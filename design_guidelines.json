@@ -1,0 +1,189 @@
+{
+  "project_name": "Tune Protect - Insurance Tech Platform",
+  "theme": "light",
+  "archetype": "1_organic_earthy",
+  "visual_aesthetic": {
+    "vibe": "Premium, Trustworthy, Frictionless, Warm",
+    "description": "A high-end insurtech platform that blends the trustworthiness of a premium financial institution with the warmth and approachability of a lifestyle brand. Avoids cold 'tech-bro' aesthetics. Uses generous whitespace, soft drop shadows, warm gold accents, and organic rounded corners to make the stressful process of insurance feel safe and easy."
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#DEB25E",
+      "50": "#FBF7EF",
+      "100": "#F7EFDE",
+      "200": "#EFDFBD",
+      "300": "#E7CE9C",
+      "400": "#E0BE7B",
+      "500": "#DEB25E",
+      "600": "#C39845",
+      "700": "#9C7937",
+      "800": "#755B29",
+      "900": "#4E3D1C",
+      "foreground": "#FFFFFF"
+    },
+    "secondary": {
+      "DEFAULT": "#FFFFFF",
+      "foreground": "#111827"
+    },
+    "background": {
+      "base": "#F8F9FA",
+      "surface": "#FFFFFF",
+      "surface_hover": "#F3F4F6",
+      "subtle": "#F1F5F9"
+    },
+    "text": {
+      "heading": "#111827",
+      "body": "#4B5563",
+      "muted": "#9CA3AF",
+      "inverse": "#FFFFFF"
+    },
+    "status": {
+      "success": "#10B981",
+      "success_bg": "#D1FAE5",
+      "warning": "#F59E0B",
+      "warning_bg": "#FEF3C7",
+      "danger": "#EF4444",
+      "danger_bg": "#FEE2E2",
+      "info": "#3B82F6",
+      "info_bg": "#DBEAFE"
+    },
+    "border": {
+      "DEFAULT": "#E5E7EB",
+      "focus": "#DEB25E"
+    }
+  },
+  "typography": {
+    "font_families": {
+      "heading": "Outfit, sans-serif",
+      "body": "Plus Jakarta Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-5xl sm:text-6xl tracking-tight font-semibold",
+      "h2": "text-4xl sm:text-5xl tracking-tight font-semibold",
+      "h3": "text-2xl sm:text-3xl tracking-tight font-medium",
+      "h4": "text-xl sm:text-2xl font-medium",
+      "body": "text-base leading-relaxed",
+      "body_sm": "text-sm leading-relaxed",
+      "caption": "text-xs tracking-wider uppercase font-semibold text-gray-500"
+    }
+  },
+  "spacing_and_layout": {
+    "scale_philosophy": "Generous Spacing Philosophy: p-6, p-8, p-12. White space creates luxury.",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "bento_grid": {
+      "marketing": "grid-cols-1 md:grid-cols-12 gap-8",
+      "dashboard": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"
+    },
+    "radius": {
+      "card": "rounded-2xl",
+      "button": "rounded-full",
+      "input": "rounded-xl",
+      "badge": "rounded-full"
+    },
+    "shadows": {
+      "sm": "shadow-sm",
+      "DEFAULT": "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]",
+      "lg": "shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]",
+      "float": "shadow-[0_20px_40px_-12px_rgba(222,178,94,0.15)]"
+    }
+  },
+  "component_patterns": {
+    "buttons": {
+      "primary": "bg-primary text-white hover:bg-primary-600 transition-colors shadow-sm",
+      "secondary": "bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 transition-colors",
+      "ghost": "text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+    },
+    "cards": {
+      "base": "bg-white border border-gray-100 shadow rounded-2xl p-6",
+      "interactive": "hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/20",
+      "glass": "bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm"
+    },
+    "inputs": {
+      "base": "bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
+      "label": "block text-sm font-medium text-gray-700 mb-1"
+    },
+    "navigation": "bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50",
+    "animation": "framer-motion for page transitions and micro-interactions. duration-300 ease-out"
+  },
+  "page_layouts": {
+    "landing_page": {
+      "header": "Sticky nav, Logo left, Links center (Products, Claims, Support), Primary CTA right (Get Quote).",
+      "hero": "Split layout: Left text-heavy with H1 ('Premium Protection for Your Peace of Mind'), caption, CTA 'Explore Plans'. Right side: Dynamic curved image masking of the family lifestyle image.",
+      "product_tiles": "Bento grid of 4 cards (Travel, Health, Motor, Device). Each card has an icon, title, description, and an arrow link.",
+      "stats_testimonials": "Full width soft gray background. 3 large stat counters. Testimonial carousel featuring real user quotes.",
+      "footer": "Dark slate background, white/gold text. Sitemap, legal links, newsletter signup."
+    },
+    "auth": {
+      "layout": "Split screen: Left side clean white with login/signup form (Email + Phone OTP mocked). Right side full-height lifestyle image (Travel/Health) with gold overlay gradient."
+    },
+    "customer_dashboard": {
+      "layout": "Sidebar navigation (Overview, Policies, Claims, Profile) + Main content area. Background #F8F9FA.",
+      "overview": "Top: Welcome back user. AI Recommendations banner (e.g., 'Upcoming trip? Add travel coverage'). Middle: 'My Active Policies' horizontal cards. Bottom: 'Recent Activity' timeline.",
+      "policies_list": "Table or List view. Clicking a row opens a slide-out drawer (Sheet component) showing details, coverage limits, and 'Download PDF' button.",
+      "claims_wizard": "Multi-step form (Progress bar at top). Steps: 1. Select Policy, 2. Incident Details, 3. Upload Documents (Drag & Drop zone), 4. Review & Submit.",
+      "claims_tracker": "Vertical step progress component showing states: Filed -> Review -> Approved -> Paid.",
+      "ai_chat": "Floating action button opening a side-panel. Claude-powered assistant for policy questions."
+    },
+    "quote_flow": {
+      "layout": "Centered narrow container (max-w-2xl) to reduce cognitive load.",
+      "steps": "Destination autocomplete -> Dates (Shadcn Calendar) -> Travelers counter -> Coverage tier slider (Basic/Premium/VIP) -> Price breakdown.",
+      "checkout": "Summary card on left, Stripe payment elements on right. Gold 'Pay Securely' button."
+    },
+    "admin_crm": {
+      "layout": "Dense dashboard (Control Room Grid). Sidebar collapsed by default.",
+      "customer_360": "Profile header (Name, KYC status, Risk Score). Bento grid: Active Policies, Claim History, LTV, Interaction Timeline, AI Next-best-action.",
+      "leads_kanban": "Horizontal scrolling columns: New -> Contacted -> Quoted -> Won -> Lost. Draggable cards.",
+      "analytics": "Top KPIs: MRR, Active Policies, Claim Ratio. Charts: Revenue over time (Recharts Area), Policy Mix (Recharts Donut).",
+      "claims_queue": "Dense data table with filters (Status, Type, Date). Quick action buttons: Approve (Green), Reject (Red)."
+    }
+  },
+  "media": {
+    "hero_lifestyle": {
+      "url": "https://images.pexels.com/photos/7065885/pexels-photo-7065885.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Happy family walking hand in hand through lush resort, symbolizing peace of mind.",
+      "usage": "Landing page hero section, Auth right panel"
+    },
+    "travel_insurance": {
+      "url": "https://images.unsplash.com/photo-1774663855124-9ede7464f37e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwyfHxmYW1pbHklMjB0cmF2ZWwlMjB2YWNhdGlvbiUyMGx1eHVyeXxlbnwwfHx8fDE3NzcyNzIwOTd8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Tropical resort with swimming pool",
+      "usage": "Product tile for Travel Insurance, Quote flow background"
+    },
+    "health_insurance": {
+      "url": "https://images.pexels.com/photos/4617309/pexels-photo-4617309.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Joyful family moment orange juice indoors",
+      "usage": "Product tile for Health Insurance"
+    },
+    "motor_insurance": {
+      "url": "https://images.unsplash.com/photo-1636613112804-c5aebc1f4d8d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBjYXIlMjBkcml2aW5nfGVufDB8fHx8MTc3NzI3MjA5N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Interior of a luxury car with steering wheel",
+      "usage": "Product tile for Motor Insurance"
+    },
+    "device_insurance": {
+      "url": "https://images.pexels.com/photos/7382453/pexels-photo-7382453.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Person using laptop and smartphone simultaneously",
+      "usage": "Product tile for Device Insurance"
+    }
+  },
+  "data_testid_conventions": {
+    "rule": "All interactive and key informational elements MUST include a data-testid attribute.",
+    "format": "kebab-case, role-based, context-specific",
+    "examples": {
+      "buttons": "login-submit-button, get-quote-cta, claim-approve-button",
+      "inputs": "email-input, destination-autocomplete, coverage-slider",
+      "links": "nav-products-link, footer-privacy-link",
+      "containers": "policy-card-123, customer-360-timeline"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Install and configure Tailwind CSS, Lucide React, and Framer Motion.",
+    "Import 'Outfit' and 'Plus Jakarta Sans' fonts via Google Fonts and set them in tailwind.config.js.",
+    "Configure all primary and secondary colors in tailwind.config.js as defined in this JSON.",
+    "Use pure HTML+Tailwind for the landing page layout to ensure creative freedom, leveraging the provided image URLs.",
+    "Use Shadcn UI components extensively for the CRM Dashboard, Quote Flow, and Claims Wizard (Forms, Inputs, Select, Tables, Cards, Dialogs, Sheets).",
+    "Always apply data-testid attributes to interactive elements.",
+    "Ensure hover states are explicitly defined for text and background colors.",
+    "Do not use generic placeholder image URLs; use the media URLs provided in this document.",
+    "When building charts for the Admin CRM, utilize Recharts."
+  ]
+}
