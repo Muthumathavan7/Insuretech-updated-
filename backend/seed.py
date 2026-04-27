@@ -52,21 +52,27 @@ DEFAULT_PRODUCTS = [
         "image_url": "https://images.pexels.com/photos/4617309/pexels-photo-4617309.jpeg?auto=compress&cs=tinysrgb&w=1200",
     },
     {
-        "name": "Motor Drive Pro",
+        "name": "Motor Easy",
         "category": "motor",
-        "description": "Complete car insurance with roadside assistance & zero depreciation.",
-        "base_premium": 49.0,
-        "coverage_amount": 50000,
+        "description": "Comprehensive private car insurance. Move seamlessly with 24/7 auto-assist, 300+ authorised workshops, and an instant 10% online rebate.",
+        "base_premium": 180.0,
+        "coverage_amount": 30000,
         "features": [
-            "Own damage + third-party",
-            "Zero depreciation",
-            "24/7 roadside assistance",
-            "Engine protect",
-            "Cashless garage network",
+            "Comprehensive own-damage + third-party cover",
+            "10% instant online rebate on top of NCD",
+            "Agreed Sum or Market Value payout",
+            "24-hour emergency roadside auto-assist",
+            "300+ nationwide authorised workshops",
+            "6-month workmanship & parts guarantee",
         ],
         "addons": [
-            {"name": "Zero Depreciation", "price": 20.0},
-            {"name": "Engine Protect", "price": 14.0},
+            {"name": "Windscreen Coverage", "price": 35.0},
+            {"name": "Inconvenience Allowance", "price": 25.0},
+            {"name": "Spray Paint", "price": 60.0},
+            {"name": "Strike, Riot & Civil Commotion", "price": 18.0},
+            {"name": "Passenger PA Coverage", "price": 22.0},
+            {"name": "Legal Liability to Passengers", "price": 20.0},
+            {"name": "Flood / Special Perils", "price": 30.0},
         ],
         "image_url": "https://images.unsplash.com/photo-1636613112804-c5aebc1f4d8d?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80",
     },
@@ -130,10 +136,10 @@ async def seed_all():
         doc["password_hash"] = _hash("Demo@123")
         await db.users.insert_one(doc)
 
-    # Products
-    count = await db.products.count_documents({})
-    if count == 0:
-        for p in DEFAULT_PRODUCTS:
+    # Products — insert missing categories (idempotent per category)
+    for p in DEFAULT_PRODUCTS:
+        exists = await db.products.find_one({"category": p["category"], "name": p["name"]}, {"_id": 0})
+        if not exists:
             prod = Product(**p)
             await db.products.insert_one(prod.model_dump())
 

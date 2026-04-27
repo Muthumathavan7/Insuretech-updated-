@@ -19,6 +19,8 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import MyPolicies from "@/pages/MyPolicies";
 import FileClaim from "@/pages/FileClaim";
 import Claims from "@/pages/Claims";
+import MotorInsurance from "@/pages/MotorInsurance";
+import MotorQuote from "@/pages/MotorQuote";
 
 import AdminDashboard from "@/admin/AdminDashboard";
 import Customers from "@/admin/Customers";
@@ -57,6 +59,9 @@ function AppRoutes() {
       <Route path="/login" element={<CustomerShell><Login /></CustomerShell>} />
       <Route path="/signup" element={<CustomerShell><Signup /></CustomerShell>} />
       <Route path="/products" element={<CustomerShell><Products /></CustomerShell>} />
+      <Route path="/products/motor-easy" element={<CustomerShell><MotorInsurance /></CustomerShell>} />
+      <Route path="/motor-quote" element={<CustomerShell><MotorQuote /></CustomerShell>} />
+      <Route path="/motor-quote/:productId" element={<CustomerShell><MotorQuote /></CustomerShell>} />
       <Route
         path="/dashboard"
         element={

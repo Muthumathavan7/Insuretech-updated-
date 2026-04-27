@@ -120,10 +120,11 @@ export default function Landing() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {products.map((p) => {
             const Icon = ICONS[p.category] || Shield;
+            const href = p.category === "motor" ? "/products/motor-easy" : "/products";
             return (
               <Link
                 key={p.id}
-                to="/products"
+                to={href}
                 data-testid={`product-tile-${p.category}`}
                 className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:border-primary/30 hover:-translate-y-1 hover:shadow-float transition-all duration-300"
               >

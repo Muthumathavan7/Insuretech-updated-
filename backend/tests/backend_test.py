@@ -470,3 +470,121 @@ class TestRoleEnforcement:
 
     def test_customer_blocked_from_campaigns(self, s, demo_token):
         assert s.get(f"{API}/campaigns", headers=H(demo_token)).status_code == 403
+
+
+
+# ---------- Motor (Iteration 3) ----------
+class TestMotorProducts:
+    def test_motor_product_seeded(self, s):
+        r = s.get(f"{API}/products?category=motor", timeout=20)
+        assert r.status_code == 200
+        items = r.json()
+        motor = [p for p in items if p.get("name") == "Motor Easy"]
+        assert len(motor) == 1, f"Expected 1 Motor Easy, got {len(motor)}: {items}"
+        m = motor[0]
+        assert m["category"] == "motor"
+        # 7 addons as per requirement
+        addon_names = {a["name"] for a in m.get("addons", [])}
+        expected = {
+            "Windscreen Coverage", "Inconvenience Allowance", "Spray Paint",
+            "Strike, Riot & Civil Commotion", "Passenger PA Coverage",
+            "Legal Liability to Passengers", "Flood / Special Perils",
+        }
+        assert expected.issubset(addon_names), f"Missing addons: {expected - addon_names}"
+        assert len(m["addons"]) == 7
+        STATE["motor_product_id"] = m["id"]
+        STATE["motor_product"] = m
+
+
+class TestMotorQuote:
+    def test_create_motor_quote_comprehensive(self, s, demo_token):
+        payload = {
+            "product_id": STATE["motor_product_id"],
+            "account_type": "personal",
+            "vehicle_reg": "TEST1234",
+            "id_type": "nric",
+            "id_number": "900101-10-1234",
+            "full_name": "Test Driver",
+            "date_of_birth": "1990-01-01",
+            "postcode": "50000",
+            "email": "TEST_motor@insurtech.io",
+            "cover_type": "comprehensive",
+            "sum_insured": 30000,
+            "ncd_percent": 25,
+            "addons": ["Windscreen Coverage", "Flood / Special Perils"],
+        }
+        r = s.post(f"{API}/quotes/motor", json=payload, headers=H(demo_token), timeout=30)
+        assert r.status_code == 200, r.text
+        q = r.json()
+        # Expected math per review_request:
+        # base = max(180, 30000*0.035) = max(180, 1050) = 1050  (age ~36 => age_loading 0)
+        # ncd_discount = 1050 * 0.25 = 262.50
+        # online_rebate = (1050 - 262.50) * 0.10 = 78.75
+        # subtotal = (1050 - 262.50 - 78.75) + (35 + 30) = 708.75 + 65 = 773.75
+        # tax = 773.75 * 0.08 = 61.90
+        # total = 773.75 + 61.90 = 835.65
+        assert q["total"] == pytest.approx(835.65, rel=0.02), f"Expected ~835.65, got {q['total']}"
+        meta = q.get("meta", {})
+        assert meta.get("ncd_discount") == pytest.approx(262.50, rel=0.02)
+        assert meta.get("online_rebate") == pytest.approx(78.75, rel=0.02)
+        assert meta.get("gross_premium") == pytest.approx(1050.0, rel=0.02)
+        assert meta.get("vehicle_reg") == "TEST1234"
+        assert q["coverage_tier"] == "comprehensive"
+        STATE["motor_quote_id"] = q["id"]
+
+    def test_motor_quote_requires_auth(self, s):
+        payload = {
+            "product_id": STATE["motor_product_id"],
+            "vehicle_reg": "X", "id_number": "1", "full_name": "x",
+            "date_of_birth": "1990-01-01", "postcode": "50000",
+            "email": "x@x.com", "sum_insured": 20000,
+        }
+        r = s.post(f"{API}/quotes/motor", json=payload, timeout=20)
+        assert r.status_code == 401
+
+    def test_motor_quote_invalid_product_category(self, s, demo_token):
+        # Use travel product id -> should 404 because category != motor
+        payload = {
+            "product_id": STATE["travel_product_id"],
+            "vehicle_reg": "X", "id_number": "1", "full_name": "x",
+            "date_of_birth": "1990-01-01", "postcode": "50000",
+            "email": "x@x.com", "sum_insured": 20000,
+        }
+        r = s.post(f"{API}/quotes/motor", json=payload, headers=H(demo_token), timeout=20)
+        assert r.status_code == 404
+
+    def test_motor_quote_third_party(self, s, demo_token):
+        payload = {
+            "product_id": STATE["motor_product_id"],
+            "vehicle_reg": "TP9999",
+            "id_number": "800101-10-9999",
+            "full_name": "TP Driver",
+            "date_of_birth": "1980-01-01",
+            "postcode": "50000",
+            "email": "TEST_tp@insurtech.io",
+            "cover_type": "third_party",
+            "sum_insured": 20000,
+            "ncd_percent": 0,
+            "addons": [],
+        }
+        r = s.post(f"{API}/quotes/motor", json=payload, headers=H(demo_token), timeout=30)
+        assert r.status_code == 200
+        q = r.json()
+        # base = 180 * 0.4 = 72, no NCD, online rebate = 7.20, subtotal 64.80, tax 5.18, total ~69.98
+        assert q["total"] > 0
+        assert q["coverage_tier"] == "third_party"
+
+    def test_motor_checkout(self, s, demo_token):
+        payload = {"quote_id": STATE["motor_quote_id"], "origin_url": BASE_URL}
+        r = s.post(f"{API}/payments/checkout", json=payload, headers=H(demo_token), timeout=60)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert "url" in data and "session_id" in data
+        assert "stripe.com" in data["url"] or "checkout" in data["url"].lower()
+
+    def test_motor_quote_persisted(self, s, demo_token):
+        r = s.get(f"{API}/quotes/{STATE['motor_quote_id']}", headers=H(demo_token), timeout=20)
+        assert r.status_code == 200
+        q = r.json()
+        assert q["id"] == STATE["motor_quote_id"]
+        assert q.get("meta", {}).get("cover_type") == "comprehensive"

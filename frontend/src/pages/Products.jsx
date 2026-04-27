@@ -22,7 +22,8 @@ export default function Products() {
   const selectProduct = (p) => {
     if (!user) return nav("/login");
     if (p.category === "travel") nav(`/quote/${p.id}`);
-    else alert(`${p.name} quote coming soon! Travel insurance is fully live.`);
+    else if (p.category === "motor") nav(`/products/motor-easy`);
+    else alert(`${p.name} quote coming soon! Travel and Motor insurance are fully live.`);
   };
 
   return (
