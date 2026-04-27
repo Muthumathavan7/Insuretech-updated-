@@ -17,9 +17,16 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
 
-## Implemented (2026-02-27 → 2026-04-27 — iteration 5)
+## Implemented (2026-02-27 → 2026-04-27 — iteration 6)
 
-### PA (Personal Accident) Insurance — NEW
+### Admin-Configurable Stripe (NEW)
+- `/admin/settings` — full Stripe configuration UI with status banner ("Using platform default" vs "Using your custom keys"), publishable key, secret key (password field + eye toggle), webhook signing secret, enabled toggle, Save + **Test connection** button (creates a real $1 Stripe session), Clear-stored-secret action, and a "Buy premium / Open customer flow" helper card linking to `/products`
+- Backend: `settings` Mongo collection (singleton `app_settings`), `get_active_stripe_key()` helper prefers admin-stored key over env, secret keys are NEVER returned in plain — only masked (`sk_test...XXXX`)
+- 5 new endpoints: `GET /api/admin/settings`, `PATCH /api/admin/settings`, `POST /api/admin/settings/stripe/test`, admin-only, non-admin → 403
+- All existing Travel / Motor / PA checkout flows now route through the admin-configured key automatically — no code changes needed to go live
+- Sidebar entry "Settings" added to the CRM Console
+
+### PA (Personal Accident) Insurance (iteration 5)
 - `/products/pa-easy` marketing page (hero "Life is unpredictable. Your cover shouldn't be.", pricing card $29.16 with strikethrough $36.00 + -25% badge, 4 highlight tiles, 6 benefit cards with icons, Why PA Easy section, 7 FAQs, footer CTA)
 - `/pa-quote/:productId` 3-step form: **Plan** (num_persons 1-6 stepper + live price preview) → **Personal Details** (15 fields: name/NRIC-Passport/gender/DOB/nationality/occupation class 1-4/email/phone/address/postcode + beneficiary name/relationship/NRIC) → **Summary & Stripe checkout**
 - `POST /api/quotes/pa` — gross × (1 + occupation_loading) × num_persons → 25% online discount → 8% SST → total. Age 18-70 eligibility. Class 1 = 0%, class 2 = 15%, class 3 = 35%, class 4 = 60% loading.
