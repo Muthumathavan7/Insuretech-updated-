@@ -54,7 +54,7 @@ export default function AIChat() {
       <button
         data-testid="ai-chat-toggle"
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary hover:bg-primary-600 text-white shadow-float flex items-center justify-center transition-transform hover:scale-105"
+        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-primary hover:bg-primary-600 text-white shadow-float flex items-center justify-center transition-transform hover:scale-105"
       >
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </button>
@@ -62,7 +62,7 @@ export default function AIChat() {
       {open && (
         <div
           data-testid="ai-chat-panel"
-          className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-fade-in-up"
+          className="fixed bottom-24 left-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-fade-in-up"
         >
           <div className="p-4 bg-gradient-to-br from-primary-50 to-white border-b border-gray-100 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
