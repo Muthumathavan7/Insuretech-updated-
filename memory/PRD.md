@@ -17,7 +17,13 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
 
-## Implemented (2026-02-27)
+## Implemented (2026-02-27 → 2026-04-27)
+
+### Motor Insurance module (NEW — modelled on tuneprotect.com)
+- `/products/motor-easy` — full marketing page (hero "Move seamlessly. Protect deeply.", 10% online discount pill, Flood Cover highlight card, Motor Bundle section with 8 numbered benefits, 5 benefit cards, 6 optional add-on cards, FAQ accordion with 6 questions, dark footer CTA)
+- `/motor-quote/:productId` — 3-step wizard: **Plan Selection** (Personal/Business toggle, Vehicle Reg, NRIC/Passport toggle, ID number, Full Name, Date of Birth, Postcode, Email, Privacy consent) → **Plan Config** (Comprehensive/Third Party, Sum Insured, NCD %, 7 add-ons) → **Summary & Payment**
+- Backend `POST /api/quotes/motor` — pricing: comprehensive = max(product.base, sum_insured × 3.5%), age loading for drivers <23 or >65, NCD discount (0-55%) applied, 10% online rebate on (base − NCD), addons flat, 8% SST. Updates CRM profile with KYC data + auto-sets lead_stage to "quoted"
+- Seeded **Motor Easy** product with 7 add-ons (Windscreen, Inconvenience Allowance, Spray Paint, Strike/Riot/Civil, Passenger PA, Legal Liability, Flood/Special Perils)
 
 ### Consumer app
 - Landing page (hero, 4 product tiles, AI section, stats, footer)

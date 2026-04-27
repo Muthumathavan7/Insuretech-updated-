@@ -327,6 +327,7 @@ export default function MotorQuote() {
               <Button
                 onClick={next}
                 disabled={!canSubmitStep0}
+                aria-disabled={!canSubmitStep0}
                 data-testid="motor-step0-next"
                 className="rounded-full bg-primary hover:bg-primary-600 text-white h-12 px-8 shadow-float ml-auto"
               >
