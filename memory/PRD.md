@@ -17,9 +17,17 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
 
-## Implemented (2026-02-27 → 2026-04-27 — iteration 4)
+## Implemented (2026-02-27 → 2026-04-27 — iteration 5)
 
-### Vehicle Registration Lookup + Admin-Controlled Forms (NEW)
+### PA (Personal Accident) Insurance — NEW
+- `/products/pa-easy` marketing page (hero "Life is unpredictable. Your cover shouldn't be.", pricing card $29.16 with strikethrough $36.00 + -25% badge, 4 highlight tiles, 6 benefit cards with icons, Why PA Easy section, 7 FAQs, footer CTA)
+- `/pa-quote/:productId` 3-step form: **Plan** (num_persons 1-6 stepper + live price preview) → **Personal Details** (15 fields: name/NRIC-Passport/gender/DOB/nationality/occupation class 1-4/email/phone/address/postcode + beneficiary name/relationship/NRIC) → **Summary & Stripe checkout**
+- `POST /api/quotes/pa` — gross × (1 + occupation_loading) × num_persons → 25% online discount → 8% SST → total. Age 18-70 eligibility. Class 1 = 0%, class 2 = 15%, class 3 = 35%, class 4 = 60% loading.
+- **Exact Tune Protect math**: 1 person, class 1, age 35 → **$29.16/year**
+- Seeded PA Easy product with 6 benefits matching user spec (Death/Permanent Disablement $10K, Hospital Income $50/day, Ambulance $200, Bereavement $1.5K, Dental $1K, Fuel Station $10K)
+- 15 admin-controllable form fields via `form_config` (same engine as Motor)
+
+### Vehicle Registration Lookup + Admin-Controlled Forms (iteration 4)
 - `POST /api/vehicles/lookup` — deterministic mock ISM-ABI endpoint. Returns make/model/year/engine/body/market_value/NCD eligibility for any registration. 6 curated test regs + 24-car hashed fallback with year-based depreciation (9%/year capped at 55%).
 - Motor quote Step 0 has a **"Look up"** button next to Vehicle Registration. When found, shows a green "Vehicle found" card and auto-fills Sum Insured + suggested NCD in Step 1 (with "Auto-filled from lookup" badge).
 - **Admin Products page** is now a full editor (Sheet drawer): edit name, description, `base_premium`, `coverage_amount`, features (add/remove), **addons (name + price editable, add/remove)**, image URL, active flag.

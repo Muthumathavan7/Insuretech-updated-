@@ -152,8 +152,9 @@ export default function Layout({ children }) {
             <h5 className="text-white font-semibold mb-3 text-sm">Products</h5>
             <ul className="space-y-2 text-sm opacity-80">
               <li>Travel</li>
+              <li>Motor Easy</li>
+              <li>PA Easy</li>
               <li>Health</li>
-              <li>Motor</li>
               <li>Device</li>
             </ul>
           </div>
