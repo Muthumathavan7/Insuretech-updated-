@@ -4,7 +4,7 @@ import random
 import bcrypt
 
 from database import db
-from models import User, Product, DEFAULT_MOTOR_FORM_CONFIG
+from models import User, Product, DEFAULT_MOTOR_FORM_CONFIG, DEFAULT_PA_FORM_CONFIG
 
 
 def _hash(pw: str) -> str:
@@ -94,6 +94,23 @@ DEFAULT_PRODUCTS = [
         ],
         "image_url": "https://images.pexels.com/photos/7382453/pexels-photo-7382453.jpeg?auto=compress&cs=tinysrgb&w=1200",
     },
+    {
+        "name": "PA Easy",
+        "category": "pa",
+        "description": "Life is unpredictable — you'll never know when an accident could happen. Protect yourself and your loved ones from financial strain with PA Easy.",
+        "base_premium": 36.0,
+        "coverage_amount": 10000,
+        "features": [
+            "Death & Permanent Disablement Benefit up to $10,000",
+            "Hospital Income $50/day up to 30 days",
+            "Ambulance Services up to $200",
+            "Bereavement / Funeral Expenses (Accidental only) $1,500",
+            "Dental & Clinical Accidental Treatment $1,000",
+            "Fuel Station Accident Benefit $10,000",
+        ],
+        "addons": [],
+        "image_url": "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80",
+    },
 ]
 
 
@@ -143,6 +160,8 @@ async def seed_all():
             prod = Product(**p)
             if prod.category == "motor" and not prod.form_config:
                 prod.form_config = DEFAULT_MOTOR_FORM_CONFIG
+            if prod.category == "pa" and not prod.form_config:
+                prod.form_config = DEFAULT_PA_FORM_CONFIG
             await db.products.insert_one(prod.model_dump())
         else:
             # Backfill motor form_config if missing on existing doc
@@ -150,6 +169,11 @@ async def seed_all():
                 await db.products.update_one(
                     {"id": exists["id"]},
                     {"$set": {"form_config": DEFAULT_MOTOR_FORM_CONFIG}},
+                )
+            if p["category"] == "pa" and not exists.get("form_config"):
+                await db.products.update_one(
+                    {"id": exists["id"]},
+                    {"$set": {"form_config": DEFAULT_PA_FORM_CONFIG}},
                 )
 
     # Sample leads (customers at various stages) for Kanban

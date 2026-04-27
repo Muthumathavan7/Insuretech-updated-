@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
-import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Shield, Sparkles, Check, Star } from "lucide-react";
+import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Shield, Sparkles, Check, Star, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone };
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity };
 const HERO_IMG =
   "https://images.pexels.com/photos/7065885/pexels-photo-7065885.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1200";
 
@@ -120,7 +120,10 @@ export default function Landing() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {products.map((p) => {
             const Icon = ICONS[p.category] || Shield;
-            const href = p.category === "motor" ? "/products/motor-easy" : "/products";
+            const href =
+              p.category === "motor" ? "/products/motor-easy"
+              : p.category === "pa" ? "/products/pa-easy"
+              : "/products";
             return (
               <Link
                 key={p.id}

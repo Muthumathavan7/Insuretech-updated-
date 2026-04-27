@@ -23,7 +23,8 @@ export default function Products() {
     if (!user) return nav("/login");
     if (p.category === "travel") nav(`/quote/${p.id}`);
     else if (p.category === "motor") nav(`/products/motor-easy`);
-    else alert(`${p.name} quote coming soon! Travel and Motor insurance are fully live.`);
+    else if (p.category === "pa") nav(`/products/pa-easy`);
+    else alert(`${p.name} quote coming soon! Travel, Motor and PA insurance are fully live.`);
   };
 
   return (

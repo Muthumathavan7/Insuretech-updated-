@@ -21,6 +21,8 @@ import FileClaim from "@/pages/FileClaim";
 import Claims from "@/pages/Claims";
 import MotorInsurance from "@/pages/MotorInsurance";
 import MotorQuote from "@/pages/MotorQuote";
+import PAInsurance from "@/pages/PAInsurance";
+import PAQuote from "@/pages/PAQuote";
 
 import AdminDashboard from "@/admin/AdminDashboard";
 import Customers from "@/admin/Customers";
@@ -62,6 +64,9 @@ function AppRoutes() {
       <Route path="/products/motor-easy" element={<CustomerShell><MotorInsurance /></CustomerShell>} />
       <Route path="/motor-quote" element={<CustomerShell><MotorQuote /></CustomerShell>} />
       <Route path="/motor-quote/:productId" element={<CustomerShell><MotorQuote /></CustomerShell>} />
+      <Route path="/products/pa-easy" element={<CustomerShell><PAInsurance /></CustomerShell>} />
+      <Route path="/pa-quote" element={<CustomerShell><PAQuote /></CustomerShell>} />
+      <Route path="/pa-quote/:productId" element={<CustomerShell><PAQuote /></CustomerShell>} />
       <Route
         path="/dashboard"
         element={

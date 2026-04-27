@@ -8,12 +8,12 @@ import { Switch } from "@/components/ui/switch";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plane, HeartPulse, Car, Smartphone, Plus, Trash2, Pencil, Save } from "lucide-react";
+import { Plane, HeartPulse, Car, Smartphone, Plus, Trash2, Pencil, Save, Activity } from "lucide-react";
 import { toast } from "sonner";
 
-const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone };
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity };
 
-const FIELD_LABELS = {
+const FIELD_LABELS_MOTOR = {
   account_type: "Personal / Business toggle",
   vehicle_reg: "Vehicle Registration No.",
   vehicle_lookup: "Vehicle Lookup button",
@@ -27,6 +27,24 @@ const FIELD_LABELS = {
   sum_insured: "Sum Insured",
   ncd_percent: "No Claim Discount",
   addons: "Optional Add-ons",
+};
+
+const FIELD_LABELS_PA = {
+  num_persons: "Number of Persons selector",
+  full_name: "Full Name",
+  id_type: "ID Type (NRIC / Passport)",
+  id_number: "ID Number",
+  gender: "Gender",
+  date_of_birth: "Date of Birth",
+  nationality: "Nationality",
+  occupation_class: "Occupation Class",
+  email: "Email",
+  phone: "Phone",
+  address: "Residential Address",
+  postcode: "Postcode",
+  beneficiary_name: "Beneficiary Full Name",
+  beneficiary_relationship: "Beneficiary Relationship",
+  beneficiary_nric: "Beneficiary NRIC",
 };
 
 function ProductEditor({ product, onSaved }) {
@@ -79,6 +97,8 @@ function ProductEditor({ product, onSaved }) {
   };
 
   const isMotor = product.category === "motor";
+  const isPA = product.category === "pa";
+  const fieldLabels = isMotor ? FIELD_LABELS_MOTOR : isPA ? FIELD_LABELS_PA : null;
 
   return (
     <div className="space-y-6" data-testid={`product-editor-${product.category}`}>
@@ -190,16 +210,16 @@ function ProductEditor({ product, onSaved }) {
         </div>
       </div>
 
-      {/* Field toggles (motor only for now) */}
-      {isMotor && (
+      {/* Field toggles (motor + pa) */}
+      {fieldLabels && (
         <div>
           <Label className="mb-2 block">Form fields — admin control</Label>
           <p className="text-xs text-gray-500 mb-3">
-            Toggle fields on/off on the customer-facing Motor quote form. Required means the field
+            Toggle fields on/off on the customer-facing {isMotor ? "Motor" : "PA"} quote form. Required means the field
             must be filled; unchecked required means optional.
           </p>
           <div className="bg-gray-50 rounded-2xl p-3 space-y-1">
-            {Object.keys(FIELD_LABELS).map((key) => {
+            {Object.keys(fieldLabels).map((key) => {
               const cfg = draft.form_config?.[key] || { enabled: true, required: true };
               return (
                 <div
@@ -208,7 +228,7 @@ function ProductEditor({ product, onSaved }) {
                   className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-gray-100"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{FIELD_LABELS[key]}</div>
+                    <div className="text-sm font-medium truncate">{fieldLabels[key]}</div>
                     <div className="text-[10px] text-gray-400 font-mono">{key}</div>
                   </div>
                   <div className="flex items-center gap-4 text-xs">

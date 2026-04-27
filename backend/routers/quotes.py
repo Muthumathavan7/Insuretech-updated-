@@ -31,6 +31,28 @@ class MotorQuoteInput(BaseModel):
     addons: List[str] = []
 
 
+class PAQuoteInput(BaseModel):
+    product_id: str
+    # Plan
+    num_persons: int = Field(ge=1, le=6, default=1)
+    # Insured person
+    full_name: str
+    id_type: Literal["nric", "passport"] = "nric"
+    id_number: str
+    gender: Literal["male", "female"] = "male"
+    date_of_birth: str
+    nationality: Literal["malaysian", "non_malaysian"] = "malaysian"
+    occupation_class: Literal["class_1", "class_2", "class_3", "class_4"] = "class_1"
+    email: EmailStr
+    phone: str
+    address: Optional[str] = ""
+    postcode: str
+    # Beneficiary
+    beneficiary_name: str
+    beneficiary_relationship: Literal["spouse", "parent", "child", "sibling", "other"] = "spouse"
+    beneficiary_nric: Optional[str] = ""
+
+
 def _parse_date(s: str) -> datetime:
     try:
         return datetime.fromisoformat(s.replace("Z", "+00:00"))
@@ -205,6 +227,96 @@ async def create_motor_quote(body: MotorQuoteInput, user: dict = Depends(get_cur
         "id": __import__("uuid").uuid4().hex, "user_id": user["id"],
         "kind": "action", "title": "Motor quote generated",
         "body": f"{body.vehicle_reg} · {body.cover_type} · ${total}",
+        "meta": {"quote_id": q.id}, "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return response
+
+
+@router.post("/pa")
+async def create_pa_quote(body: PAQuoteInput, user: dict = Depends(get_current_user)):
+    product = await db.products.find_one({"id": body.product_id, "active": True}, {"_id": 0})
+    if not product or product["category"] != "pa":
+        raise HTTPException(404, "PA product not found")
+
+    # Enforce form_config
+    fc = product.get("form_config") or {}
+    def _enabled(k): return fc.get(k, {}).get("enabled", True) if fc else True
+    def _required(k): return fc.get(k, {}).get("required", True) if fc else True
+
+    for key in ("full_name", "id_number", "beneficiary_name", "postcode", "phone"):
+        if _enabled(key) and _required(key) and not str(getattr(body, key, "")).strip():
+            raise HTTPException(400, f"Field '{key}' is required")
+
+    # Eligibility check — age 18-70
+    try:
+        dob = datetime.fromisoformat(body.date_of_birth).replace(tzinfo=timezone.utc)
+    except Exception:
+        raise HTTPException(400, "Invalid date_of_birth — use YYYY-MM-DD")
+    age = max(0, (datetime.now(timezone.utc) - dob).days // 365)
+    if age < 18 or age > 70:
+        raise HTTPException(400, "PA Easy is available for ages 18 to 70")
+
+    # Occupation class loading (higher class = more hazardous job)
+    occ_loading = {
+        "class_1": 0.0,   # office / desk
+        "class_2": 0.15,  # light manual
+        "class_3": 0.35,  # heavy manual
+        "class_4": 0.60,  # hazardous
+    }.get(body.occupation_class, 0.0)
+
+    base_per_person = product["base_premium"]  # e.g. 36
+    gross = round(base_per_person * (1 + occ_loading) * body.num_persons, 2)
+    online_discount = round(gross * 0.25, 2)  # 25% online rebate
+    subtotal = round(gross - online_discount, 2)
+    tax = round(subtotal * 0.08, 2)
+    total = round(subtotal + tax, 2)
+
+    risk = round(min(0.95, 0.15 + occ_loading + (0.1 if age > 60 else 0.0)), 2)
+
+    q = Quote(
+        user_id=user["id"],
+        product_id=body.product_id,
+        input=body.model_dump(),
+        base_premium=subtotal,
+        addon_total=0.0,
+        tax=tax,
+        total=total,
+        risk_score=risk,
+        coverage_tier="standard",
+    )
+    doc = q.model_dump()
+    doc["meta"] = {
+        "gross_premium": gross,
+        "online_discount": online_discount,
+        "occupation_loading_pct": round(occ_loading * 100, 1),
+        "num_persons": body.num_persons,
+        "insured_name": body.full_name,
+        "age": age,
+    }
+    response = {**doc, "policy_id": None}
+    await db.quotes.insert_one(doc)
+
+    # Update CRM profile with PA KYC
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "lead_stage": "quoted",
+            "risk_score": risk,
+            "full_name": body.full_name,
+            "kyc_data": {
+                "id_type": body.id_type, "id_number": body.id_number,
+                "gender": body.gender, "date_of_birth": body.date_of_birth,
+                "nationality": body.nationality, "occupation_class": body.occupation_class,
+                "phone": body.phone, "postcode": body.postcode,
+                "beneficiary_name": body.beneficiary_name,
+                "beneficiary_relationship": body.beneficiary_relationship,
+            },
+        }},
+    )
+    await db.interactions.insert_one({
+        "id": __import__("uuid").uuid4().hex, "user_id": user["id"],
+        "kind": "action", "title": "PA Easy quote generated",
+        "body": f"{body.num_persons} person(s) · {body.occupation_class} · ${total}",
         "meta": {"quote_id": q.id}, "created_at": datetime.now(timezone.utc).isoformat(),
     })
     return response

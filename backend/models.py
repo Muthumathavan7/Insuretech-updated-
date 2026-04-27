@@ -126,11 +126,31 @@ DEFAULT_MOTOR_FORM_CONFIG = {
 }
 
 
+# Default form config for PA quote
+DEFAULT_PA_FORM_CONFIG = {
+    "num_persons": {"enabled": True, "required": True},
+    "full_name": {"enabled": True, "required": True},
+    "id_type": {"enabled": True, "required": True},
+    "id_number": {"enabled": True, "required": True},
+    "gender": {"enabled": True, "required": True},
+    "date_of_birth": {"enabled": True, "required": True},
+    "nationality": {"enabled": True, "required": True},
+    "occupation_class": {"enabled": True, "required": True},
+    "email": {"enabled": True, "required": True},
+    "phone": {"enabled": True, "required": True},
+    "address": {"enabled": True, "required": False},
+    "postcode": {"enabled": True, "required": True},
+    "beneficiary_name": {"enabled": True, "required": True},
+    "beneficiary_relationship": {"enabled": True, "required": True},
+    "beneficiary_nric": {"enabled": True, "required": False},
+}
+
+
 class Product(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=_id)
     name: str
-    category: Literal["travel", "health", "motor", "device"]
+    category: Literal["travel", "health", "motor", "device", "pa"]
     description: str
     base_premium: float
     currency: str = "USD"
@@ -145,7 +165,7 @@ class Product(BaseModel):
 
 class ProductCreate(BaseModel):
     name: str
-    category: Literal["travel", "health", "motor", "device"]
+    category: Literal["travel", "health", "motor", "device", "pa"]
     description: str
     base_premium: float
     coverage_amount: float

@@ -745,3 +745,169 @@ class TestAdminProductUpdate:
                    headers=H(demo_token), timeout=20)
         assert r.status_code == 400
         assert "vehicle_reg" in r.text.lower() or "required" in r.text.lower()
+
+
+
+# ---------- Iteration 5: PA (Personal Accident) ----------
+class TestPAProducts:
+    def test_pa_product_seeded(self, s):
+        r = s.get(f"{API}/products?category=pa", timeout=20)
+        assert r.status_code == 200
+        items = r.json()
+        pa = [p for p in items if p.get("name") == "PA Easy"]
+        assert len(pa) == 1, f"Expected 1 PA Easy, got {len(pa)}"
+        p = pa[0]
+        assert p["category"] == "pa"
+        # 6 features
+        assert len(p["features"]) == 6
+        features_text = " | ".join(p["features"]).lower()
+        for token in ["death & permanent disablement", "hospital income", "ambulance",
+                      "bereavement", "dental", "fuel station"]:
+            assert token in features_text, f"Missing feature token: {token}"
+        # form_config has 15 keys
+        fc = p.get("form_config") or {}
+        expected_keys = {"num_persons", "full_name", "id_type", "id_number", "gender",
+                         "date_of_birth", "nationality", "occupation_class", "email",
+                         "phone", "address", "postcode", "beneficiary_name",
+                         "beneficiary_relationship", "beneficiary_nric"}
+        assert set(fc.keys()) == expected_keys, f"form_config keys mismatch: {set(fc.keys()) ^ expected_keys}"
+        STATE["pa_product_id"] = p["id"]
+        STATE["pa_product"] = p
+
+
+class TestPAQuote:
+    def _base_payload(self):
+        return {
+            "product_id": STATE["pa_product_id"],
+            "num_persons": 1,
+            "full_name": "PA Test User",
+            "id_type": "nric",
+            "id_number": "900101-10-1234",
+            "gender": "male",
+            "date_of_birth": "1990-01-01",  # age ~36, within 18-70
+            "nationality": "malaysian",
+            "occupation_class": "class_1",
+            "email": "TEST_pa@insurtech.io",
+            "phone": "+60123456789",
+            "address": "1 Jalan Test",
+            "postcode": "50000",
+            "beneficiary_name": "Jane Doe",
+            "beneficiary_relationship": "spouse",
+            "beneficiary_nric": "900202-10-5678",
+        }
+
+    def test_pa_quote_class1_1person_35yo(self, s, demo_token):
+        payload = self._base_payload()
+        # Age 35 on quote time: set dob to 1990-01-01 so age ~36 (review says 35; both within class_1 same loading)
+        payload["date_of_birth"] = "1990-12-01"
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=30)
+        assert r.status_code == 200, r.text
+        q = r.json()
+        meta = q.get("meta", {})
+        # Expected: gross $36 -> -25% $9 -> net $27 -> +8% SST $2.16 -> total $29.16
+        assert meta.get("gross_premium") == pytest.approx(36.0, rel=0.02), f"gross={meta.get('gross_premium')}"
+        assert meta.get("online_discount") == pytest.approx(9.0, rel=0.02)
+        assert meta.get("num_persons") == 1
+        assert meta.get("occupation_loading_pct") == pytest.approx(0.0, abs=0.01)
+        assert q["total"] == pytest.approx(29.16, rel=0.02), f"total={q['total']}"
+        STATE["pa_quote_id"] = q["id"]
+
+    def test_pa_quote_class3_loading(self, s, demo_token):
+        payload = self._base_payload()
+        payload["occupation_class"] = "class_3"
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=30)
+        assert r.status_code == 200, r.text
+        q = r.json()
+        meta = q.get("meta", {})
+        # class_3 +35% loading: gross $36 * 1.35 = $48.60; -25% = $36.45; +8% = $39.37
+        assert meta.get("gross_premium") == pytest.approx(48.60, rel=0.02), f"gross={meta.get('gross_premium')}"
+        assert meta.get("occupation_loading_pct") == pytest.approx(35.0, rel=0.05)
+        assert q["total"] == pytest.approx(39.37, rel=0.02), f"total={q['total']}"
+
+    def test_pa_quote_num_persons_scaling(self, s, demo_token):
+        payload = self._base_payload()
+        payload["num_persons"] = 2
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=30)
+        assert r.status_code == 200, r.text
+        q = r.json()
+        # 2 persons: total should ~2 * 29.16 = 58.32
+        assert q["total"] == pytest.approx(58.32, rel=0.03), f"total={q['total']}"
+        assert q["meta"]["num_persons"] == 2
+
+    def test_pa_quote_age_too_young_400(self, s, demo_token):
+        payload = self._base_payload()
+        payload["date_of_birth"] = "2015-01-01"  # age ~11
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=20)
+        assert r.status_code == 400
+        assert "18" in r.text and "70" in r.text
+
+    def test_pa_quote_age_too_old_400(self, s, demo_token):
+        payload = self._base_payload()
+        payload["date_of_birth"] = "1940-01-01"  # age ~86
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=20)
+        assert r.status_code == 400
+        assert "18" in r.text and "70" in r.text
+
+    def test_pa_quote_missing_full_name_400(self, s, demo_token):
+        payload = self._base_payload()
+        payload["full_name"] = "   "
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=20)
+        assert r.status_code == 400
+
+    def test_pa_quote_missing_beneficiary_400(self, s, demo_token):
+        payload = self._base_payload()
+        payload["beneficiary_name"] = ""
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=20)
+        assert r.status_code == 400
+
+    def test_pa_quote_requires_auth(self, s):
+        r = s.post(f"{API}/quotes/pa", json={"product_id": STATE["pa_product_id"],
+                                             "num_persons": 1}, timeout=20)
+        assert r.status_code == 401
+
+    def test_pa_quote_invalid_product_category(self, s, demo_token):
+        payload = {
+            "product_id": STATE["travel_product_id"],
+            "num_persons": 1, "full_name": "x", "id_type": "nric", "id_number": "1",
+            "gender": "male", "date_of_birth": "1990-01-01", "nationality": "malaysian",
+            "occupation_class": "class_1", "email": "x@x.com", "phone": "+60",
+            "address": "x", "postcode": "50000", "beneficiary_name": "y",
+            "beneficiary_relationship": "spouse", "beneficiary_nric": "1",
+        }
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=20)
+        assert r.status_code == 404
+
+
+class TestPAFormConfig:
+    def test_pa_form_config_toggle_off_allows_empty(self, s, admin_token, demo_token):
+        pid = STATE["pa_product_id"]
+        # Snapshot original
+        before = s.get(f"{API}/products/{pid}", timeout=20).json()
+        original_fc = before.get("form_config") or {}
+
+        # Disable beneficiary_name
+        new_fc = {**original_fc, "beneficiary_name": {"enabled": False, "required": False}}
+        rp = s.patch(f"{API}/products/{pid}", json={"form_config": new_fc},
+                     headers=H(admin_token), timeout=20)
+        assert rp.status_code == 200
+
+        # Now submit quote with empty beneficiary_name — should succeed
+        payload = {
+            "product_id": pid, "num_persons": 1, "full_name": "FC Test",
+            "id_type": "nric", "id_number": "900101-10-9999", "gender": "female",
+            "date_of_birth": "1990-01-01", "nationality": "malaysian",
+            "occupation_class": "class_1", "email": "TEST_fc@insurtech.io",
+            "phone": "+60111111111", "address": "x", "postcode": "50000",
+            "beneficiary_name": "",  # empty, but disabled
+            "beneficiary_relationship": "spouse",
+            "beneficiary_nric": "",
+        }
+        r = s.post(f"{API}/quotes/pa", json=payload, headers=H(demo_token), timeout=30)
+        assert r.status_code == 200, f"Expected 200 with beneficiary_name disabled, got {r.status_code}: {r.text}"
+
+        # RESTORE
+        restore = s.patch(f"{API}/products/{pid}", json={"form_config": original_fc},
+                          headers=H(admin_token), timeout=20)
+        assert restore.status_code == 200
+        after = s.get(f"{API}/products/{pid}", timeout=20).json()
+        assert after["form_config"]["beneficiary_name"]["enabled"] is True
