@@ -1,4 +1,5 @@
 """Admin — analytics, campaigns, coupons, voice-call logs, notifications, partner APIs."""
+import os
 from datetime import datetime, timezone, timedelta
 from typing import List
 from collections import defaultdict
@@ -12,6 +13,90 @@ from models import (
 )
 
 router = APIRouter(tags=["admin"])
+
+
+# -------- Settings (Stripe & others, admin editable) --------
+SETTINGS_ID = "app_settings"
+
+
+def _mask(secret: str) -> str:
+    if not secret:
+        return ""
+    if len(secret) <= 8:
+        return "****"
+    return f"{secret[:7]}...{secret[-4:]}"
+
+
+async def _get_settings_raw() -> dict:
+    doc = await db.settings.find_one({"id": SETTINGS_ID}, {"_id": 0})
+    return doc or {"id": SETTINGS_ID}
+
+
+async def get_active_stripe_key() -> str:
+    """Return admin-configured Stripe key if present, else env fallback."""
+    s = await _get_settings_raw()
+    k = (s.get("stripe_secret_key") or "").strip()
+    if k:
+        return k
+    return os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
+
+
+@router.get("/admin/settings")
+async def get_settings(_: dict = Depends(require_roles("admin"))):
+    s = await _get_settings_raw()
+    secret = s.get("stripe_secret_key") or ""
+    webhook = s.get("stripe_webhook_secret") or ""
+    return {
+        "stripe_publishable_key": s.get("stripe_publishable_key") or "",
+        "stripe_secret_key_masked": _mask(secret),
+        "stripe_secret_key_set": bool(secret),
+        "stripe_webhook_secret_masked": _mask(webhook),
+        "stripe_webhook_secret_set": bool(webhook),
+        "stripe_enabled": s.get("stripe_enabled", True),
+        "using_env_fallback": not bool(secret),
+    }
+
+
+@router.patch("/admin/settings")
+async def update_settings(payload: dict, _: dict = Depends(require_roles("admin"))):
+    updates = {}
+    for key in (
+        "stripe_publishable_key",
+        "stripe_secret_key",
+        "stripe_webhook_secret",
+        "stripe_enabled",
+    ):
+        if key in payload and payload[key] is not None:
+            val = payload[key]
+            # allow explicit blanking of secrets by sending empty string
+            updates[key] = val.strip() if isinstance(val, str) else val
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.settings.update_one(
+        {"id": SETTINGS_ID},
+        {"$set": {"id": SETTINGS_ID, **updates}},
+        upsert=True,
+    )
+    return {"updated": True, "fields": list(updates.keys())}
+
+
+@router.post("/admin/settings/stripe/test")
+async def test_stripe(_: dict = Depends(require_roles("admin"))):
+    """Create a $1.00 test checkout session to verify the key works."""
+    from emergentintegrations.payments.stripe.checkout import (
+        StripeCheckout, CheckoutSessionRequest,
+    )
+    key = await get_active_stripe_key()
+    try:
+        stripe = StripeCheckout(api_key=key, webhook_url="https://example.com/webhook")
+        session = await stripe.create_checkout_session(CheckoutSessionRequest(
+            amount=1.0, currency="usd",
+            success_url="https://example.com/ok",
+            cancel_url="https://example.com/cancel",
+            metadata={"test": "connection"},
+        ))
+        return {"ok": True, "session_id": session.session_id, "key_prefix": key[:7]}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "key_prefix": key[:7]}
 
 
 # -------- Analytics --------

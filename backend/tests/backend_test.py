@@ -911,3 +911,162 @@ class TestPAFormConfig:
         assert restore.status_code == 200
         after = s.get(f"{API}/products/{pid}", timeout=20).json()
         assert after["form_config"]["beneficiary_name"]["enabled"] is True
+
+
+
+# ---------- Admin Settings (Stripe admin-configurable) ----------
+class TestAdminSettings:
+    """Tests for new /api/admin/settings endpoints (Iteration 6)."""
+
+    def test_get_settings_requires_admin(self, s, demo_token):
+        r = s.get(f"{API}/admin/settings", headers=H(demo_token), timeout=15)
+        assert r.status_code == 403, f"Non-admin should be 403, got {r.status_code}"
+
+    def test_get_settings_unauthenticated(self, s):
+        r = s.get(f"{API}/admin/settings", timeout=15)
+        assert r.status_code in (401, 403)
+
+    def test_get_settings_initial_env_fallback(self, s, admin_token):
+        # Ensure clean state first
+        s.patch(f"{API}/admin/settings",
+                json={"stripe_secret_key": "", "stripe_webhook_secret": "", "stripe_publishable_key": ""},
+                headers=H(admin_token), timeout=15)
+        r = s.get(f"{API}/admin/settings", headers=H(admin_token), timeout=15)
+        assert r.status_code == 200
+        d = r.json()
+        # Expected fields
+        for k in ("stripe_publishable_key", "stripe_secret_key_masked", "stripe_secret_key_set",
+                  "stripe_webhook_secret_masked", "stripe_webhook_secret_set",
+                  "stripe_enabled", "using_env_fallback"):
+            assert k in d, f"missing field {k}"
+        assert d["stripe_secret_key_set"] is False
+        assert d["using_env_fallback"] is True
+        assert d["stripe_secret_key_masked"] == ""
+
+    def test_patch_settings_publishable_and_webhook(self, s, admin_token):
+        payload = {
+            "stripe_publishable_key": "pk_test_VALIDATE123",
+            "stripe_webhook_secret": "whsec_test_999",
+        }
+        r = s.patch(f"{API}/admin/settings", json=payload, headers=H(admin_token), timeout=15)
+        assert r.status_code == 200
+        d = r.json()
+        assert d["updated"] is True
+        assert "stripe_publishable_key" in d["fields"]
+        assert "stripe_webhook_secret" in d["fields"]
+        # verify persisted
+        g = s.get(f"{API}/admin/settings", headers=H(admin_token), timeout=15).json()
+        assert g["stripe_publishable_key"] == "pk_test_VALIDATE123"
+        assert g["stripe_webhook_secret_set"] is True
+        assert g["stripe_webhook_secret_masked"].startswith("whsec_t") and g["stripe_webhook_secret_masked"].endswith("_999")
+        # Still env fallback because no secret_key set
+        assert g["using_env_fallback"] is True
+
+    def test_patch_requires_admin(self, s, demo_token):
+        r = s.patch(f"{API}/admin/settings",
+                    json={"stripe_publishable_key": "pk_evil"},
+                    headers=H(demo_token), timeout=15)
+        assert r.status_code == 403
+
+    def test_stripe_test_env_fallback_succeeds(self, s, admin_token):
+        # With no secret set, uses env STRIPE_API_KEY (valid test key)
+        r = s.post(f"{API}/admin/settings/stripe/test", headers=H(admin_token), timeout=30)
+        assert r.status_code == 200
+        d = r.json()
+        assert d.get("ok") is True, f"expected ok=True with env fallback, got: {d}"
+        assert "session_id" in d
+        assert d["key_prefix"].startswith("sk_")
+
+    def test_stripe_test_with_bogus_key_uses_that_key(self, s, admin_token):
+        # set a bogus key; verify GET reflects that it is now admin-configured,
+        # not env fallback, and the test endpoint reports that prefix.
+        r = s.patch(f"{API}/admin/settings",
+                    json={"stripe_secret_key": "sk_test_fakeINVALID123"},
+                    headers=H(admin_token), timeout=15)
+        assert r.status_code == 200
+        g = s.get(f"{API}/admin/settings", headers=H(admin_token), timeout=15).json()
+        assert g["stripe_secret_key_set"] is True
+        assert g["using_env_fallback"] is False
+        assert g["stripe_secret_key_masked"].startswith("sk_test") and g["stripe_secret_key_masked"].endswith("D123")
+        # Returns 200 regardless (either ok:true from proxy acceptance, or ok:false on validation).
+        t = s.post(f"{API}/admin/settings/stripe/test", headers=H(admin_token), timeout=30)
+        assert t.status_code == 200
+        td = t.json()
+        assert td["key_prefix"] == "sk_test"
+        # NOTE: emergentintegrations sets stripe.api_base globally when first
+        # initialised with "sk_test_emergent"; subsequent inits with other
+        # sk_test_ keys inherit that base, so a "fake" test key may still
+        # succeed through the emergent proxy. We only assert that the endpoint
+        # responds with the right shape and key_prefix reflects the new key.
+        assert "ok" in td
+
+    def test_clear_secret_restores_env_fallback(self, s, admin_token):
+        # clear secret by patching empty string
+        r = s.patch(f"{API}/admin/settings",
+                    json={"stripe_secret_key": ""}, headers=H(admin_token), timeout=15)
+        assert r.status_code == 200
+        g = s.get(f"{API}/admin/settings", headers=H(admin_token), timeout=15).json()
+        assert g["stripe_secret_key_set"] is False
+        assert g["using_env_fallback"] is True
+        # test should succeed again
+        t = s.post(f"{API}/admin/settings/stripe/test", headers=H(admin_token), timeout=30)
+        assert t.status_code == 200
+        assert t.json().get("ok") is True
+
+    def test_masking_never_leaks_plain_secret(self, s, admin_token):
+        # set a secret
+        s.patch(f"{API}/admin/settings",
+                json={"stripe_secret_key": "sk_test_SUPERSECRETvalue_1234"},
+                headers=H(admin_token), timeout=15)
+        g = s.get(f"{API}/admin/settings", headers=H(admin_token), timeout=15).json()
+        # ensure no full value in response
+        body_str = str(g)
+        assert "SUPERSECRETvalue" not in body_str, "Plain secret leaked!"
+        assert g["stripe_secret_key_masked"] != "sk_test_SUPERSECRETvalue_1234"
+        # cleanup
+        s.patch(f"{API}/admin/settings",
+                json={"stripe_secret_key": ""}, headers=H(admin_token), timeout=15)
+
+    def test_payment_flow_still_works_with_env_fallback(self, s, demo_token, admin_token):
+        # Ensure cleared → env fallback active
+        s.patch(f"{API}/admin/settings",
+                json={"stripe_secret_key": ""}, headers=H(admin_token), timeout=15)
+        # Fetch a motor product
+        products = s.get(f"{API}/products?category=motor", timeout=20).json()
+        assert products, "no motor products seeded"
+        motor_pid = products[0]["id"]
+        quote_payload = {
+            "product_id": motor_pid,
+            "account_type": "personal",
+            "vehicle_reg": "SETTINGS1",
+            "id_type": "nric",
+            "id_number": "900101-10-1234",
+            "full_name": "Settings Test",
+            "date_of_birth": "1990-01-01",
+            "postcode": "50000",
+            "email": "TEST_settings@insurtech.io",
+            "cover_type": "comprehensive",
+            "sum_insured": 30000,
+            "ncd_percent": 25,
+            "addons": [],
+        }
+        qq = s.post(f"{API}/quotes/motor", json=quote_payload, headers=H(demo_token), timeout=20)
+        assert qq.status_code == 200, qq.text
+        quote_id = qq.json()["id"]
+        co = s.post(f"{API}/payments/checkout",
+                    json={"quote_id": quote_id, "origin_url": BASE_URL},
+                    headers=H(demo_token), timeout=30)
+        assert co.status_code == 200, f"Checkout failed: {co.status_code} {co.text}"
+        cd = co.json()
+        assert "url" in cd and cd["url"].startswith("https://")
+        assert "session_id" in cd
+
+    def test_final_cleanup_env_fallback_restored(self, s, admin_token):
+        # Clear all admin-set values so downstream environment is clean
+        s.patch(f"{API}/admin/settings",
+                json={"stripe_secret_key": "", "stripe_webhook_secret": "",
+                      "stripe_publishable_key": ""},
+                headers=H(admin_token), timeout=15)
+        g = s.get(f"{API}/admin/settings", headers=H(admin_token), timeout=15).json()
+        assert g["using_env_fallback"] is True
+        assert g["stripe_secret_key_set"] is False

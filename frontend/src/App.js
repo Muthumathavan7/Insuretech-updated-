@@ -33,6 +33,7 @@ import ClaimsQueue from "@/admin/ClaimsQueue";
 import AdminProducts from "@/admin/AdminProducts";
 import Campaigns from "@/admin/Campaigns";
 import VoiceCalls from "@/admin/VoiceCalls";
+import Settings from "@/admin/Settings";
 
 function Protected({ children, adminOnly = false }) {
   const { user, loading } = useAuth();
@@ -194,6 +195,14 @@ function AppRoutes() {
         element={
           <Protected adminOnly>
             <AdminLayout><VoiceCalls /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><Settings /></AdminLayout>
           </Protected>
         }
       />

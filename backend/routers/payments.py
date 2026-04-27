@@ -10,16 +10,16 @@ from auth import get_current_user
 from database import db
 from models import CheckoutRequest, PaymentTransaction
 from routers.policies import issue_policy_from_quote
+from routers.admin import get_active_stripe_key
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
-STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
 
-
-def _stripe(request: Request) -> StripeCheckout:
+async def _stripe(request: Request) -> StripeCheckout:
     host_url = str(request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
-    return StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    api_key = await get_active_stripe_key()
+    return StripeCheckout(api_key=api_key, webhook_url=webhook_url)
 
 
 @router.post("/checkout")
@@ -37,7 +37,7 @@ async def create_checkout(body: CheckoutRequest, request: Request, user: dict = 
     success_url = f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{origin}/checkout/{body.quote_id}"
 
-    stripe = _stripe(request)
+    stripe = await _stripe(request)
     metadata = {
         "quote_id": body.quote_id,
         "user_id": user["id"],
@@ -78,7 +78,7 @@ async def get_status(session_id: str, request: Request, user: dict = Depends(get
             "policy_id": tx.get("metadata", {}).get("policy_id"),
         }
 
-    stripe = _stripe(request)
+    stripe = await _stripe(request)
     try:
         status = await stripe.get_checkout_status(session_id)
     except Exception as e:
@@ -125,7 +125,7 @@ webhook_router = APIRouter(tags=["payments"])
 async def stripe_webhook(request: Request):
     body = await request.body()
     sig = request.headers.get("Stripe-Signature", "")
-    stripe = _stripe(request)
+    stripe = await _stripe(request)
     try:
         evt = await stripe.handle_webhook(body, sig)
     except Exception as e:

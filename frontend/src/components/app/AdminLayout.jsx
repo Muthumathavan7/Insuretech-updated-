@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import {
   Shield, LayoutDashboard, Users, KanbanSquare, TrendingUp, Hammer,
-  Package, Megaphone, Phone, LogOut
+  Package, Megaphone, Phone, LogOut, Settings as SettingsIcon,
 } from "lucide-react";
 
 const NAV = [
@@ -15,6 +15,7 @@ const NAV = [
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { to: "/admin/voice", label: "Voice AI Calls", icon: Phone },
+  { to: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export default function AdminLayout({ children }) {
