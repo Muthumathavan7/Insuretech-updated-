@@ -107,6 +107,24 @@ async def create_motor_quote(body: MotorQuoteInput, user: dict = Depends(get_cur
     if not product or product["category"] != "motor":
         raise HTTPException(404, "Motor product not found")
 
+    # Enforce admin-controlled form config: required-but-blank fails
+    fc = product.get("form_config") or {}
+
+    def _enabled(k: str) -> bool:
+        return fc.get(k, {}).get("enabled", True) if fc else True
+
+    def _required(k: str) -> bool:
+        return fc.get(k, {}).get("required", True) if fc else True
+
+    # Null out values that the admin has disabled
+    data = body.model_dump()
+    if not _enabled("addons"):
+        data["addons"] = []
+    # validate required-and-enabled text fields not blank
+    for key in ("vehicle_reg", "id_number", "full_name", "postcode"):
+        if _enabled(key) and _required(key) and not str(data.get(key, "")).strip():
+            raise HTTPException(400, f"Field '{key}' is required")
+
     # Derive base premium:
     # Comprehensive: ~3.5% of sum insured (capped by product base)
     # Third Party: fixed multiplier on product base

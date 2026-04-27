@@ -102,6 +102,30 @@ class ProductAddon(BaseModel):
     price: float
 
 
+class FieldConfig(BaseModel):
+    """Admin-controlled per-field toggle used by the quote form."""
+    enabled: bool = True
+    required: bool = True
+
+
+# Default form config for Motor quote
+DEFAULT_MOTOR_FORM_CONFIG = {
+    "account_type": {"enabled": True, "required": True},
+    "vehicle_reg": {"enabled": True, "required": True},
+    "id_type": {"enabled": True, "required": True},
+    "id_number": {"enabled": True, "required": True},
+    "full_name": {"enabled": True, "required": True},
+    "date_of_birth": {"enabled": True, "required": True},
+    "postcode": {"enabled": True, "required": True},
+    "email": {"enabled": True, "required": True},
+    "cover_type": {"enabled": True, "required": True},
+    "sum_insured": {"enabled": True, "required": True},
+    "ncd_percent": {"enabled": True, "required": True},
+    "addons": {"enabled": True, "required": False},
+    "vehicle_lookup": {"enabled": True, "required": False},
+}
+
+
 class Product(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=_id)
@@ -115,6 +139,7 @@ class Product(BaseModel):
     addons: List[ProductAddon] = Field(default_factory=list)
     image_url: Optional[str] = None
     active: bool = True
+    form_config: Dict[str, FieldConfig] = Field(default_factory=dict)
     created_at: str = Field(default_factory=_now)
 
 
@@ -127,6 +152,37 @@ class ProductCreate(BaseModel):
     features: List[str] = []
     addons: List[ProductAddon] = []
     image_url: Optional[str] = None
+    form_config: Dict[str, FieldConfig] = Field(default_factory=dict)
+
+
+class ProductUpdate(BaseModel):
+    """Admin editable product fields — all optional (partial update)."""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    base_premium: Optional[float] = None
+    coverage_amount: Optional[float] = None
+    features: Optional[List[str]] = None
+    addons: Optional[List[ProductAddon]] = None
+    image_url: Optional[str] = None
+    active: Optional[bool] = None
+    form_config: Optional[Dict[str, FieldConfig]] = None
+
+
+# ============ VEHICLE LOOKUP ============
+class VehicleLookupInput(BaseModel):
+    vehicle_reg: str
+
+
+class VehicleLookupResult(BaseModel):
+    vehicle_reg: str
+    make: str
+    model: str
+    year: int
+    engine_cc: int
+    body_type: str
+    market_value: float  # in USD (demo)
+    ncd_eligible: float  # suggested NCD %
+    source: str = "mock-ism-abi"
 
 
 # ============ QUOTE ============

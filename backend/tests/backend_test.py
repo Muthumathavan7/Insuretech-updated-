@@ -588,3 +588,160 @@ class TestMotorQuote:
         q = r.json()
         assert q["id"] == STATE["motor_quote_id"]
         assert q.get("meta", {}).get("cover_type") == "comprehensive"
+
+
+# ---------- Iteration 4: Vehicle Lookup ----------
+class TestVehicleLookup:
+    def test_lookup_curated_wxy1234(self, s, demo_token):
+        r = s.post(f"{API}/vehicles/lookup", json={"vehicle_reg": "WXY1234"},
+                   headers=H(demo_token), timeout=20)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["make"] == "Perodua"
+        assert data["model"] == "Myvi"
+        assert data["year"] == 2020
+        assert data["market_value"] == 14500.0
+        assert data["vehicle_reg"] == "WXY1234"
+        assert "ncd_eligible" in data
+        assert data["source"] == "mock-ism-abi"
+
+    def test_lookup_curated_civic(self, s, demo_token):
+        r = s.post(f"{API}/vehicles/lookup", json={"vehicle_reg": "WAB5678"},
+                   headers=H(demo_token), timeout=20)
+        assert r.status_code == 200
+        data = r.json()
+        assert data["make"] == "Honda" and data["model"] == "Civic"
+        assert data["market_value"] == 30500.0
+
+    def test_lookup_deterministic_random(self, s, demo_token):
+        r1 = s.post(f"{API}/vehicles/lookup", json={"vehicle_reg": "XYZ7777"},
+                    headers=H(demo_token), timeout=20)
+        assert r1.status_code == 200
+        d1 = r1.json()
+        # Same reg returns same result
+        r2 = s.post(f"{API}/vehicles/lookup", json={"vehicle_reg": "XYZ7777"},
+                    headers=H(demo_token), timeout=20)
+        d2 = r2.json()
+        assert d1["make"] == d2["make"]
+        assert d1["model"] == d2["model"]
+        assert d1["year"] == d2["year"]
+        assert d1["market_value"] == d2["market_value"]
+        assert d1["make"] is not None and d1["market_value"] > 0
+
+    def test_lookup_short_reg_400(self, s, demo_token):
+        r = s.post(f"{API}/vehicles/lookup", json={"vehicle_reg": "AB"},
+                   headers=H(demo_token), timeout=20)
+        assert r.status_code == 400
+
+    def test_lookup_empty_reg_400(self, s, demo_token):
+        r = s.post(f"{API}/vehicles/lookup", json={"vehicle_reg": ""},
+                   headers=H(demo_token), timeout=20)
+        assert r.status_code == 400
+
+    def test_lookup_requires_auth(self, s):
+        r = s.post(f"{API}/vehicles/lookup", json={"vehicle_reg": "WXY1234"}, timeout=20)
+        assert r.status_code == 401
+
+
+# ---------- Iteration 4: Admin Product Update ----------
+class TestAdminProductUpdate:
+    def test_patch_product_base_premium_and_addon(self, s, admin_token):
+        pid = STATE["motor_product_id"]
+        # Get current
+        before = s.get(f"{API}/products/{pid}", timeout=20).json()
+        original_base = before["base_premium"]
+        original_addons = before.get("addons", [])
+
+        new_addon = {"name": "TEST_Extra Cover", "price": 12.50}
+        payload = {
+            "base_premium": 199,
+            "addons": original_addons + [new_addon],
+        }
+        r = s.patch(f"{API}/products/{pid}", json=payload,
+                    headers=H(admin_token), timeout=20)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["updated"] is True
+        assert "base_premium" in data["fields"]
+        assert "addons" in data["fields"]
+
+        # Verify persistence
+        after = s.get(f"{API}/products/{pid}", timeout=20).json()
+        assert after["base_premium"] == 199
+        names = {a["name"] for a in after["addons"]}
+        assert "TEST_Extra Cover" in names
+
+        # Cleanup: restore
+        restore = {"base_premium": original_base, "addons": original_addons}
+        rr = s.patch(f"{API}/products/{pid}", json=restore,
+                     headers=H(admin_token), timeout=20)
+        assert rr.status_code == 200
+        restored = s.get(f"{API}/products/{pid}", timeout=20).json()
+        assert restored["base_premium"] == original_base
+
+    def test_patch_product_form_config(self, s, admin_token, demo_token):
+        pid = STATE["motor_product_id"]
+        before = s.get(f"{API}/products/{pid}", timeout=20).json()
+        original_fc = before.get("form_config") or {}
+
+        # Disable account_type
+        new_fc = {**original_fc, "account_type": {"enabled": False, "required": False}}
+        r = s.patch(f"{API}/products/{pid}", json={"form_config": new_fc},
+                    headers=H(admin_token), timeout=20)
+        assert r.status_code == 200
+
+        after = s.get(f"{API}/products/{pid}", timeout=20).json()
+        assert after["form_config"]["account_type"]["enabled"] is False
+
+        # Restore form_config to all-enabled (original) for downstream tests
+        restore_fc = original_fc if original_fc else {
+            "account_type": {"enabled": True, "required": True},
+            "vehicle_reg": {"enabled": True, "required": True},
+            "id_type": {"enabled": True, "required": True},
+            "id_number": {"enabled": True, "required": True},
+            "full_name": {"enabled": True, "required": True},
+            "date_of_birth": {"enabled": True, "required": True},
+            "postcode": {"enabled": True, "required": True},
+            "email": {"enabled": True, "required": True},
+            "cover_type": {"enabled": True, "required": True},
+            "sum_insured": {"enabled": True, "required": True},
+            "ncd_percent": {"enabled": True, "required": True},
+            "addons": {"enabled": True, "required": False},
+            "vehicle_lookup": {"enabled": True, "required": False},
+        }
+        rr = s.patch(f"{API}/products/{pid}", json={"form_config": restore_fc},
+                     headers=H(admin_token), timeout=20)
+        assert rr.status_code == 200
+
+    def test_patch_product_forbidden_for_customer(self, s, demo_token):
+        pid = STATE["motor_product_id"]
+        r = s.patch(f"{API}/products/{pid}", json={"base_premium": 50},
+                    headers=H(demo_token), timeout=20)
+        assert r.status_code == 403
+
+    def test_patch_product_unauth(self, s):
+        pid = STATE["motor_product_id"]
+        r = s.patch(f"{API}/products/{pid}", json={"base_premium": 50}, timeout=20)
+        assert r.status_code == 401
+
+    def test_motor_quote_required_field_blank_400(self, s, demo_token):
+        # form_config restored to all enabled+required for vehicle_reg
+        payload = {
+            "product_id": STATE["motor_product_id"],
+            "account_type": "personal",
+            "vehicle_reg": "   ",  # blank but required
+            "id_type": "nric",
+            "id_number": "900101-10-0001",
+            "full_name": "Blank Test",
+            "date_of_birth": "1990-01-01",
+            "postcode": "50000",
+            "email": "TEST_blank@insurtech.io",
+            "cover_type": "comprehensive",
+            "sum_insured": 25000,
+            "ncd_percent": 0,
+            "addons": [],
+        }
+        r = s.post(f"{API}/quotes/motor", json=payload,
+                   headers=H(demo_token), timeout=20)
+        assert r.status_code == 400
+        assert "vehicle_reg" in r.text.lower() or "required" in r.text.lower()

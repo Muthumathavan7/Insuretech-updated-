@@ -1,0 +1,32 @@
+{
+  "summary": "Iteration 4: Validated two new features end-to-end + full regression. (1) Vehicle Registration → Market Value lookup via POST /api/vehicles/lookup (auth-required, deterministic) — curated 'WXY1234' → Perodua Myvi 2020 $14,500 / 25% NCD; random 'XYZ7777' returns same car/year/value on repeat calls; <3-char or empty reg returns 400; missing auth returns 401. (2) Admin product editor PATCH /api/products/{id} — base_premium, addons, features, image_url, form_config all partially updateable; non-admin → 403, unauth → 401; persistence verified via GET. Backend enforcement: POST /api/quotes/motor returns 400 when admin-required field (vehicle_reg) is blank+enabled+required. Backend: 71/71 pytest pass (60 regression + 11 new). Frontend: /motor-quote 'Look up' button → green vehicle-lookup-result card (data-testid present), Step 1 sum_insured auto-filled to 14500 with 'AUTO-FILLED FROM LOOKUP' badge, NCD auto-filled to 25. Admin /admin/products → 'Edit product' Sheet drawer with edit-base-premium input, all 26 form_config switches present (enabled-{key} + required-{key} for 13 motor field keys); changing base_premium 180→199 + saving shows 'Product updated' toast and persists across reload; toggling account_type.enabled=OFF on Motor Easy hides the account-personal/business toggle on /motor-quote for customer; re-enabling restores it. Regression: demo+admin login work, motor quote math still 835.65 / 803.25, travel quote, claims, payments, role enforcement all green.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "VehicleLookup endpoint correctly auth-gated, deterministic via SHA1 of normalised reg; depreciation cap 55% on age, ncd_eligible scaled with age — sound. CURATED list covers 6 known regs as spec; CAR_DB has 24 cars for hash fallback.",
+    "products.py PATCH coerces ProductAddon and FieldConfig pydantic models to dicts before mongo $set — prevents BSON encode errors. exclude_unset=True+exclude_none=True correctly enables true partial updates.",
+    "quotes.py motor enforces form_config via _enabled / _required helpers; required+enabled+blank text fields raise 400. addons zeroed when admin disables addons field. Logic is correct but only 4 text fields are validated for blank — non-text fields rely on Pydantic constraints which is acceptable.",
+    "MotorQuote.jsx properly reads form_config via fieldOn/fieldReq helpers and conditionally renders account toggle, ID type, etc. 'Auto-filled from lookup' badge renders when vehicle is set.",
+    "AdminProducts.jsx Sheet editor renders 13 motor field switches only when product.category==='motor'. Switch component from ui/switch.jsx correctly toggles {enabled, required} per field."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (added TestVehicleLookup [6 tests] + TestAdminProductUpdate [5 tests] = 11 new tests)"
+  ],
+  "success_rate": {"backend": "100% (71/71)", "frontend": "100% on lookup + admin editor flows + regression"},
+  "test_credentials": "admin@insurtech.io/Admin@123, demo@insurtech.io/Demo@123, claims@insurtech.io/Claims@123",
+  "seed_data_creation": "Tests created TEST_-prefixed addon during PATCH and cleaned up by restoring original addons. Travel Shield Global was inadvertently overwritten during a misclick early in UI testing (180 vs original 29) and restored to base_premium=29 via API. form_config on Motor Easy fully restored to all-enabled at end.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests share STATE dict across classes (TestProducts populates travel_product_id, TestMotorProducts populates motor_product_id) — DO NOT run individual classes in isolation; always run full suite or include TestProducts+TestMotorProducts as prerequisites. New tests: TestVehicleLookup (curated regs WXY1234/WAB5678, deterministic random, validation, auth) and TestAdminProductUpdate (PATCH with persistence + cleanup, form_config update, RBAC, blank-required-field 400). On UI: Motor Easy is the 4th product card on /admin/products; use page.locator('button:has-text(\"Edit product\")').nth(3) to open its editor (the broad has_text matcher matches the page wrapper too). All 13 motor form_config keys must have both enabled-{key} and required-{key} testids. After any toggle test, ALWAYS restore form_config to all-enabled.",
+  "rca of the issue": "No bugs found. Both new features implemented correctly per spec; pricing math, auth gates, persistence, and UI conditional rendering all verified."
+}

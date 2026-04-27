@@ -4,7 +4,7 @@ import random
 import bcrypt
 
 from database import db
-from models import User, Product
+from models import User, Product, DEFAULT_MOTOR_FORM_CONFIG
 
 
 def _hash(pw: str) -> str:
@@ -141,7 +141,16 @@ async def seed_all():
         exists = await db.products.find_one({"category": p["category"], "name": p["name"]}, {"_id": 0})
         if not exists:
             prod = Product(**p)
+            if prod.category == "motor" and not prod.form_config:
+                prod.form_config = DEFAULT_MOTOR_FORM_CONFIG
             await db.products.insert_one(prod.model_dump())
+        else:
+            # Backfill motor form_config if missing on existing doc
+            if p["category"] == "motor" and not exists.get("form_config"):
+                await db.products.update_one(
+                    {"id": exists["id"]},
+                    {"$set": {"form_config": DEFAULT_MOTOR_FORM_CONFIG}},
+                )
 
     # Sample leads (customers at various stages) for Kanban
     lead_count = await db.users.count_documents({"role": "customer"})

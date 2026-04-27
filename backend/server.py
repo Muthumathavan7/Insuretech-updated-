@@ -19,6 +19,7 @@ from routers.claims import router as claims_router  # noqa: E402
 from routers.payments import router as payments_router, webhook_router  # noqa: E402
 from routers.ai import router as ai_router  # noqa: E402
 from routers.admin import router as admin_router  # noqa: E402
+from routers.vehicles import router as vehicles_router  # noqa: E402
 from seed import seed_all  # noqa: E402
 
 app = FastAPI(title="Tune Protect — Insurance Tech Platform")
@@ -46,6 +47,7 @@ api.include_router(claims_router)
 api.include_router(payments_router)
 api.include_router(ai_router)
 api.include_router(admin_router)
+api.include_router(vehicles_router)
 api.include_router(webhook_router)  # /api/webhook/stripe
 
 app.include_router(api)
