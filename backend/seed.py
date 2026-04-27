@@ -18,6 +18,7 @@ DEFAULT_PRODUCTS = [
         "description": "Worldwide travel insurance covering medical, delays, baggage & cancellation.",
         "base_premium": 29.0,
         "coverage_amount": 100000,
+        "display_order": 10,
         "features": [
             "Emergency medical up to $100k",
             "Trip cancellation reimbursement",
@@ -82,6 +83,7 @@ DEFAULT_PRODUCTS = [
         "description": "Protect laptops, phones, tablets, and wearables from accidental damage and theft.",
         "base_premium": 7.0,
         "coverage_amount": 3000,
+        "display_order": 50,
         "features": [
             "Accidental damage cover",
             "Theft & burglary protection",
@@ -100,6 +102,7 @@ DEFAULT_PRODUCTS = [
         "description": "Life is unpredictable — you'll never know when an accident could happen. Protect yourself and your loved ones from financial strain with PA Easy.",
         "base_premium": 36.0,
         "coverage_amount": 10000,
+        "display_order": 30,
         "features": [
             "Death & Permanent Disablement Benefit up to $10,000",
             "Hospital Income $50/day up to 30 days",
@@ -115,6 +118,9 @@ DEFAULT_PRODUCTS = [
 
 
 async def seed_all():
+    # Clean up legacy duplicate products
+    await db.products.delete_many({"name": "Motor Drive Pro"})
+
     # Admin
     existing_admin = await db.users.find_one({"email": "admin@insurtech.io"}, {"_id": 0})
     if not existing_admin:
@@ -153,7 +159,7 @@ async def seed_all():
         doc["password_hash"] = _hash("Demo@123")
         await db.users.insert_one(doc)
 
-    # Products — insert missing categories (idempotent per category)
+    # Products — insert missing categories (idempotent per category). Also backfill display_order.
     for p in DEFAULT_PRODUCTS:
         exists = await db.products.find_one({"category": p["category"], "name": p["name"]}, {"_id": 0})
         if not exists:
@@ -164,17 +170,16 @@ async def seed_all():
                 prod.form_config = DEFAULT_PA_FORM_CONFIG
             await db.products.insert_one(prod.model_dump())
         else:
-            # Backfill motor form_config if missing on existing doc
+            # Backfill defaults if missing on existing doc
+            backfill = {}
             if p["category"] == "motor" and not exists.get("form_config"):
-                await db.products.update_one(
-                    {"id": exists["id"]},
-                    {"$set": {"form_config": DEFAULT_MOTOR_FORM_CONFIG}},
-                )
+                backfill["form_config"] = DEFAULT_MOTOR_FORM_CONFIG
             if p["category"] == "pa" and not exists.get("form_config"):
-                await db.products.update_one(
-                    {"id": exists["id"]},
-                    {"$set": {"form_config": DEFAULT_PA_FORM_CONFIG}},
-                )
+                backfill["form_config"] = DEFAULT_PA_FORM_CONFIG
+            if "display_order" not in exists:
+                backfill["display_order"] = p.get("display_order", 100)
+            if backfill:
+                await db.products.update_one({"id": exists["id"]}, {"$set": backfill})
 
     # Sample leads (customers at various stages) for Kanban
     lead_count = await db.users.count_documents({"role": "customer"})

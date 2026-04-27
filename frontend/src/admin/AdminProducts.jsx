@@ -81,6 +81,7 @@ function ProductEditor({ product, onSaved }) {
         description: draft.description,
         base_premium: parseFloat(draft.base_premium),
         coverage_amount: parseFloat(draft.coverage_amount),
+        display_order: parseInt(draft.display_order) || 100,
         features: draft.features,
         addons: draft.addons.map((a) => ({ name: a.name, price: parseFloat(a.price) })),
         form_config: draft.form_config,
@@ -119,6 +120,32 @@ function ProductEditor({ product, onSaved }) {
         <div>
           <Label>Coverage amount (USD)</Label>
           <Input type="number" data-testid="edit-coverage" value={draft.coverage_amount} onChange={(e) => updateDraft({ coverage_amount: e.target.value })} className="rounded-xl h-11" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="flex items-center justify-between">
+            <span>Display order</span>
+            <span className="text-xs text-gray-400 font-normal">lower = first</span>
+          </Label>
+          <Input
+            type="number"
+            data-testid="edit-display-order"
+            value={draft.display_order ?? 100}
+            onChange={(e) => updateDraft({ display_order: parseInt(e.target.value) || 0 })}
+            className="rounded-xl h-11"
+          />
+        </div>
+        <div className="flex items-end">
+          <label className="flex items-center gap-2 h-11">
+            <Switch
+              data-testid="edit-active"
+              checked={draft.active !== false}
+              onCheckedChange={(v) => updateDraft({ active: v })}
+            />
+            <span className="text-sm">Active (visible to customers)</span>
+          </label>
         </div>
       </div>
 

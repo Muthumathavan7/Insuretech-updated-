@@ -14,7 +14,9 @@ async def list_products(category: Optional[str] = None):
     q = {"active": True}
     if category:
         q["category"] = category
-    items = await db.products.find(q, {"_id": 0}).sort("created_at", 1).to_list(200)
+    items = await db.products.find(q, {"_id": 0}).sort(
+        [("display_order", 1), ("created_at", 1)]
+    ).to_list(200)
     return items
 
 

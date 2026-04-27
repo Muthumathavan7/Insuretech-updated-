@@ -159,6 +159,7 @@ class Product(BaseModel):
     addons: List[ProductAddon] = Field(default_factory=list)
     image_url: Optional[str] = None
     active: bool = True
+    display_order: int = 100
     form_config: Dict[str, FieldConfig] = Field(default_factory=dict)
     created_at: str = Field(default_factory=_now)
 
@@ -172,6 +173,7 @@ class ProductCreate(BaseModel):
     features: List[str] = []
     addons: List[ProductAddon] = []
     image_url: Optional[str] = None
+    display_order: int = 100
     form_config: Dict[str, FieldConfig] = Field(default_factory=dict)
 
 
@@ -185,6 +187,7 @@ class ProductUpdate(BaseModel):
     addons: Optional[List[ProductAddon]] = None
     image_url: Optional[str] = None
     active: Optional[bool] = None
+    display_order: Optional[int] = None
     form_config: Optional[Dict[str, FieldConfig]] = None
 
 
