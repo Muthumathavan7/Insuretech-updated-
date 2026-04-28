@@ -28,6 +28,8 @@ import AdminDashboard from "@/admin/AdminDashboard";
 import Customers from "@/admin/Customers";
 import Customer360 from "@/admin/Customer360";
 import LeadsKanban from "@/admin/LeadsKanban";
+import LeadsList from "@/admin/Leads";
+import LeadDetail from "@/admin/LeadDetailPage";
 import Analytics from "@/admin/Analytics";
 import ClaimsQueue from "@/admin/ClaimsQueue";
 import AdminProducts from "@/admin/AdminProducts";
@@ -152,6 +154,22 @@ function AppRoutes() {
       />
       <Route
         path="/admin/leads"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><LeadsList /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
+        path="/admin/leads/:id"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><LeadDetail /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
+        path="/admin/leads-kanban"
         element={
           <Protected adminOnly>
             <AdminLayout><LeadsKanban /></AdminLayout>

@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   CreditCard, KeyRound, ShieldCheck, Eye, EyeOff, Zap, AlertCircle, CheckCircle2, Info,
+  Phone, Mic, Mail,
 } from "lucide-react";
 
 export default function Settings() {
@@ -22,6 +23,18 @@ export default function Settings() {
     stripe_secret_key: "",
     stripe_webhook_secret: "",
     stripe_enabled: true,
+    twilio_account_sid: "",
+    twilio_auth_token: "",
+    twilio_phone_number: "",
+    twilio_whatsapp_from: "",
+    elevenlabs_api_key: "",
+    elevenlabs_default_agent_id: "",
+    elevenlabs_phone_number_id: "",
+    gmail_smtp_user: "",
+    gmail_smtp_app_password: "",
+    gmail_sender_name: "",
+    google_oauth_client_id: "",
+    google_oauth_client_secret: "",
   });
 
   const load = async () => {
@@ -29,9 +42,21 @@ export default function Settings() {
     setData(r.data);
     setForm({
       stripe_publishable_key: r.data.stripe_publishable_key || "",
-      stripe_secret_key: "", // never populated; user must re-enter to change
+      stripe_secret_key: "",
       stripe_webhook_secret: "",
       stripe_enabled: r.data.stripe_enabled,
+      twilio_account_sid: r.data.twilio_account_sid || "",
+      twilio_auth_token: "",
+      twilio_phone_number: r.data.twilio_phone_number || "",
+      twilio_whatsapp_from: r.data.twilio_whatsapp_from || "",
+      elevenlabs_api_key: "",
+      elevenlabs_default_agent_id: r.data.elevenlabs_default_agent_id || "",
+      elevenlabs_phone_number_id: r.data.elevenlabs_phone_number_id || "",
+      gmail_smtp_user: r.data.gmail_smtp_user || "",
+      gmail_smtp_app_password: "",
+      gmail_sender_name: r.data.gmail_sender_name || "",
+      google_oauth_client_id: r.data.google_oauth_client_id || "",
+      google_oauth_client_secret: "",
     });
   };
   useEffect(() => { load(); }, []);
@@ -42,12 +67,29 @@ export default function Settings() {
       const payload = {
         stripe_publishable_key: form.stripe_publishable_key.trim(),
         stripe_enabled: form.stripe_enabled,
+        twilio_account_sid: form.twilio_account_sid.trim(),
+        twilio_phone_number: form.twilio_phone_number.trim(),
+        twilio_whatsapp_from: form.twilio_whatsapp_from.trim(),
+        elevenlabs_default_agent_id: form.elevenlabs_default_agent_id.trim(),
+        elevenlabs_phone_number_id: form.elevenlabs_phone_number_id.trim(),
+        gmail_smtp_user: form.gmail_smtp_user.trim(),
+        gmail_sender_name: form.gmail_sender_name.trim(),
+        google_oauth_client_id: form.google_oauth_client_id.trim(),
       };
+      // Only send secrets if user typed new values
       if (form.stripe_secret_key.trim()) payload.stripe_secret_key = form.stripe_secret_key.trim();
       if (form.stripe_webhook_secret.trim()) payload.stripe_webhook_secret = form.stripe_webhook_secret.trim();
+      if (form.twilio_auth_token.trim()) payload.twilio_auth_token = form.twilio_auth_token.trim();
+      if (form.elevenlabs_api_key.trim()) payload.elevenlabs_api_key = form.elevenlabs_api_key.trim();
+      if (form.gmail_smtp_app_password.trim()) payload.gmail_smtp_app_password = form.gmail_smtp_app_password.trim();
+      if (form.google_oauth_client_secret.trim()) payload.google_oauth_client_secret = form.google_oauth_client_secret.trim();
       await api.patch("/admin/settings", payload);
       toast.success("Settings saved");
-      setForm((f) => ({ ...f, stripe_secret_key: "", stripe_webhook_secret: "" }));
+      setForm((f) => ({
+        ...f, stripe_secret_key: "", stripe_webhook_secret: "",
+        twilio_auth_token: "", elevenlabs_api_key: "",
+        gmail_smtp_app_password: "", google_oauth_client_secret: "",
+      }));
       await load();
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Failed to save");
@@ -307,6 +349,154 @@ export default function Settings() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Twilio configuration */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-100 mb-6" data-testid="twilio-settings">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+            <Phone className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-xl font-semibold">Twilio (Voice + WhatsApp)</h2>
+            <p className="text-xs text-gray-500">
+              Used for AI Voice calls (via ElevenLabs) and WhatsApp messaging from leads page.
+            </p>
+          </div>
+          <a href="https://console.twilio.com/" target="_blank" rel="noreferrer" className="text-xs text-primary-700 hover:underline">Twilio Console →</a>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="twsid">Account SID</Label>
+            <Input id="twsid" data-testid="twilio-sid-input"
+              value={form.twilio_account_sid}
+              onChange={(e) => setForm({ ...form, twilio_account_sid: e.target.value })}
+              placeholder="ACxxxxxxxxxxxx" className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+          <div>
+            <Label htmlFor="twtok">Auth Token</Label>
+            <Input id="twtok" type="password" data-testid="twilio-token-input"
+              value={form.twilio_auth_token}
+              onChange={(e) => setForm({ ...form, twilio_auth_token: e.target.value })}
+              placeholder={data.twilio_auth_token_set ? `Currently: ${data.twilio_auth_token_masked}` : "Auth token"}
+              className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+          <div>
+            <Label htmlFor="twph">Twilio Phone Number</Label>
+            <Input id="twph" data-testid="twilio-phone-input"
+              value={form.twilio_phone_number}
+              onChange={(e) => setForm({ ...form, twilio_phone_number: e.target.value })}
+              placeholder="+15555555555" className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+          <div>
+            <Label htmlFor="twwa">WhatsApp Sender</Label>
+            <Input id="twwa" data-testid="twilio-whatsapp-input"
+              value={form.twilio_whatsapp_from}
+              onChange={(e) => setForm({ ...form, twilio_whatsapp_from: e.target.value })}
+              placeholder="+14155238886 (sandbox)" className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+        </div>
+      </div>
+
+      {/* ElevenLabs configuration */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-100 mb-6" data-testid="elevenlabs-settings">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+            <Mic className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-xl font-semibold">ElevenLabs Conversational AI</h2>
+            <p className="text-xs text-gray-500">
+              Powers outbound AI voice calls via Twilio. Get keys at elevenlabs.io.
+            </p>
+          </div>
+          <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noreferrer" className="text-xs text-primary-700 hover:underline">Get keys →</a>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <Label htmlFor="elkey">API Key</Label>
+            <Input id="elkey" type="password" data-testid="elevenlabs-key-input"
+              value={form.elevenlabs_api_key}
+              onChange={(e) => setForm({ ...form, elevenlabs_api_key: e.target.value })}
+              placeholder={data.elevenlabs_api_key_set ? `Currently: ${data.elevenlabs_api_key_masked}` : "sk_..."}
+              className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+          <div>
+            <Label htmlFor="elag">Default Agent ID</Label>
+            <Input id="elag" data-testid="elevenlabs-agent-input"
+              value={form.elevenlabs_default_agent_id}
+              onChange={(e) => setForm({ ...form, elevenlabs_default_agent_id: e.target.value })}
+              placeholder="agent_..." className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+          <div>
+            <Label htmlFor="elphid">Phone Number ID</Label>
+            <Input id="elphid" data-testid="elevenlabs-phoneid-input"
+              value={form.elevenlabs_phone_number_id}
+              onChange={(e) => setForm({ ...form, elevenlabs_phone_number_id: e.target.value })}
+              placeholder="phnum_..." className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+        </div>
+      </div>
+
+      {/* Gmail SMTP / Google */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-100 mb-6" data-testid="google-settings">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+            <Mail className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-xl font-semibold">Google / Gmail (Meeting Invites)</h2>
+            <p className="text-xs text-gray-500">
+              Sends meeting invites with .ics calendar attachment via Gmail SMTP.
+              Use a Gmail App Password (not your account password).
+            </p>
+          </div>
+          <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="text-xs text-primary-700 hover:underline">Get App Password →</a>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="gmuser">Gmail Address</Label>
+            <Input id="gmuser" data-testid="gmail-user-input"
+              value={form.gmail_smtp_user}
+              onChange={(e) => setForm({ ...form, gmail_smtp_user: e.target.value })}
+              placeholder="you@gmail.com" className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+          <div>
+            <Label htmlFor="gmpw">App Password</Label>
+            <Input id="gmpw" type="password" data-testid="gmail-pass-input"
+              value={form.gmail_smtp_app_password}
+              onChange={(e) => setForm({ ...form, gmail_smtp_app_password: e.target.value })}
+              placeholder={data.gmail_smtp_app_password_set ? `Currently: ${data.gmail_smtp_app_password_masked}` : "16-char app password"}
+              className="rounded-xl h-12 font-mono text-sm" />
+          </div>
+          <div>
+            <Label htmlFor="gmname">Sender Name</Label>
+            <Input id="gmname" data-testid="gmail-name-input"
+              value={form.gmail_sender_name}
+              onChange={(e) => setForm({ ...form, gmail_sender_name: e.target.value })}
+              placeholder="Insurance CRM" className="rounded-xl h-12 text-sm" />
+          </div>
+          <div className="sm:col-span-2 pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500 mb-2 font-medium">Optional: Google OAuth (Calendar API — coming soon)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                value={form.google_oauth_client_id}
+                onChange={(e) => setForm({ ...form, google_oauth_client_id: e.target.value })}
+                placeholder="Google OAuth Client ID"
+                className="rounded-xl h-11 font-mono text-xs"
+                data-testid="google-client-id-input"
+              />
+              <Input
+                type="password"
+                value={form.google_oauth_client_secret}
+                onChange={(e) => setForm({ ...form, google_oauth_client_secret: e.target.value })}
+                placeholder={data.google_oauth_client_secret_set ? `Currently: ${data.google_oauth_client_secret_masked}` : "Google OAuth Client Secret"}
+                className="rounded-xl h-11 font-mono text-xs"
+                data-testid="google-client-secret-input"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Premium plan helper card */}

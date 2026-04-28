@@ -115,3 +115,104 @@ body {
         border-bottom-color: inherit;
     }
 }
+
+
+/* ============ Elstar (Sales-CRM) component classes ============ */
+@layer components {
+  .elstar-card {
+    @apply bg-card rounded-lg border border-border;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .elstar-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(222,178,94,0.2), 0 4px 10px -6px rgba(222,178,94,0.15);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+  .elstar-btn-primary {
+    @apply bg-primary text-primary-foreground font-medium px-4 py-2 rounded-lg;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px -2px rgba(222,178,94,0.4);
+  }
+  .elstar-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .elstar-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .elstar-btn-secondary {
+    @apply bg-secondary text-secondary-foreground font-medium px-4 py-2 rounded-lg;
+    transition: all 0.2s ease;
+  }
+  .elstar-btn-secondary:hover { @apply bg-secondary/70; }
+  .elstar-btn-ghost {
+    @apply bg-transparent text-foreground font-medium px-4 py-2 rounded-lg border border-border;
+    transition: all 0.2s ease;
+  }
+  .elstar-btn-ghost:hover { @apply bg-secondary; }
+  .elstar-input {
+    @apply w-full h-11 px-3 bg-background border border-input rounded-lg text-sm;
+    @apply placeholder:text-muted-foreground;
+    transition: all 0.2s ease;
+  }
+  .elstar-input:focus {
+    @apply outline-none ring-2 ring-primary/20 border-primary;
+  }
+  .elstar-select {
+    @apply w-full h-11 px-3 bg-background border border-input rounded-lg text-sm cursor-pointer;
+    transition: all 0.2s ease;
+  }
+  .elstar-select:focus {
+    @apply outline-none ring-2 ring-primary/20 border-primary;
+  }
+  .elstar-table { @apply w-full text-sm; }
+  .elstar-table th {
+    @apply text-left font-semibold text-muted-foreground py-3 px-4 border-b border-border text-xs uppercase tracking-wider;
+  }
+  .elstar-table td { @apply py-3 px-4 border-b border-border; transition: all 0.2s ease; }
+  .elstar-table tbody tr { transition: all 0.15s ease; }
+  .elstar-table tbody tr:hover { @apply bg-primary/5; }
+  .elstar-badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+  .elstar-badge-primary { @apply bg-primary/10 text-primary; }
+  .elstar-badge-success { background-color: rgba(34,197,94,0.15); color: rgb(22,163,74); }
+  .elstar-badge-warning { @apply bg-amber-500/10 text-amber-600; }
+  .elstar-badge-danger { @apply bg-red-500/10 text-red-500; }
+  .elstar-badge-info { @apply bg-blue-500/10 text-blue-600; }
+  .elstar-modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4;
+    z-index: 9998; animation: overlayFadeIn 0.2s ease-out;
+  }
+  .elstar-modal {
+    @apply bg-card rounded-xl shadow-xl w-full;
+    max-width: 500px; max-height: calc(100vh - 2rem);
+    z-index: 9999;
+    border: 1px solid hsl(var(--border));
+    animation: modalSlideIn 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .elstar-modal-header {
+    @apply px-6 py-4 border-b border-border rounded-t-xl bg-card;
+  }
+  .elstar-modal-body { @apply px-6 py-4 overflow-y-auto bg-card; max-height: calc(100vh - 14rem); }
+  .elstar-modal-footer {
+    @apply px-6 py-4 border-t border-border flex justify-end gap-3 rounded-b-xl bg-card;
+  }
+  .elstar-dropdown-item {
+    @apply px-4 py-2.5 text-sm text-foreground cursor-pointer;
+    transition: all 0.15s ease;
+  }
+  .elstar-dropdown-item:hover { @apply bg-primary/5 text-primary; }
+}
+.score-high { color: rgb(22,163,74); }
+.score-medium { @apply text-amber-500; }
+.score-low { @apply text-red-500; }
+.ai-gradient { background: linear-gradient(135deg, #DEB25E 0%, #F5C77A 100%); }
+.ai-text {
+  background: linear-gradient(135deg, #DEB25E 0%, #F5C77A 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }

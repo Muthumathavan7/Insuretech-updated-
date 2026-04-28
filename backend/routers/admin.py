@@ -46,6 +46,10 @@ async def get_settings(_: dict = Depends(require_roles("admin"))):
     s = await _get_settings_raw()
     secret = s.get("stripe_secret_key") or ""
     webhook = s.get("stripe_webhook_secret") or ""
+    twilio_token = s.get("twilio_auth_token") or ""
+    eleven_key = s.get("elevenlabs_api_key") or ""
+    gmail_pwd = s.get("gmail_smtp_app_password") or ""
+    google_secret = s.get("google_oauth_client_secret") or ""
     return {
         "stripe_publishable_key": s.get("stripe_publishable_key") or "",
         "stripe_secret_key_masked": _mask(secret),
@@ -54,21 +58,42 @@ async def get_settings(_: dict = Depends(require_roles("admin"))):
         "stripe_webhook_secret_set": bool(webhook),
         "stripe_enabled": s.get("stripe_enabled", True),
         "using_env_fallback": not bool(secret),
+        # Twilio
+        "twilio_account_sid": s.get("twilio_account_sid") or "",
+        "twilio_auth_token_masked": _mask(twilio_token),
+        "twilio_auth_token_set": bool(twilio_token),
+        "twilio_phone_number": s.get("twilio_phone_number") or "",
+        "twilio_whatsapp_from": s.get("twilio_whatsapp_from") or "",
+        # ElevenLabs
+        "elevenlabs_api_key_masked": _mask(eleven_key),
+        "elevenlabs_api_key_set": bool(eleven_key),
+        "elevenlabs_default_agent_id": s.get("elevenlabs_default_agent_id") or "",
+        "elevenlabs_phone_number_id": s.get("elevenlabs_phone_number_id") or "",
+        # Gmail SMTP (placeholder for Google email integration)
+        "gmail_smtp_user": s.get("gmail_smtp_user") or "",
+        "gmail_smtp_app_password_masked": _mask(gmail_pwd),
+        "gmail_smtp_app_password_set": bool(gmail_pwd),
+        "gmail_sender_name": s.get("gmail_sender_name") or "",
+        # Google OAuth (placeholder for full Calendar integration)
+        "google_oauth_client_id": s.get("google_oauth_client_id") or "",
+        "google_oauth_client_secret_masked": _mask(google_secret),
+        "google_oauth_client_secret_set": bool(google_secret),
     }
 
 
 @router.patch("/admin/settings")
 async def update_settings(payload: dict, _: dict = Depends(require_roles("admin"))):
     updates = {}
-    for key in (
-        "stripe_publishable_key",
-        "stripe_secret_key",
-        "stripe_webhook_secret",
-        "stripe_enabled",
-    ):
+    allowed = (
+        "stripe_publishable_key", "stripe_secret_key", "stripe_webhook_secret", "stripe_enabled",
+        "twilio_account_sid", "twilio_auth_token", "twilio_phone_number", "twilio_whatsapp_from",
+        "elevenlabs_api_key", "elevenlabs_default_agent_id", "elevenlabs_phone_number_id",
+        "gmail_smtp_user", "gmail_smtp_app_password", "gmail_sender_name",
+        "google_oauth_client_id", "google_oauth_client_secret",
+    )
+    for key in allowed:
         if key in payload and payload[key] is not None:
             val = payload[key]
-            # allow explicit blanking of secrets by sending empty string
             updates[key] = val.strip() if isinstance(val, str) else val
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.settings.update_one(

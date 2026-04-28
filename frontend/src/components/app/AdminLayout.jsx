@@ -9,7 +9,8 @@ import {
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/customers", label: "Customers (CRM)", icon: Users },
-  { to: "/admin/leads", label: "Leads Pipeline", icon: KanbanSquare },
+  { to: "/admin/leads", label: "Leads", icon: Users },
+  { to: "/admin/leads-kanban", label: "Leads Kanban", icon: KanbanSquare },
   { to: "/admin/analytics", label: "Analytics", icon: TrendingUp },
   { to: "/admin/claims", label: "Claims Queue", icon: Hammer },
   { to: "/admin/products", label: "Products", icon: Package },
