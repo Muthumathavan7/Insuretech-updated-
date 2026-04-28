@@ -805,8 +805,8 @@ export default function LeadDetailPage() {
           </button>
           <div className="min-w-0">
             <h1 className="text-lg sm:text-xl font-bold truncate">{lead.pic_name || lead.name}</h1>
-            {lead.company && (
-              <p className="text-xs text-muted-foreground truncate">at {lead.company}</p>
+            {lead.pic_name && lead.name && lead.pic_name !== lead.name && (
+              <p className="text-xs text-muted-foreground truncate">{lead.name}</p>
             )}
           </div>
         </div>
@@ -876,8 +876,26 @@ export default function LeadDetailPage() {
                   <Building2 className="w-4 h-4 text-amber-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Company</p>
-                  <p className="text-sm font-medium break-words">{lead.company || '-'}</p>
+                  <p className="text-xs text-muted-foreground">Customer Name</p>
+                  <p className="text-sm font-medium break-words">{lead.name || '-'}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+                  <UserCheck className="w-4 h-4 text-rose-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">IC Number</p>
+                  <p className="text-sm font-medium font-mono break-words">{lead.ic_number || '-'}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                  <UserCheck className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Passport Number</p>
+                  <p className="text-sm font-medium font-mono break-words">{lead.passport_number || '-'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -1479,12 +1497,12 @@ export default function LeadDetailPage() {
       <SlideInPanel isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Edit Lead">
         <form onSubmit={handleEditSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Company Name</label>
+            <label className="block text-sm font-medium mb-2">Customer Name</label>
             <input
               className="elstar-input w-full"
-              value={editForm.name || editForm.company || ''}
+              value={editForm.name || ''}
               onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value, company: e.target.value }))}
-              placeholder="Company name"
+              placeholder="Customer name"
             />
           </div>
           <div>

@@ -1004,8 +1004,10 @@ export default function Leads() {
                         data-testid="select-all-checkbox"
                       />
                     </th>
-                    <th className="px-2 text-left">Company</th>
+                    <th className="px-2 text-left">Customer Name</th>
                     <th className="px-2 text-left hidden sm:table-cell">PIC</th>
+                    <th className="px-2 text-left hidden md:table-cell">IC Number</th>
+                    <th className="px-2 text-left hidden md:table-cell">Passport</th>
                     <th className="px-2 text-left hidden lg:table-cell">Mobile</th>
                     <th className="px-2 text-left hidden xl:table-cell">Email</th>
                     <th className="px-2 text-left hidden 2xl:table-cell">Location</th>
@@ -1038,13 +1040,19 @@ export default function Leads() {
                         <div className="flex items-center gap-1 min-w-0 overflow-hidden">
                           <Building2 className="w-4 h-4 shrink-0 text-muted-foreground hidden sm:block" />
                           <div className="min-w-0 flex-1 overflow-hidden">
-                            <span className="font-medium text-sm truncate block">{lead.company || lead.name}</span>
+                            <span className="font-medium text-sm truncate block">{lead.name}</span>
                             <span className="text-xs text-muted-foreground sm:hidden truncate block">{lead.pic_name || ''}</span>
                           </div>
                         </div>
                       </td>
                       <td className="px-2 hidden sm:table-cell overflow-hidden">
                         <span className="text-sm truncate block">{lead.pic_name || '-'}</span>
+                      </td>
+                      <td className="px-2 hidden md:table-cell overflow-hidden">
+                        <span className="text-sm text-muted-foreground font-mono truncate block">{lead.ic_number || '-'}</span>
+                      </td>
+                      <td className="px-2 hidden md:table-cell overflow-hidden">
+                        <span className="text-sm text-muted-foreground font-mono truncate block">{lead.passport_number || '-'}</span>
                       </td>
                       <td className="px-2 hidden lg:table-cell overflow-hidden">
                         <span className="text-sm text-muted-foreground truncate block">{lead.phone || '-'}</span>
