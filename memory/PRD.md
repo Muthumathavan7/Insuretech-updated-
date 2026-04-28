@@ -17,6 +17,44 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
 
+## Implemented (2026-02-27 → 2026-04-28 — iteration 7)
+
+### Sales-Hub-CRM Leads Replication (NEW — iteration 7)
+- **Replicated leads page + lead detail page** functionality from
+  `github.com/muthurengan4/Sales-hub-CRM` into the admin panel, adapted for insurance:
+  - "Clinic Name (Company Name)" → **"Customer Name"**
+  - Added **IC Number** + **Passport Number** fields in PIC section
+  - Kept all other labels (PIC = Person In Charge) intact
+- **Backend** (`/app/backend/routers/sales_crm.py` + `services/ai_services.py`):
+  - Full CRUD: `GET/POST/PUT/DELETE /api/leads` with pagination (page, limit), search,
+    pipeline_status & state filters
+  - Excel import via `openpyxl` at `POST /api/leads/import`
+  - Convert to customer at `POST /api/leads/{id}/convert`
+  - AI score refresh at `POST /api/leads/{id}/refresh-score` (deterministic heuristic)
+  - Activity timeline `GET/POST /api/leads/{id}/activities`
+  - Deals CRUD + Lead-Deal-Linkages + Tasks + AI Agents endpoints
+  - Real Twilio WhatsApp send at `POST /api/whatsapp/send`
+  - Real ElevenLabs Conversational AI outbound calls at `POST /api/ai-calls/initiate`
+  - Real Gmail SMTP meeting invites with .ics calendar attachment at `POST /api/meetings/schedule`
+  - All integration keys read from `db.settings` (admin-configured, never env)
+  - Graceful degradation: missing keys return `{success:false, error:"..."}` rather than crashing
+- **Frontend** (`/app/frontend/src/admin/`):
+  - `Leads.jsx` — paginated table with search + filters + bulk-select + AI Calling +
+    AI WhatsApp batch + Excel import + Convert-to-customer + per-row actions
+  - `LeadDetailPage.jsx` — split layout: contact card / activity timeline + pipeline update + WhatsApp chat /
+    activity summary + deals + AI score; Edit slide-in panel with IC + Passport;
+    AI Call modal with agent selection; Schedule Meeting modal with online/offline & email invite
+  - Settings page extended with **Twilio**, **ElevenLabs**, **Gmail SMTP**, **Google OAuth** (placeholder)
+    sections, all secrets stored masked
+  - Routes:
+    - `/admin/leads` — new full Leads list (replaces old Kanban)
+    - `/admin/leads/:id` — Lead detail page
+    - `/admin/leads-kanban` — original Kanban (kept)
+- **Components added**: `Modal`, `SlideInPanel`, `Pagination`, `ActionDropdown` under
+  `/components/elstar/`. Elstar CSS classes added to `index.css`.
+- **Auth context** now exposes `token` for legacy fetch-based components.
+- **Test results**: Backend 37/37 NEW sales-CRM + 93/93 regression — all green.
+
 ## Implemented (2026-02-27 → 2026-04-27 — iteration 6)
 
 ### Admin-Configurable Stripe (NEW)
