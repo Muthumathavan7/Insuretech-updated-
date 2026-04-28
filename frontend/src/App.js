@@ -251,11 +251,3 @@ function App() {
 }
 
 export default App;
-     <AppRoutes />
-        <Toaster richColors position="top-right" />
-      </BrowserRouter>
-    </AuthProvider>
-  );
-}
-
-export default App;
