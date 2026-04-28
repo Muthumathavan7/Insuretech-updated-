@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import {
   Shield, LayoutDashboard, Users, KanbanSquare, TrendingUp, Hammer,
-  Package, Megaphone, Phone, LogOut, Settings as SettingsIcon,
+  Package, Megaphone, LogOut, Settings as SettingsIcon,
   GitBranch, MessageCircle,
 } from "lucide-react";
 
@@ -18,7 +18,6 @@ const NAV = [
   { to: "/admin/claims", label: "Claims Queue", icon: Hammer },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
-  { to: "/admin/voice", label: "Voice AI Calls", icon: Phone },
   { to: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
 

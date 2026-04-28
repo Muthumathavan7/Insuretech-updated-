@@ -227,14 +227,6 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/admin/voice"
-        element={
-          <Protected adminOnly>
-            <AdminLayout><VoiceCalls /></AdminLayout>
-          </Protected>
-        }
-      />
-      <Route
         path="/admin/settings"
         element={
           <Protected adminOnly>
@@ -252,6 +244,14 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <AppRoutes />
+        <Toaster richColors position="top-right" />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;
+     <AppRoutes />
         <Toaster richColors position="top-right" />
       </BrowserRouter>
     </AuthProvider>
