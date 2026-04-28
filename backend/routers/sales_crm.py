@@ -722,3 +722,62 @@ async def list_states(_: dict = Depends(require_roles("admin", "agent"))):
     rows = await db.leads.distinct("state")
     states = sorted([s for s in rows if s])
     return {"states": states}
+
+
+@router.get("/lookup/companies")
+async def list_companies(_: dict = Depends(require_roles("admin", "agent"))):
+    leads = await db.leads.find({}, {"_id": 0, "id": 1, "name": 1, "company": 1, "pic_name": 1, "state": 1}).to_list(2000)
+    return {"companies": [{"id": ld["id"], "name": ld.get("company") or ld.get("name"),
+                            "pic_name": ld.get("pic_name", ""), "state": ld.get("state", "")} for ld in leads]}
+
+
+# ============ CSV EXPORT ============
+@router.get("/leads/export/csv")
+async def export_leads_csv(_: dict = Depends(require_roles("admin", "agent"))):
+    import csv
+    leads = await db.leads.find({}, {"_id": 0}).sort("created_at", -1).to_list(10000)
+    buf = io.StringIO()
+    cols = ["name", "pic_name", "title", "email", "phone", "office_number", "ic_number",
+            "passport_number", "country", "state", "city", "postcode", "address",
+            "industry", "company_size", "website", "source", "pipeline_status", "status",
+            "ai_score", "owner_name", "notes", "created_at"]
+    writer = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
+    writer.writeheader()
+    for ld in leads:
+        writer.writerow(ld)
+    return StreamingResponse(
+        io.BytesIO(buf.getvalue().encode()),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=leads_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"},
+    )
+
+
+# ============ LINKAGE PUT/DELETE (for Pipeline page) ============
+@router.put("/lead-deal-linkages/{linkage_id}")
+async def update_linkage(linkage_id: str, payload: dict, _: dict = Depends(require_roles("admin", "agent"))):
+    updates = {k: v for k, v in payload.items() if k in ("pipeline_status", "notes")}
+    updates["updated_at"] = _now()
+    await db.lead_deal_linkages.update_one({"id": linkage_id}, {"$set": updates})
+    return await db.lead_deal_linkages.find_one({"id": linkage_id}, {"_id": 0})
+
+
+@router.delete("/lead-deal-linkages/{linkage_id}")
+async def delete_linkage(linkage_id: str, _: dict = Depends(require_roles("admin", "agent"))):
+    await db.lead_deal_linkages.delete_one({"id": linkage_id})
+    return {"deleted": True}
+
+
+# ============ DEAL KNOWLEDGE BASE ============
+@router.post("/deals/{deal_id}/knowledge-base/upload")
+async def upload_kb(deal_id: str, file: UploadFile = File(...), _: dict = Depends(require_roles("admin", "agent"))):
+    content = await file.read()
+    try:
+        text = content.decode("utf-8", errors="ignore")
+    except Exception:
+        text = ""
+    await db.deals.update_one({"id": deal_id}, {"$set": {
+        "knowledge_base_filename": file.filename,
+        "knowledge_base_content": text[:50000],
+        "updated_at": _now(),
+    }})
+    return {"uploaded": True, "filename": file.filename, "size": len(content)}

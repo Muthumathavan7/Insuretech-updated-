@@ -1,0 +1,50 @@
+{
+  "summary": "Iteration 7: CSV export + Pipeline page + WhatsApp page. Backend 48/48 pytest pass (37 sales_crm regression + 11 new in test_pipeline_csv_kb.py). All 5 new endpoints verified end-to-end with persistence assertions: GET /api/leads/export/csv returns text/csv with correct 23-column header (name,pic_name,title,email,phone,office_number,ic_number,passport_number,country,state,city,postcode,address,industry,company_size,website,source,pipeline_status,status,ai_score,owner_name,notes,created_at), Content-Disposition attachment .csv, requires auth (401/403 unauthenticated), seeded lead present in body. GET /api/lookup/companies returns {companies:[{id,name,pic_name,state}]} populated from leads collection. PUT /api/lead-deal-linkages/{id} updates pipeline_status to qualified/negotiation and persists (verified via GET). DELETE /api/lead-deal-linkages/{id} returns {deleted:true} and item removed (verified via GET). POST /api/deals/{id}/knowledge-base/upload (multipart) persists knowledge_base_filename + knowledge_base_content on the deal doc (verified via GET /api/deals/{id}). Frontend verified end-to-end with admin login: /admin/leads has data-testid='export-csv-btn'; click triggers actual file download (suggested filename leads_*.csv). Sidebar shows Pipeline + WhatsApp links navigating to /admin/pipeline + /admin/whatsapp. /admin/pipeline renders all 6 columns (lead, qualified, proposal, negotiation, sales_closed, lost) plus add-deal-btn + pipeline-date-filter. Add Deal slide-in panel exposes deal-selector, deal-title-input, deal-value-input, deal-close-date-input, knowledge base upload zone, link companies checkbox list (Acme Sdn Bhd shown), submit-deal-btn. /admin/whatsapp loads contacts list from /api/leads (1 contact: Dr. Ahmad), search-contacts-input present; selecting contact reveals message-input + send-message-btn; sending invokes POST /api/whatsapp/send and shows toast feedback. No console errors observed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "WhatsApp send (no Twilio keys)",
+        "issue": "WhatsAppMessages.jsx handleSendMessage only checks response.ok (HTTP 200) and shows toast.success('Message sent') even though backend returns body {status:'failed', error:'...'} when Twilio is unconfigured. Spec expected an 'integration coming soon' toast to surface graceful degradation. The 'integration coming soon' branch is only taken on non-2xx, but the backend always returns 200. Suggested fix: parse response body and check data.status==='failed' || !data.success to show toast.info('WhatsApp integration coming soon. Message saved locally.') instead. Currently misleads admin into thinking message was actually delivered.",
+        "affected_selectors": ["[data-testid='send-message-btn']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_pipeline_csv_kb.py",
+    "/app/backend/tests/test_sales_crm.py",
+    "/app/test_reports/pytest/pipeline_csv_kb_results.xml",
+    "/app/test_reports/pytest/sales_crm_results.xml"
+  ],
+  "action_items": [
+    "(Optional, low-priority) WhatsAppMessages.jsx: distinguish between transport-level success (HTTP 200) and business-level success — read JSON body and check data.status/data.success before showing the green 'Message sent' toast. Otherwise the page silently misleads admins while Twilio keys are unconfigured."
+  ],
+  "critical_code_review_comments": [
+    "sales_crm.py /leads/export/csv: uses StreamingResponse with BytesIO + csv.DictWriter(extrasaction='ignore') — tolerates missing fields per row. Header order matches spec exactly (23 columns). created_at serialized as datetime via DictWriter — Python writes its repr; consider isoformat() for cleaner Excel ingestion.",
+    "sales_crm.py /lookup/companies: prefers lead.company over lead.name as the display label (good). Limit 2000 may be tight for larger tenants — consider pagination if leads grow.",
+    "sales_crm.py PUT /lead-deal-linkages/{id}: uses field allowlist (pipeline_status, notes) — safe. Returns the upserted doc with _id excluded. Good. Does NOT 404 when linkage doesn't exist (silently no-op then returns None) — minor: consider raising 404 if update_one.matched_count==0.",
+    "sales_crm.py /deals/{deal_id}/knowledge-base/upload: caps content at 50KB after utf-8 decode with errors='ignore' — sane for binary files (PDF/DOC) but for those the stored content will be garbled. The UI advertises 'PDF, DOC, TXT (Max 10MB)' but only TXT will yield useful text. Document this limitation or add a real PDF/DOC parser (pypdf/python-docx).",
+    "Pipeline.jsx (1077 lines): exceeds the >700-line guideline. Consider splitting kanban column rendering, deal-form panel, and drag-drop handlers into separate files for maintainability.",
+    "WhatsAppMessages.jsx handleSendMessage: as noted, the success/failure branch is keyed off response.ok rather than payload — back-end-driven UX won't reflect actual Twilio outcome. Same applies if Twilio later returns body {status:'failed'} with HTTP 200.",
+    "Pipeline.jsx drag-drop: uses HTML5 native dragstart/drop — no a11y story (keyboard-only users can't reorder). Acceptable for admin tooling but worth noting."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pipeline_csv_kb.py (new — 11 tests covering CSV export, lookup/companies, linkage PUT/DELETE, KB upload with create→verify persistence pattern)"
+  ],
+  "success_rate": {
+    "backend": "100% (48/48 — 37 sales_crm regression + 11 new endpoints)",
+    "frontend": "100% on /admin/leads (CSV download) + /admin/pipeline (6 columns + add-deal panel) + /admin/whatsapp (contacts + send). Sidebar entries verified. One minor UX deviation on send-failure toast (see frontend_issues.integration_issues)."
+  },
+  "test_credentials": "admin@insurtech.io / Admin@123",
+  "seed_data_creation": "test_pipeline_csv_kb.py creates TEST_PipelineLead + TEST_PipelineDeal + linkage during the run; cleans up via DELETE in TestCleanup. Idempotent.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 7 — All requested features (CSV export + Pipeline page + WhatsApp page) verified working end-to-end. Backend regression suite is now 48 tests across two files: test_sales_crm.py (37) and test_pipeline_csv_kb.py (11). Run both with: pytest /app/backend/tests/test_sales_crm.py /app/backend/tests/test_pipeline_csv_kb.py -v. The new test file validates create→verify-persistence patterns (e.g., upload KB → GET deal → assert filename+content). Twilio/ElevenLabs/Gmail keys remain unconfigured (intentional). Note the WhatsApp send toast UX issue (see frontend_issues.integration_issues): UI shows green 'Message sent' even on Twilio-unconfigured fail because handleSendMessage only checks response.ok. /admin/leads-kanban (old) still works alongside /admin/pipeline (new). Pipeline.jsx is 1077 lines — flagged for split. CSV header exactly matches spec (23 cols).",
+  "rca of the issue": "No blocking issues. Single non-blocking UX deviation in WhatsAppMessages.jsx — root cause: success branch keyed on HTTP status (response.ok) rather than payload status field. Backend always returns 200 with status='failed' for graceful degradation, so the failure-aware toast.info('WhatsApp integration coming soon...') branch never fires. Fix: replace `if (response.ok)` with `const data = await response.json(); if (response.ok && data.status !== 'failed' && data.success !== false) { /* success toast */ } else { /* coming-soon toast */ }`."
+}

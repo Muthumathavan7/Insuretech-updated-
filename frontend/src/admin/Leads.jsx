@@ -8,7 +8,7 @@ import Pagination from '../components/elstar/Pagination';
 import ActionDropdown from '../components/elstar/ActionDropdown';
 import { 
   Plus, Search, Loader2, Sparkles, Mail, Phone, Building2, 
-  Trash2, Edit, RefreshCw, Upload, FileSpreadsheet, Eye, UserCheck, 
+  Trash2, Edit, RefreshCw, Upload, Download, FileSpreadsheet, Eye, UserCheck, 
   DollarSign, PhoneCall, MessageCircle, Globe, MapPin, Check
 } from 'lucide-react';
 
@@ -832,14 +832,37 @@ export default function Leads() {
           <p className="text-muted-foreground mt-1">Manage and track your sales leads</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button 
-            onClick={() => setIsImportOpen(true)} 
+          <button
+            onClick={() => setIsImportOpen(true)}
             className="elstar-btn-ghost flex items-center gap-2"
             data-testid="import-lead-btn"
           >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Import Excel</span>
             <span className="sm:hidden">Import</span>
+          </button>
+          <button
+            onClick={() => {
+              const url = `${API}/api/leads/export/csv`;
+              fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+                .then(r => r.ok ? r.blob() : Promise.reject(r))
+                .then(blob => {
+                  const a = document.createElement('a');
+                  const u = URL.createObjectURL(blob);
+                  a.href = u;
+                  a.download = `leads_${new Date().toISOString().slice(0,10)}.csv`;
+                  document.body.appendChild(a); a.click(); a.remove();
+                  setTimeout(() => URL.revokeObjectURL(u), 1000);
+                  toast.success('CSV exported');
+                })
+                .catch(() => toast.error('Failed to export CSV'));
+            }}
+            className="elstar-btn-ghost flex items-center gap-2"
+            data-testid="export-csv-btn"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export CSV</span>
+            <span className="sm:hidden">CSV</span>
           </button>
           <button 
             onClick={openCreateDialog} 

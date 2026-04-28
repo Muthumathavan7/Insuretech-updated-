@@ -30,6 +30,8 @@ import Customer360 from "@/admin/Customer360";
 import LeadsKanban from "@/admin/LeadsKanban";
 import LeadsList from "@/admin/Leads";
 import LeadDetail from "@/admin/LeadDetailPage";
+import Pipeline from "@/admin/Pipeline";
+import WhatsAppMessages from "@/admin/WhatsAppMessages";
 import Analytics from "@/admin/Analytics";
 import ClaimsQueue from "@/admin/ClaimsQueue";
 import AdminProducts from "@/admin/AdminProducts";
@@ -173,6 +175,22 @@ function AppRoutes() {
         element={
           <Protected adminOnly>
             <AdminLayout><LeadsKanban /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
+        path="/admin/pipeline"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><Pipeline /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
+        path="/admin/whatsapp"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><WhatsAppMessages /></AdminLayout>
           </Protected>
         }
       />
