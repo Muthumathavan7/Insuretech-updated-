@@ -980,18 +980,20 @@ export default function Leads() {
           </div>
         ) : (
           <>
-            <div className="w-full overflow-hidden">
-              <table className="elstar-table w-full" style={{ tableLayout: 'fixed' }}>
+            <div className="w-full overflow-x-auto">
+              <table className="elstar-table w-full min-w-[720px]" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
                   <col style={{ width: '32px' }} />
-                  <col style={{ width: '22%' }} />
-                  <col className="hidden sm:table-column" style={{ width: '12%' }} />
-                  <col className="hidden lg:table-column" style={{ width: '13%' }} />
-                  <col className="hidden xl:table-column" style={{ width: '18%' }} />
+                  <col style={{ width: '18%' }} />
+                  <col className="hidden sm:table-column" style={{ width: '11%' }} />
+                  <col className="hidden md:table-column" style={{ width: '11%' }} />
+                  <col className="hidden md:table-column" style={{ width: '10%' }} />
+                  <col className="hidden lg:table-column" style={{ width: '11%' }} />
+                  <col className="hidden xl:table-column" style={{ width: '14%' }} />
                   <col className="hidden 2xl:table-column" style={{ width: '10%' }} />
-                  <col style={{ width: '10%' }} />
-                  <col className="hidden sm:table-column" style={{ width: '8%' }} />
-                  <col style={{ width: '32px' }} />
+                  <col style={{ width: '9%' }} />
+                  <col className="hidden sm:table-column" style={{ width: '6%' }} />
+                  <col style={{ width: '40px' }} />
                 </colgroup>
                 <thead>
                   <tr>
@@ -1004,15 +1006,15 @@ export default function Leads() {
                         data-testid="select-all-checkbox"
                       />
                     </th>
-                    <th className="px-2 text-left">Customer Name</th>
-                    <th className="px-2 text-left hidden sm:table-cell">PIC</th>
-                    <th className="px-2 text-left hidden md:table-cell">IC Number</th>
-                    <th className="px-2 text-left hidden md:table-cell">Passport</th>
-                    <th className="px-2 text-left hidden lg:table-cell">Mobile</th>
-                    <th className="px-2 text-left hidden xl:table-cell">Email</th>
-                    <th className="px-2 text-left hidden 2xl:table-cell">Location</th>
-                    <th className="px-2 text-left">Status</th>
-                    <th className="px-1 text-center hidden sm:table-cell">Score</th>
+                    <th className="px-2 text-left whitespace-nowrap">Customer Name</th>
+                    <th className="px-2 text-left whitespace-nowrap hidden sm:table-cell">PIC</th>
+                    <th className="px-2 text-left whitespace-nowrap hidden md:table-cell">IC Number</th>
+                    <th className="px-2 text-left whitespace-nowrap hidden md:table-cell">Passport</th>
+                    <th className="px-2 text-left whitespace-nowrap hidden lg:table-cell">Mobile</th>
+                    <th className="px-2 text-left whitespace-nowrap hidden xl:table-cell">Email</th>
+                    <th className="px-2 text-left whitespace-nowrap hidden 2xl:table-cell">Location</th>
+                    <th className="px-2 text-left whitespace-nowrap">Status</th>
+                    <th className="px-1 text-center whitespace-nowrap hidden sm:table-cell">Score</th>
                     <th className="px-1"></th>
                   </tr>
                 </thead>
