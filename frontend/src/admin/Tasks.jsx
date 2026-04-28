@@ -155,7 +155,7 @@ export default function Tasks() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!formData.lead_id) {
-      toast.error('Please select a company');
+      toast.error('Please select a customer');
       return;
     }
     
@@ -448,13 +448,13 @@ export default function Tasks() {
               <table className="w-full table-fixed">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left px-2 py-3 text-xs font-medium text-muted-foreground uppercase w-10 hidden sm:table-cell">NO.</th>
-                    <th className="text-left px-2 py-3 text-xs font-medium text-muted-foreground uppercase">COMPANY</th>
-                    <th className="text-left px-2 py-3 text-xs font-medium text-muted-foreground uppercase hidden lg:table-cell w-24">PIC</th>
-                    <th className="text-left px-2 py-3 text-xs font-medium text-muted-foreground uppercase hidden xl:table-cell w-28">DEAL</th>
-                    <th className="text-left px-2 py-3 text-xs font-medium text-muted-foreground uppercase w-20">STATUS</th>
-                    <th className="text-left px-2 py-3 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell w-16">DATE</th>
-                    <th className="text-left px-2 py-3 text-xs font-medium text-muted-foreground uppercase hidden 2xl:table-cell w-20">PAYMENT</th>
+                    <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground uppercase w-10 hidden sm:table-cell">NO.</th>
+                    <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">CUSTOMER NAME</th>
+                    <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground uppercase hidden lg:table-cell w-24">PIC</th>
+                    <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground uppercase hidden xl:table-cell w-28">DEAL</th>
+                    <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground uppercase w-20">STATUS</th>
+                    <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground uppercase hidden sm:table-cell w-16">DATE</th>
+                    <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground uppercase hidden 2xl:table-cell w-20">PAYMENT</th>
                     <th className="w-8"></th>
                   </tr>
                 </thead>
@@ -464,10 +464,10 @@ export default function Tasks() {
                     const paymentDisplay = paymentStatusConfig[task.payment_status] || { label: task.payment_status || 'Unpaid', class: 'bg-gray-500/20 text-gray-400' };
                     return (
                       <tr key={task.id} className="border-b border-border hover:bg-secondary/30 transition-colors" data-testid={`task-row-${task.id}`}>
-                        <td className="px-2 py-3 text-sm text-muted-foreground hidden sm:table-cell">
+                        <td className="px-2 py-1.5 text-sm text-muted-foreground hidden sm:table-cell">
                           {String((currentPage - 1) * pageSize + index + 1).padStart(4, '0')}
                         </td>
-                        <td className="px-2 py-3">
+                        <td className="px-2 py-1.5">
                           <div className="min-w-0">
                             <div className="flex items-center gap-1">
                               <button 
@@ -491,21 +491,21 @@ export default function Tasks() {
                             </p>
                           </div>
                         </td>
-                        <td className="px-2 py-3 text-sm hidden lg:table-cell">
+                        <td className="px-2 py-1.5 text-sm hidden lg:table-cell">
                           <span className="truncate block">{task.pic_name || '-'}</span>
                         </td>
-                        <td className="px-2 py-3 hidden xl:table-cell">
+                        <td className="px-2 py-1.5 hidden xl:table-cell">
                           <span className="text-sm text-primary truncate block">{task.deal_name || '-'}</span>
                         </td>
-                        <td className="px-2 py-3">
+                        <td className="px-2 py-1.5">
                           <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusDisplay.class}`}>
                             {statusDisplay.label}
                           </span>
                         </td>
-                        <td className="px-2 py-3 text-xs text-muted-foreground hidden sm:table-cell">
+                        <td className="px-2 py-1.5 text-xs text-muted-foreground hidden sm:table-cell">
                           {(task.due_date || task.updated_at) ? new Date(task.due_date || task.updated_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '-'}
                         </td>
-                        <td className="px-2 py-3 hidden 2xl:table-cell">
+                        <td className="px-2 py-1.5 hidden 2xl:table-cell">
                           <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${paymentDisplay.class}`}>
                             {paymentDisplay.label}
                           </span>
@@ -568,18 +568,18 @@ export default function Tasks() {
             <h3 className="text-primary font-semibold text-sm uppercase tracking-wider">TASK DETAILS</h3>
           </div>
 
-          {/* Company Name */}
+          {/* Customer Name */}
           <div>
-            <label className="block text-sm text-muted-foreground mb-2">Company Name *</label>
+            <label className="block text-sm text-muted-foreground mb-2">Customer Name *</label>
             <select
               value={formData.lead_id}
               onChange={(e) => handleCompanyChange(e.target.value)}
               className="w-full bg-card border border-primary/50 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
               data-testid="task-company-select"
             >
-              <option value="">Select company...</option>
+              <option value="">Select customer...</option>
               {leads.map(lead => (
-                <option key={lead.id} value={lead.id}>{lead.company || lead.name}</option>
+                <option key={lead.id} value={lead.id}>{lead.name || lead.company}</option>
               ))}
             </select>
           </div>
