@@ -584,6 +584,34 @@ export default function Tasks() {
             </select>
           </div>
 
+          {/* Title */}
+          <div>
+            <label className="block text-sm text-muted-foreground mb-2">Task Title</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="e.g. Follow up on proposal"
+              className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
+              data-testid="task-title-input"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm text-muted-foreground mb-2">Status *</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
+              data-testid="task-status-select"
+            >
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
           {/* Deal */}
           <div>
             <label className="block text-sm text-muted-foreground mb-2">Deal *</label>

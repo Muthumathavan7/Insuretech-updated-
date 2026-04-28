@@ -17,6 +17,36 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
 
+## Implemented (2026-04-28 — iteration 8: Tasks page + Multi-currency)
+
+### Tasks Page (admin)
+- New `/admin/tasks` route — paginated list, search, deals filter, slide-in Add Task panel,
+  edit/delete via action dropdown, sync-to-Google-Calendar action (stub).
+- Add Task panel exposes: Company (lead), Task Title, Deal, PIC (auto), Sales Person,
+  Status (pending/in_progress/completed), Payment.
+- Sidebar entry `Tasks` (CheckSquare icon).
+- Backend extensions on `/api/tasks`: pagination, search/filter, denormalized labels
+  (company_name/lead_name/deal_name/pic_name/assigned_to_name), full PUT/DELETE.
+- New `/api/users` lookup endpoint (paginated).
+- Stub `POST /api/google-calendar/sync-task/{id}` — returns 400 when keys missing,
+  flips `calendar_synced=true` on the task when keys configured.
+
+### Multi-currency Support
+- Customer-facing site has a currency switcher in the navbar (data-testid `currency-switcher`).
+  Choice persists in localStorage `tp_currency`.
+- All prices on Landing, Products, Dashboard, MyPolicies, Checkout, QuoteFlow,
+  MotorQuote, PAQuote use `useCurrency().format()` and update live when switched.
+- Admin Settings has a new **Multi-currency** card (data-testid `currency-settings`):
+  - Base currency dropdown (all displayed amounts in DB are in this currency)
+  - Editable table of supported currencies (symbol, name, rate × base) — add/remove rows
+  - Default seeds: MYR (base), USD, EUR, GBP, SGD, INR, AUD, JPY, AED
+- New backend public endpoint `GET /api/settings/public` (no-auth) returns `{default_currency, supported_currencies}` for frontend bootstrap.
+- `PATCH /api/admin/settings` accepts `default_currency` + `supported_currencies` array.
+
+**Test results**: 156/156 backend pytest, frontend e2e verified. 3 blockers found by testing
+agent during run were fixed in-place (currency.jsx import, PAQuote.jsx orphan lines,
+App.js missing Tasks import).
+
 ## Implemented (2026-04-28 — iteration 7B: CSV + Pipeline + WhatsApp)
 
 ### CSV Export on Leads
