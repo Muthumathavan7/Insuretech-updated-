@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import {
   Shield, LayoutDashboard, Users, KanbanSquare, TrendingUp, Hammer,
   Package, Megaphone, LogOut, Settings as SettingsIcon,
-  GitBranch, MessageCircle,
+  GitBranch, MessageCircle, CheckSquare,
 } from "lucide-react";
 
 const NAV = [
@@ -13,6 +13,7 @@ const NAV = [
   { to: "/admin/leads", label: "Leads", icon: Users },
   { to: "/admin/pipeline", label: "Pipeline", icon: GitBranch },
   { to: "/admin/leads-kanban", label: "Leads Kanban", icon: KanbanSquare },
+  { to: "/admin/tasks", label: "Tasks", icon: CheckSquare },
   { to: "/admin/whatsapp", label: "WhatsApp", icon: MessageCircle },
   { to: "/admin/analytics", label: "Analytics", icon: TrendingUp },
   { to: "/admin/claims", label: "Claims Queue", icon: Hammer },

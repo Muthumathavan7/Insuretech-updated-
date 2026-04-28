@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { FileText, Shield, Hammer, Download } from "lucide-react";
@@ -17,6 +18,7 @@ const BADGE = {
 export default function MyPolicies() {
   const [policies, setPolicies] = useState([]);
   const [selected, setSelected] = useState(null);
+  const { format } = useCurrency();
 
   useEffect(() => {
     api.get("/policies").then((r) => setPolicies(r.data));
@@ -73,7 +75,7 @@ export default function MyPolicies() {
                   <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
                     <div className="flex justify-between mb-1">
                       <span>Coverage</span>
-                      <span className="font-medium text-gray-800">${p.coverage_amount.toLocaleString()}</span>
+                      <span className="font-medium text-gray-800">{format(p.coverage_amount, { decimals: 0 })}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Premium</span>
@@ -94,7 +96,7 @@ export default function MyPolicies() {
                     <div className="flex justify-between"><span className="text-gray-500">Status</span><span className="capitalize font-medium">{p.status}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Start date</span><span>{new Date(p.start_date).toLocaleDateString()}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">End date</span><span>{new Date(p.end_date).toLocaleDateString()}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Coverage</span><span>${p.coverage_amount.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Coverage</span><span>{format(p.coverage_amount, { decimals: 0 })}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Premium</span><span>${p.premium}</span></div>
                     {p.meta?.tier && (
                       <div className="flex justify-between"><span className="text-gray-500">Tier</span><span className="capitalize">{p.meta.tier}</span></div>

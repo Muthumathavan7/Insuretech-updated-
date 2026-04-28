@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -651,7 +652,7 @@ export default function PAQuote() {
                     Order summary
                   </div>
                   <div className="space-y-2 text-sm mt-3 mb-4">
-                    <Row label="Gross premium" value={`$${quote.meta?.gross_premium?.toFixed(2)}`} />
+                    <Row label="Gross premium" value={format(quote.meta?.gross_premium || 0)} />
                     {quote.meta?.occupation_loading_pct > 0 && (
                       <Row
                         label={`Occupation loading +${quote.meta.occupation_loading_pct}%`}
@@ -661,14 +662,14 @@ export default function PAQuote() {
                     )}
                     <Row
                       label="25% online discount"
-                      value={`-$${quote.meta?.online_discount?.toFixed(2)}`}
+                      value={`- ${format(quote.meta?.online_discount || 0)}`}
                       negative
                     />
-                    <Row label="SST (8%)" value={`$${quote.tax.toFixed(2)}`} />
+                    <Row label="SST (8%)" value={format(quote.tax)} />
                   </div>
                   <div className="flex justify-between font-display text-xl font-semibold pt-4 border-t border-gray-100 mb-5">
                     <span>Total</span>
-                    <span>${quote.total.toFixed(2)}</span>
+                    <span>{format(quote.total)}</span>
                   </div>
                   <Button
                     onClick={pay}

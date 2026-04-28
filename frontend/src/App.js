@@ -2,6 +2,7 @@ import React from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { CurrencyProvider } from "@/lib/currency";
 import { Toaster } from "sonner";
 
 import Layout from "@/components/app/Layout";
@@ -31,6 +32,7 @@ import LeadsKanban from "@/admin/LeadsKanban";
 import LeadsList from "@/admin/Leads";
 import LeadDetail from "@/admin/LeadDetailPage";
 import Pipeline from "@/admin/Pipeline";
+import Tasks from "@/admin/Tasks";
 import WhatsAppMessages from "@/admin/WhatsAppMessages";
 import Analytics from "@/admin/Analytics";
 import ClaimsQueue from "@/admin/ClaimsQueue";
@@ -195,6 +197,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin/tasks"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><Tasks /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
         path="/admin/analytics"
         element={
           <Protected adminOnly>
@@ -242,10 +252,12 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        <Toaster richColors position="top-right" />
-      </BrowserRouter>
+      <CurrencyProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <Toaster richColors position="top-right" />
+        </BrowserRouter>
+      </CurrencyProvider>
     </AuthProvider>
   );
 }

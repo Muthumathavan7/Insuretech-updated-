@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ const TIERS = [
 export default function QuoteFlow() {
   const { productId } = useParams();
   const nav = useNavigate();
+  const { format, code } = useCurrency();
   const [product, setProduct] = useState(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -249,25 +251,25 @@ export default function QuoteFlow() {
               <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold mb-1">
                 Your quote
               </div>
-              <div className="font-display text-6xl font-semibold">${quote.total.toFixed(2)}</div>
-              <div className="text-gray-500 mt-1">Total · USD</div>
+              <div className="font-display text-6xl font-semibold">{format(quote.total)}</div>
+              <div className="text-gray-500 mt-1">Total · {code}</div>
             </div>
             <div className="bg-gray-50 rounded-2xl p-5 space-y-2 text-sm mb-6">
               <div className="flex justify-between">
                 <span className="text-gray-600">Base premium</span>
-                <span className="font-medium">${quote.base_premium.toFixed(2)}</span>
+                <span className="font-medium">{format(quote.base_premium)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Add-ons</span>
-                <span className="font-medium">${quote.addon_total.toFixed(2)}</span>
+                <span className="font-medium">{format(quote.addon_total)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax (8%)</span>
-                <span className="font-medium">${quote.tax.toFixed(2)}</span>
+                <span className="font-medium">{format(quote.tax)}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-gray-200 font-semibold">
                 <span>Total</span>
-                <span>${quote.total.toFixed(2)}</span>
+                <span>{format(quote.total)}</span>
               </div>
             </div>
             <div className="flex gap-3">

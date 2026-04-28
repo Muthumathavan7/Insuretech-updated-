@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useCurrency } from "@/lib/currency";
 import { Shield, FileText, Hammer, TrendingUp, ArrowRight, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,6 +23,7 @@ function StatCard({ label, value, sub }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { format } = useCurrency();
   const [policies, setPolicies] = useState([]);
   const [claims, setClaims] = useState([]);
   const [recs, setRecs] = useState([]);
@@ -53,7 +55,7 @@ export default function Dashboard() {
         <StatCard label="Active policies" value={active.length} />
         <StatCard label="Open claims" value={claims.filter((c) => !["approved", "rejected", "paid"].includes(c.status)).length} />
         <StatCard label="Risk score" value={`${Math.round((user?.risk_score || 0.5) * 100)}%`} sub="lower is better" />
-        <StatCard label="Lifetime value" value={`$${Math.round(user?.ltv || 0).toLocaleString()}`} />
+        <StatCard label="Lifetime value" value={format(Math.round(user?.ltv || 0), { decimals: 0 })} />
       </div>
 
       {/* recommendations */}
@@ -120,7 +122,7 @@ export default function Dashboard() {
                     <div className="text-xs text-gray-500">{p.policy_number}</div>
                     <div className="font-semibold truncate">{p.product_name}</div>
                     <div className="text-xs text-gray-500">
-                      Coverage ${p.coverage_amount.toLocaleString()} · Premium ${p.premium}
+                      Coverage {format(p.coverage_amount, { decimals: 0 })} · Premium {format(p.premium)}
                     </div>
                   </div>
                   <span className="text-xs font-semibold px-3 py-1 rounded-full bg-green-50 text-green-700">

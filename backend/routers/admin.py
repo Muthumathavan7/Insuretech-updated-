@@ -18,6 +18,18 @@ router = APIRouter(tags=["admin"])
 # -------- Settings (Stripe & others, admin editable) --------
 SETTINGS_ID = "app_settings"
 
+DEFAULT_SUPPORTED_CURRENCIES = [
+    {"code": "MYR", "symbol": "RM", "name": "Malaysian Ringgit", "rate": 1.0},
+    {"code": "USD", "symbol": "$",  "name": "US Dollar",         "rate": 0.21},
+    {"code": "EUR", "symbol": "€",  "name": "Euro",              "rate": 0.20},
+    {"code": "GBP", "symbol": "£",  "name": "British Pound",     "rate": 0.17},
+    {"code": "SGD", "symbol": "S$", "name": "Singapore Dollar",  "rate": 0.29},
+    {"code": "INR", "symbol": "₹",  "name": "Indian Rupee",      "rate": 17.65},
+    {"code": "AUD", "symbol": "A$", "name": "Australian Dollar", "rate": 0.32},
+    {"code": "JPY", "symbol": "¥",  "name": "Japanese Yen",      "rate": 31.5},
+    {"code": "AED", "symbol": "AED","name": "UAE Dirham",        "rate": 0.78},
+]
+
 
 def _mask(secret: str) -> str:
     if not secret:
@@ -69,15 +81,28 @@ async def get_settings(_: dict = Depends(require_roles("admin"))):
         "elevenlabs_api_key_set": bool(eleven_key),
         "elevenlabs_default_agent_id": s.get("elevenlabs_default_agent_id") or "",
         "elevenlabs_phone_number_id": s.get("elevenlabs_phone_number_id") or "",
-        # Gmail SMTP (placeholder for Google email integration)
+        # Gmail SMTP
         "gmail_smtp_user": s.get("gmail_smtp_user") or "",
         "gmail_smtp_app_password_masked": _mask(gmail_pwd),
         "gmail_smtp_app_password_set": bool(gmail_pwd),
         "gmail_sender_name": s.get("gmail_sender_name") or "",
-        # Google OAuth (placeholder for full Calendar integration)
+        # Google OAuth
         "google_oauth_client_id": s.get("google_oauth_client_id") or "",
         "google_oauth_client_secret_masked": _mask(google_secret),
         "google_oauth_client_secret_set": bool(google_secret),
+        # Currency
+        "default_currency": s.get("default_currency") or "MYR",
+        "supported_currencies": s.get("supported_currencies") or DEFAULT_SUPPORTED_CURRENCIES,
+    }
+
+
+@router.get("/settings/public")
+async def get_public_settings():
+    """Public (no-auth) endpoint exposing only safe values for frontend bootstrap (currency etc.)."""
+    s = await _get_settings_raw()
+    return {
+        "default_currency": s.get("default_currency") or "MYR",
+        "supported_currencies": s.get("supported_currencies") or DEFAULT_SUPPORTED_CURRENCIES,
     }
 
 
@@ -90,6 +115,7 @@ async def update_settings(payload: dict, _: dict = Depends(require_roles("admin"
         "elevenlabs_api_key", "elevenlabs_default_agent_id", "elevenlabs_phone_number_id",
         "gmail_smtp_user", "gmail_smtp_app_password", "gmail_sender_name",
         "google_oauth_client_id", "google_oauth_client_secret",
+        "default_currency", "supported_currencies",
     )
     for key in allowed:
         if key in payload and payload[key] is not None:

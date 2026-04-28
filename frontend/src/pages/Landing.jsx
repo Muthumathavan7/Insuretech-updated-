@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Shield, Sparkles, Check, Star, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +11,7 @@ const HERO_IMG =
 
 export default function Landing() {
   const [products, setProducts] = useState([]);
+  const { format } = useCurrency();
 
   useEffect(() => {
     api.get("/products").then((r) => setProducts(r.data)).catch(() => {});
@@ -152,7 +154,7 @@ export default function Landing() {
                   <div className="mt-4 flex items-center justify-between">
                     <div>
                       <div className="text-xs text-gray-400">from</div>
-                      <div className="font-semibold">${p.base_premium.toFixed(0)}</div>
+                      <div className="font-semibold">{format(p.base_premium, { decimals: 0 })}</div>
                     </div>
                     <ArrowRight className="w-5 h-5 text-primary-600 group-hover:translate-x-1 transition-transform" />
                   </div>

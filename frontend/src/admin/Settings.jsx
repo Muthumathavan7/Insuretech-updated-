@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   CreditCard, KeyRound, ShieldCheck, Eye, EyeOff, Zap, AlertCircle, CheckCircle2, Info,
-  Phone, Mic, Mail,
+  Phone, Mic, Mail, DollarSign,
 } from "lucide-react";
 
 export default function Settings() {
@@ -35,7 +35,9 @@ export default function Settings() {
     gmail_sender_name: "",
     google_oauth_client_id: "",
     google_oauth_client_secret: "",
+    default_currency: "MYR",
   });
+  const [currencies, setCurrencies] = useState([]);
 
   const load = async () => {
     const r = await api.get("/admin/settings");
@@ -57,7 +59,9 @@ export default function Settings() {
       gmail_sender_name: r.data.gmail_sender_name || "",
       google_oauth_client_id: r.data.google_oauth_client_id || "",
       google_oauth_client_secret: "",
+      default_currency: r.data.default_currency || "MYR",
     });
+    setCurrencies(r.data.supported_currencies || []);
   };
   useEffect(() => { load(); }, []);
 
@@ -75,6 +79,8 @@ export default function Settings() {
         gmail_smtp_user: form.gmail_smtp_user.trim(),
         gmail_sender_name: form.gmail_sender_name.trim(),
         google_oauth_client_id: form.google_oauth_client_id.trim(),
+        default_currency: form.default_currency,
+        supported_currencies: currencies,
       };
       // Only send secrets if user typed new values
       if (form.stripe_secret_key.trim()) payload.stripe_secret_key = form.stripe_secret_key.trim();
@@ -496,6 +502,126 @@ export default function Settings() {
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Currency */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-100 mb-6" data-testid="currency-settings">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <DollarSign className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-xl font-semibold">Multi-currency</h2>
+            <p className="text-xs text-gray-500">
+              Set your store's base currency and the list of currencies customers can switch to from the navbar.
+              Prices in DB stay in the base currency; the website converts on the fly using the rates below.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+          <div>
+            <Label htmlFor="defcur">Base / Default Currency</Label>
+            <select
+              id="defcur"
+              value={form.default_currency}
+              onChange={(e) => setForm({ ...form, default_currency: e.target.value })}
+              className="rounded-xl h-12 w-full border border-gray-200 bg-white px-3 text-sm font-mono"
+              data-testid="default-currency-select"
+            >
+              {currencies.map((c) => (
+                <option key={c.code} value={c.code}>{c.code} — {c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="sm:col-span-2 flex items-end">
+            <p className="text-xs text-gray-500">
+              Tip: the rates are <span className="font-medium">multipliers from the base currency</span>.
+              Example: if base is MYR and USD rate is 0.21, RM 100 → $21.
+            </p>
+          </div>
+        </div>
+        <div className="border border-gray-100 rounded-2xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+              <tr>
+                <th className="text-left px-4 py-3">Code</th>
+                <th className="text-left px-4 py-3">Symbol</th>
+                <th className="text-left px-4 py-3">Name</th>
+                <th className="text-right px-4 py-3">Rate (× base)</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {currencies.map((c, idx) => (
+                <tr key={c.code} className="border-t border-gray-100">
+                  <td className="px-4 py-2 font-mono">{c.code}</td>
+                  <td className="px-4 py-2">
+                    <Input value={c.symbol} className="h-9 rounded-lg"
+                      onChange={(e) => {
+                        const next = [...currencies]; next[idx] = { ...c, symbol: e.target.value };
+                        setCurrencies(next);
+                      }} />
+                  </td>
+                  <td className="px-4 py-2">
+                    <Input value={c.name} className="h-9 rounded-lg"
+                      onChange={(e) => {
+                        const next = [...currencies]; next[idx] = { ...c, name: e.target.value };
+                        setCurrencies(next);
+                      }} />
+                  </td>
+                  <td className="px-4 py-2">
+                    <Input
+                      type="number" step="0.0001" value={c.rate}
+                      className="h-9 rounded-lg text-right font-mono"
+                      onChange={(e) => {
+                        const next = [...currencies]; next[idx] = { ...c, rate: parseFloat(e.target.value) || 0 };
+                        setCurrencies(next);
+                      }}
+                      disabled={c.code === form.default_currency}
+                      data-testid={`currency-rate-${c.code}`}
+                    />
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    {c.code !== form.default_currency && (
+                      <button
+                        onClick={() => setCurrencies(currencies.filter((x) => x.code !== c.code))}
+                        className="text-xs text-red-500 hover:underline"
+                      >Remove</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center gap-2 mt-3">
+          <Input
+            placeholder="ADD CODE (e.g. CAD)"
+            className="h-9 w-32 rounded-lg uppercase font-mono"
+            id="newcur-code"
+            data-testid="new-currency-code"
+          />
+          <Input placeholder="Symbol (e.g. C$)" className="h-9 w-28 rounded-lg" id="newcur-sym" />
+          <Input placeholder="Name" className="h-9 flex-1 rounded-lg" id="newcur-name" />
+          <Input type="number" step="0.0001" placeholder="Rate" className="h-9 w-28 rounded-lg text-right font-mono" id="newcur-rate" />
+          <Button
+            type="button" variant="outline" className="h-9 rounded-lg"
+            onClick={() => {
+              const code = document.getElementById('newcur-code').value.trim().toUpperCase();
+              const symbol = document.getElementById('newcur-sym').value.trim();
+              const name = document.getElementById('newcur-name').value.trim();
+              const rate = parseFloat(document.getElementById('newcur-rate').value);
+              if (!code || !symbol || !name || !rate) { toast.error('Fill all fields'); return; }
+              if (currencies.some((c) => c.code === code)) { toast.error('Code already exists'); return; }
+              setCurrencies([...currencies, { code, symbol, name, rate }]);
+              document.getElementById('newcur-code').value = '';
+              document.getElementById('newcur-sym').value = '';
+              document.getElementById('newcur-name').value = '';
+              document.getElementById('newcur-rate').value = '';
+            }}
+            data-testid="add-currency-btn"
+          >+ Add</Button>
         </div>
       </div>
 

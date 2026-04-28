@@ -1,0 +1,60 @@
+{
+  "summary": "Iteration 8 — Tasks page (Sales-hub-CRM replica) + multi-currency support verified end-to-end. Backend: 15 NEW pytest cases pass in test_tasks_currency.py (public settings no-auth, currency PATCH persistence + reset, /api/users paginated lookup with auth gate, /api/tasks full CRUD with denormalized label enrichment for company_name/lead_name/deal_name/pic_name/assigned_to_name, search+lead_id filters, /google-calendar/sync-task 400 when keys absent + 200 with calendar_synced=true persisted when keys present). Combined with prior 141 tests → 156/156 pytest pass (100%). Frontend: After fixing 3 compile/runtime BLOCKERS introduced this iteration (see updated_files), /admin/tasks renders correctly with search-tasks-input, create-task-btn, deals-filter, sidebar Tasks entry; Add Task slide-in panel opens with company/deal/sales-person/payment selectors; Customer-facing Landing shows currency-switcher in navbar — selecting USD flips ALL prices from 'RM …' to '$ …' (verified: 5 RM→0 RM, 6 $ occurrences after switch), localStorage 'tp_currency' persists across reload; /admin/settings shows currency-settings card with default-currency-select + add-currency-btn.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Tasks Add Task panel",
+        "issue": "Spec calls for a 'Status' select in the Add Task panel ('select Company auto-fills PIC, optional Deal, Status, Payment status; submit creates task'). Current panel only exposes: Company, Deal, PIC, Sales Person, Payment. Task title is also implicit (no task-title-input testid). Backend accepts 'status' field — UI just doesn't surface it on create.",
+        "selector": "[data-testid='task-status-select'], [data-testid='task-title-input']",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Admin Settings (currency card)",
+        "issues": ["React hydration warning: <span> nested inside <option> (caused by dev-tool instrumentation x-source-* wrappers around static-imported `currencies` mapping at Settings.jsx:533). Not user-visible but pollutes console. Consider hard-coding option text without the dynamic <span> wrapper or marking the option content non-instrumentable."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_tasks_currency.py",
+    "/app/test_reports/pytest/tasks_currency_results.xml",
+    "/app/test_reports/pytest/all_results.xml"
+  ],
+  "action_items": [
+    "(MEDIUM) Tasks Add Task panel: add a Status <select> (pending/in_progress/completed) and ideally a free-form Title input — current panel cannot capture either, so created tasks default to status='pending' and a server-derived title.",
+    "(LOW) Settings.jsx:533 currency-row <option>{c.code} – {c.name}</option> — the dev instrumentation wraps the {c.code} in a <span>, triggering React hydration warnings. Ensure the option's children are plain text (e.g., template literal) or disable instrumentation for that node."
+  ],
+  "critical_code_review_comments": [
+    "BLOCKER FIXED — currency.jsx imported api as default (`import api from './api'`) but lib/api.js only exports named { API, api }. Fixed to `import { api } from './api';`. Without this fix the entire app failed to compile.",
+    "BLOCKER FIXED — PAQuote.jsx had 4 orphan lines (723-726) leftover from a botched edit (`-green-700\" : \"\"}`}>{value}</span> ... }`) causing a SyntaxError. Removed.",
+    "BLOCKER FIXED — App.js used <Tasks /> on /admin/tasks route but never imported the Tasks component. Added `import Tasks from '@/admin/Tasks';`. Without this, /admin/tasks threw ReferenceError: Tasks is not defined and the AdminLayout tree crashed at runtime.",
+    "Tasks.jsx is reportedly ~849 lines (per E1's spec) — exceeds the 700-line guideline; consider splitting list/table/panel/edit-modal into separate files.",
+    "sales_crm.py /tasks: GET response shape changed from List → paginated dict {items,total,page,limit,total_pages} — broke the legacy regression test test_sales_crm.py::TestTasks::test_list_tasks_by_lead which was reading r.json() as a list. I patched the regression test to handle both shapes (test fix only, no business-logic change).",
+    "admin.py /settings/public is correctly unauthenticated and returns only safe fields (default_currency + supported_currencies). Good separation from /admin/settings.",
+    "Multi-currency rate semantics: currency.jsx convert() = active.rate / defaultMeta.rate. Since base is MYR(rate=1.0) and USD rate=0.21, 100 MYR → 100 * 0.21 = 21.00 USD. Make sure admin understands rates are 'units of target per 1 unit of base' (not the inverse). Worth a tooltip in the Settings UI."
+  ],
+  "updated_files": [
+    "/app/frontend/src/lib/currency.jsx (fixed import: default → named { api })",
+    "/app/frontend/src/pages/PAQuote.jsx (removed 4 orphan/syntax-error lines 723-726)",
+    "/app/frontend/src/App.js (added missing `import Tasks from '@/admin/Tasks'`)",
+    "/app/backend/tests/test_sales_crm.py (test_list_tasks_by_lead: handle paginated dict response)",
+    "/app/backend/tests/test_tasks_currency.py (NEW — 15 tests covering tasks CRUD, users lookup, calendar stub, currency PATCH/public)"
+  ],
+  "success_rate": {
+    "backend": "100% (156/156 pytest, includes 15 new for this iteration)",
+    "frontend": "~95% — Tasks page, currency switcher (LS persistence + reload), and Settings currency card all verified end-to-end. One MEDIUM gap: Add Task panel missing Status select + Title input (spec deviation)."
+  },
+  "test_credentials": "admin@insurtech.io / Admin@123 (per /app/memory/test_credentials.md)",
+  "seed_data_creation": "test_tasks_currency.py seeds TEST_TaskLead Co + TEST_TaskDeal + TEST_FollowUpTask, then deletes them in TestZCleanup. Idempotent.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 8 added Tasks (replica of Sales-hub-CRM) + multi-currency. Three compile/runtime blockers from E1's commit were fixed in-place by this testing agent (App.js missing import, PAQuote.jsx orphan JSX, currency.jsx wrong import shape). Backend regression suite is now 156 tests across 4 files: test_sales_crm.py (47), test_pipeline_csv_kb.py (11), test_tasks_currency.py (15), test_backend.py + others (~83). Run with: REACT_APP_BACKEND_URL=https://tune-core.preview.emergentagent.com pytest /app/backend/tests/ -v. Currency switching uses localStorage key 'tp_currency'; /api/settings/public is no-auth. Google Calendar sync remains a STUB (sets calendar_synced=true on the task without making OAuth calls). Twilio/ElevenLabs/Gmail still unconfigured (intentional). The Add Task panel doesn't yet expose Status select or Title input — spec deviation flagged for E1.",
+  "rca of the issue": "Three blocker bugs introduced in iteration 8 by E1 — all fixed. RCA: (1) currency.jsx used default import for ./api which only has named exports (api, API). Fix: switch to named import. (2) PAQuote.jsx had orphan lines 723-726 left from a search-replace that didn't fully overwrite — Babel parser failed at the bare `-green-700\"` token. Fix: delete the dead lines. (3) App.js wired <Tasks /> into /admin/tasks route but the import statement for Tasks was never added — runtime ReferenceError after login. Fix: add `import Tasks from '@/admin/Tasks';`. After these three one-line fixes the app compiles cleanly and all listed user flows pass."
+}

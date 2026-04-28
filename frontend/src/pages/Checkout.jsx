@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Lock, Shield, CreditCard } from "lucide-react";
@@ -8,6 +9,7 @@ import { Lock, Shield, CreditCard } from "lucide-react";
 export default function Checkout() {
   const { quoteId } = useParams();
   const nav = useNavigate();
+  const { format } = useCurrency();
   const [quote, setQuote] = useState(null);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -58,7 +60,7 @@ export default function Checkout() {
             <div className="flex justify-between"><span className="text-gray-500">End</span><span className="font-medium">{quote.input?.end_date}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">Travelers</span><span className="font-medium">{quote.input?.travelers}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">Add-ons</span><span className="font-medium">{quote.input?.addons?.length ? quote.input.addons.join(", ") : "None"}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Coverage limit</span><span className="font-medium">${product?.coverage_amount.toLocaleString()}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Coverage limit</span><span className="font-medium">{format(product?.coverage_amount, { decimals: 0 })}</span></div>
           </div>
         </div>
 
@@ -68,13 +70,13 @@ export default function Checkout() {
               Order summary
             </div>
             <div className="space-y-2 text-sm mt-4 mb-4">
-              <div className="flex justify-between"><span className="text-gray-600">Base premium</span><span>${quote.base_premium.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Add-ons</span><span>${quote.addon_total.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Tax (8%)</span><span>${quote.tax.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Base premium</span><span>{format(quote.base_premium)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Add-ons</span><span>{format(quote.addon_total)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Tax (8%)</span><span>{format(quote.tax)}</span></div>
             </div>
             <div className="flex justify-between font-semibold text-lg pt-4 border-t border-gray-100 mb-6">
               <span>Total</span>
-              <span className="font-display">${quote.total.toFixed(2)}</span>
+              <span className="font-display">{format(quote.total)}</span>
             </div>
             <Button
               onClick={pay}

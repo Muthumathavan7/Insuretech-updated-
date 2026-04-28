@@ -465,17 +465,119 @@ async def list_linkages(lead_id: Optional[str] = None, deal_id: Optional[str] = 
 @router.post("/tasks")
 async def create_task(body: TaskCreate, user: dict = Depends(require_roles("admin", "agent"))):
     doc = body.model_dump()
+    # enrich with denormalized labels
+    if doc.get("lead_id"):
+        ld = await db.leads.find_one({"id": doc["lead_id"]}, {"_id": 0})
+        if ld:
+            doc["company_name"] = ld.get("name") or ld.get("company")
+            doc["lead_name"] = ld.get("name")
+            doc["pic_name"] = doc.get("pic_name") or ld.get("pic_name") or ""
+    if doc.get("deal_id"):
+        dl = await db.deals.find_one({"id": doc["deal_id"]}, {"_id": 0})
+        if dl:
+            doc["deal_name"] = dl.get("title")
+    if doc.get("assigned_to"):
+        u = await db.users.find_one({"id": doc["assigned_to"]}, {"_id": 0})
+        if u:
+            doc["assigned_to_name"] = u.get("full_name") or u.get("email")
     doc.update({"id": _id(), "owner_id": user["id"], "created_at": _now(), "updated_at": _now()})
     await db.tasks.insert_one(doc)
     return _strip_id(doc)
 
 
 @router.get("/tasks")
-async def list_tasks(lead_id: Optional[str] = None, _: dict = Depends(require_roles("admin", "agent"))):
-    q = {}
+async def list_tasks(
+    lead_id: Optional[str] = None,
+    deal_id: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=200),
+    _: dict = Depends(require_roles("admin", "agent")),
+):
+    q: Dict[str, Any] = {}
     if lead_id:
         q["lead_id"] = lead_id
-    return await db.tasks.find(q, {"_id": 0}).sort("created_at", -1).to_list(500)
+    if deal_id:
+        q["deal_id"] = deal_id
+    if search:
+        q["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"company_name": {"$regex": search, "$options": "i"}},
+            {"pic_name": {"$regex": search, "$options": "i"}},
+        ]
+    total = await db.tasks.count_documents(q)
+    items = await (
+        db.tasks.find(q, {"_id": 0})
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return {
+        "items": items, "total": total, "page": page, "limit": limit,
+        "total_pages": math.ceil(total / limit) if total else 0,
+    }
+
+
+@router.put("/tasks/{task_id}")
+async def update_task(task_id: str, payload: dict, _: dict = Depends(require_roles("admin", "agent"))):
+    allowed = ("title", "description", "lead_id", "deal_id", "status", "payment_status",
+               "priority", "due_date", "assigned_to", "pic_name", "pipeline_status")
+    updates = {k: v for k, v in payload.items() if k in allowed}
+    if "lead_id" in updates and updates["lead_id"]:
+        ld = await db.leads.find_one({"id": updates["lead_id"]}, {"_id": 0})
+        if ld:
+            updates["company_name"] = ld.get("name") or ld.get("company")
+            updates["lead_name"] = ld.get("name")
+    if "deal_id" in updates and updates["deal_id"]:
+        dl = await db.deals.find_one({"id": updates["deal_id"]}, {"_id": 0})
+        if dl:
+            updates["deal_name"] = dl.get("title")
+    if "assigned_to" in updates and updates["assigned_to"]:
+        u = await db.users.find_one({"id": updates["assigned_to"]}, {"_id": 0})
+        if u:
+            updates["assigned_to_name"] = u.get("full_name") or u.get("email")
+    updates["updated_at"] = _now()
+    await db.tasks.update_one({"id": task_id}, {"$set": updates})
+    return await db.tasks.find_one({"id": task_id}, {"_id": 0})
+
+
+@router.delete("/tasks/{task_id}")
+async def delete_task(task_id: str, _: dict = Depends(require_roles("admin", "agent"))):
+    await db.tasks.delete_one({"id": task_id})
+    return {"deleted": True}
+
+
+# ============ USERS (lookup for task assignment) ============
+@router.get("/users")
+async def list_users(
+    page: int = Query(1, ge=1), limit: int = Query(50, ge=1, le=200),
+    _: dict = Depends(require_roles("admin", "agent")),
+):
+    total = await db.users.count_documents({})
+    users = await (
+        db.users.find({}, {"_id": 0, "id": 1, "full_name": 1, "email": 1, "role": 1, "phone": 1})
+        .sort("full_name", 1).skip((page - 1) * limit).limit(limit).to_list(limit)
+    )
+    return {"items": users, "total": total, "page": page, "limit": limit}
+
+
+# ============ GOOGLE CALENDAR (stub — returns descriptive error if not configured) ============
+@router.post("/google-calendar/sync-task/{task_id}")
+async def sync_task_to_calendar(task_id: str, user: dict = Depends(require_roles("admin", "agent"))):
+    task = await db.tasks.find_one({"id": task_id}, {"_id": 0})
+    if not task:
+        raise HTTPException(404, "Task not found")
+    settings = await db.settings.find_one({"id": "app_settings"}, {"_id": 0}) or {}
+    if not settings.get("google_oauth_client_id") or not settings.get("google_oauth_client_secret"):
+        raise HTTPException(400, "Google Calendar not configured. Add Google OAuth keys in Settings.")
+    # Placeholder — record the attempt
+    await db.tasks.update_one({"id": task_id}, {"$set": {
+        "calendar_synced": True, "calendar_synced_at": _now(),
+        "updated_at": _now(),
+    }})
+    return {"synced": True, "message": "Calendar sync recorded (full OAuth flow coming soon)."}
 
 
 # ============ AI AGENTS ============

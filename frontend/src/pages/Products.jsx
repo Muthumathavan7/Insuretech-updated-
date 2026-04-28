@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useCurrency } from "@/lib/currency";
 import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +12,7 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [cat, setCat] = useState("all");
   const { user } = useAuth();
+  const { format } = useCurrency();
   const nav = useNavigate();
 
   useEffect(() => {

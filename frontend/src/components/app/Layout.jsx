@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { Shield, LayoutDashboard, FileText, Hammer, LogOut, Sparkles, Menu } from "lucide-react";
+import { useCurrency } from "@/lib/currency";
+import { Shield, LayoutDashboard, FileText, Hammer, LogOut, Sparkles, Menu, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +15,7 @@ import {
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
+  const { current, supported, setCurrent } = useCurrency();
   const nav = useNavigate();
   const loc = useLocation();
 
@@ -59,6 +61,35 @@ export default function Layout({ children }) {
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Currency switcher */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  data-testid="currency-switcher"
+                  className="flex items-center gap-1.5 rounded-full bg-white border border-gray-200 px-3 py-1.5 text-sm font-medium hover:border-primary transition-colors"
+                >
+                  <span className="font-mono">{current}</span>
+                  <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto">
+                <DropdownMenuLabel className="text-xs">Display Currency</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {supported.map((c) => (
+                  <DropdownMenuItem
+                    key={c.code}
+                    onClick={() => setCurrent(c.code)}
+                    data-testid={`currency-option-${c.code}`}
+                    className={current === c.code ? "bg-primary/5 text-primary" : ""}
+                  >
+                    <span className="font-mono w-12 text-xs">{c.code}</span>
+                    <span className="opacity-70 mr-2">{c.symbol}</span>
+                    <span className="text-xs truncate">{c.name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {!user ? (
               <>
                 <Link to="/login">

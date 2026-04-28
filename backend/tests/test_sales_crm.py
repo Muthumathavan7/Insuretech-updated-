@@ -230,7 +230,9 @@ class TestTasks:
     def test_list_tasks_by_lead(self, s, admin_token):
         r = s.get(f"{API}/tasks?lead_id={ST['lead_id']}", headers=H(admin_token), timeout=15)
         assert r.status_code == 200
-        assert any(t["id"] == ST["task_id"] for t in r.json())
+        body = r.json()
+        items = body["items"] if isinstance(body, dict) else body
+        assert any(t["id"] == ST["task_id"] for t in items)
 
 
 # ---------------- AI AGENTS ----------------

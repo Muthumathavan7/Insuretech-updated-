@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,7 @@ const fieldReq = (product, key) => {
 export default function MotorQuote() {
   const { productId } = useParams();
   const { user } = useAuth();
+  const { format } = useCurrency();
   const nav = useNavigate();
 
   const [product, setProduct] = useState(null);
@@ -241,7 +243,7 @@ export default function MotorQuote() {
                           <div className="font-display text-lg font-semibold">{vehicle.year} {vehicle.make} {vehicle.model}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{vehicle.engine_cc || "EV"} cc · {vehicle.body_type}</div>
                           <div className="flex flex-wrap gap-4 mt-3 text-sm">
-                            <div><span className="text-gray-500">Market value:</span> <span className="font-semibold">${vehicle.market_value.toLocaleString()}</span></div>
+                            <div><span className="text-gray-500">Market value:</span> <span className="font-semibold">{format(vehicle.market_value, { decimals: 0 })}</span></div>
                             <div><span className="text-gray-500">Suggested NCD:</span> <span className="font-semibold">{vehicle.ncd_eligible}%</span></div>
                           </div>
                         </div>
@@ -478,7 +480,7 @@ export default function MotorQuote() {
                     <Field label={quote.input.id_type === "nric" ? "NRIC" : "Passport"} value={quote.input.id_number} />
                     <Field label="Postcode" value={quote.input.postcode} />
                     <Field label="Email" value={quote.input.email} />
-                    <Field label="Sum Insured" value={`$${parseFloat(quote.input.sum_insured).toLocaleString()}`} />
+                    <Field label="Sum Insured" value={format(parseFloat(quote.input.sum_insured), { decimals: 0 })} />
                     <Field label="NCD" value={`${quote.input.ncd_percent}%`} />
                   </div>
                 </div>
@@ -502,19 +504,19 @@ export default function MotorQuote() {
                 <div className="bg-white rounded-2xl p-5 border border-primary/30 shadow-float sticky top-24">
                   <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold mb-1">Order summary</div>
                   <div className="space-y-2 text-sm mt-3 mb-4">
-                    <Row label="Gross premium" value={`$${quote.meta?.gross_premium?.toFixed(2) ?? "-"}`} />
+                    <Row label="Gross premium" value={quote.meta?.gross_premium != null ? format(quote.meta.gross_premium) : "-"} />
                     {quote.meta?.ncd_discount > 0 && (
-                      <Row label={`NCD (${quote.input.ncd_percent}%)`} value={`-$${quote.meta.ncd_discount.toFixed(2)}`} negative />
+                      <Row label={`NCD (${quote.input.ncd_percent}%)`} value={`- ${format(quote.meta.ncd_discount)}`} negative />
                     )}
                     {quote.meta?.online_rebate > 0 && (
-                      <Row label="Online rebate (10%)" value={`-$${quote.meta.online_rebate.toFixed(2)}`} negative />
+                      <Row label="Online rebate (10%)" value={`- ${format(quote.meta.online_rebate)}`} negative />
                     )}
-                    <Row label="Add-ons" value={`$${quote.addon_total.toFixed(2)}`} />
-                    <Row label="SST (8%)" value={`$${quote.tax.toFixed(2)}`} />
+                    <Row label="Add-ons" value={format(quote.addon_total)} />
+                    <Row label="SST (8%)" value={format(quote.tax)} />
                   </div>
                   <div className="flex justify-between font-display text-xl font-semibold pt-4 border-t border-gray-100 mb-5">
                     <span>Total</span>
-                    <span>${quote.total.toFixed(2)}</span>
+                    <span>{format(quote.total)}</span>
                   </div>
                   <Button onClick={pay} disabled={loading} data-testid="motor-pay-btn"
                     className="w-full h-12 rounded-full bg-primary hover:bg-primary-600 text-white shadow-float">
