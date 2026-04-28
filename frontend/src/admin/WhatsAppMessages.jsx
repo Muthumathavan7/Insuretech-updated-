@@ -160,11 +160,17 @@ export default function WhatsAppMessages() {
       });
       
       if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const failed = data.status === 'failed' || data.success === false || data.error;
         // Update message status
         setMessages(prev => prev.map(m => 
-          m.id === tempMessage.id ? { ...m, status: 'sent' } : m
+          m.id === tempMessage.id ? { ...m, status: failed ? 'failed' : 'sent' } : m
         ));
-        toast.success('Message sent');
+        if (failed) {
+          toast.info('WhatsApp integration coming soon. Message saved locally.');
+        } else {
+          toast.success('Message sent');
+        }
       } else {
         toast.info('WhatsApp integration coming soon. Message saved locally.');
         setMessages(prev => prev.map(m => 

@@ -17,6 +17,41 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
 
+## Implemented (2026-04-28 — iteration 7B: CSV + Pipeline + WhatsApp)
+
+### CSV Export on Leads
+- New backend endpoint `GET /api/leads/export/csv` → returns text/csv attachment with 23 columns
+  (name, pic_name, title, email, phone, office_number, ic_number, passport_number, country,
+  state, city, postcode, address, industry, company_size, website, source, pipeline_status,
+  status, ai_score, owner_name, notes, created_at)
+- New frontend "Export CSV" button on `/admin/leads` toolbar (data-testid `export-csv-btn`)
+  triggers download with filename `leads_YYYY-MM-DD.csv`
+
+### Pipeline Page (replaces Leads-style Kanban)
+- New frontend `/admin/pipeline` route — drag-drop kanban with 6 stages
+  (lead, qualified, proposal, negotiation, sales_closed, lost) showing each lead-deal-linkage
+  as a card. Drag a card to a column → PUT updates the linkage status.
+- "Add Deal" slide-in panel: deal title/value/expected close date, knowledge base upload,
+  link companies checkbox list, AI agent selection mode (round_robin/random/manual)
+- Date filter dropdown (last 5/10/20/30 days / all)
+- Backend additions: `GET /api/lookup/companies`, `PUT /api/lead-deal-linkages/{id}`,
+  `DELETE /api/lead-deal-linkages/{id}`, `POST /api/deals/{id}/knowledge-base/upload`
+
+### WhatsApp Page
+- New frontend `/admin/whatsapp` route — full WhatsApp-style chat UI
+  - Left pane: contacts list populated from leads (search + filter)
+  - Right pane: chat with selected lead, message templates, send button
+  - Calls existing `POST /api/whatsapp/send` and `GET /api/whatsapp/messages/{id}`
+  - Graceful degradation toast when Twilio is unconfigured
+
+### Sidebar Updates
+- Added "Pipeline" (GitBranch icon → /admin/pipeline)
+- Added "WhatsApp" (MessageCircle icon → /admin/whatsapp)
+- Old Kanban kept at /admin/leads-kanban
+
+**Test results**: 48/48 backend tests pass (37 sales_crm + 11 new pipeline_csv_kb).
+Frontend verified end-to-end — CSV download, Pipeline 6 columns, WhatsApp contacts + send.
+
 ## Implemented (2026-02-27 → 2026-04-28 — iteration 7)
 
 ### Sales-Hub-CRM Leads Replication (NEW — iteration 7)
