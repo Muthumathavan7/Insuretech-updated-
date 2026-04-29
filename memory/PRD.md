@@ -261,6 +261,22 @@ Frontend verified end-to-end — CSV download, Pipeline 6 columns, WhatsApp cont
 - Multi-tenancy for partner white-labels
 - Kafka event bus for cross-service async
 
+## Implemented (2026-04-29 — iteration 13: Admin panel mobile + tablet responsiveness)
+- `AdminLayout.jsx` refactored to a drawer pattern: persistent Lux sidebar at `lg` (>=1024px),
+  slide-in drawer + hamburger button below `lg`. Drawer auto-closes on route change and
+  locks body scroll while open. Mobile header shows compact user identity + sign-out.
+- Outer page padding moved to AdminLayout (`px-4 sm:px-6 lg:px-10`); admin pages that
+  previously had `p-8` (Customers, ClaimsQueue, Settings, AdminProducts, LeadsKanban)
+  trimmed to avoid double-padding.
+- Per user instruction "don't reduce the fields", removed every `hidden ___:table-cell`
+  column-hide on Leads (11 cols), Tasks (8 cols), Customers (6 cols), ClaimsQueue (6 cols),
+  Settings currency table (5 cols). Tables now sit inside `overflow-x-auto` with explicit
+  `min-w-[…]` so all columns stay in the DOM and scroll horizontally on small viewports.
+- `.lux-footer` wraps + stacks under 640px; `.lux-stat-num` shrinks 56→38px on mobile.
+- Settings webhook URL `<code>` got `break-all` so long URLs wrap on phones.
+- Verified by testing agent (iteration_12.json) at 390×844 / 820×1180 / 1280×800: 100% pass,
+  zero page-level horizontal overflow on any admin page.
+
 ## Implemented (2026-04-29 — iteration 12: Category-aware policy card variants)
 - `PolicyCard.jsx` now auto-picks a credit-card visual variant from `policy.category`:
   - **motor → obsidian** (jet black + champagne gold accents)
