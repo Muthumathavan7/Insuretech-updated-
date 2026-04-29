@@ -444,7 +444,7 @@ export default function MotorQuote() {
                           } />
                         <div className="flex-1">
                           <div className="font-medium">{a.name}</div>
-                          <div className="text-xs text-gray-500">+${a.price.toFixed(2)}</div>
+                          <div className="text-xs text-gray-500">+{format(a.price)}</div>
                         </div>
                       </label>
                     );

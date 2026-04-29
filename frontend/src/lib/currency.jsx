@@ -70,6 +70,20 @@ export function CurrencyProvider({ children }) {
     return `${active.symbol} ${formatted}`;
   };
 
+  // Replaces `$X,XXX[.XX]` patterns inside a longer string with the active
+  // currency (treating the underlying number as base-currency value). Used for
+  // legacy product feature bullets seeded with hard-coded "$" prefixes.
+  const formatText = (text) => {
+    if (!text || typeof text !== "string") return text;
+    return text.replace(/\$\s?([0-9][0-9,]*(?:\.[0-9]+)?)/g, (_, num) => {
+      const value = parseFloat(num.replace(/,/g, ""));
+      if (!Number.isFinite(value)) return _;
+      // Preserve integer formatting when the original had no decimals
+      const decimals = num.includes(".") ? 2 : 0;
+      return format(value, { decimals });
+    });
+  };
+
   return (
     <CurrencyCtx.Provider
       value={{
@@ -81,6 +95,7 @@ export function CurrencyProvider({ children }) {
         defaultCode,
         setCurrent,
         format,
+        formatText,
         convert,
       }}
     >

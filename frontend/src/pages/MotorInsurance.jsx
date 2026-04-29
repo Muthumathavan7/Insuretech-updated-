@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
@@ -41,32 +42,6 @@ const BENEFITS = [
   },
 ];
 
-const ADDONS = [
-  { icon: Umbrella, name: "Windscreen Coverage",
-    body: "A cracked windscreen can happen anytime. Repair & replacement without affecting your NCD." },
-  { icon: Wallet, name: "Inconvenience Allowance",
-    body: "Receive up to $50/day while your car is being repaired (up to 10 days)." },
-  { icon: Brush, name: "Spray Paint",
-    body: "Get the whole car repainted — not just the damaged area." },
-  { icon: ShieldCheck, name: "Strike, Riot & Civil Commotion",
-    body: "Cover damages to your vehicle caused by strikes, riots or public disturbance." },
-  { icon: Users, name: "Passenger PA Coverage",
-    body: "Additional personal accident coverage for your passengers." },
-  { icon: ScrollText, name: "Legal Liability to Passengers",
-    body: "Protect passengers in the event of an accident with compensation for injury or death." },
-];
-
-const BUNDLE = [
-  "All Drivers — waiver of excess up to $100",
-  "Convenience Cash Allowance — 10% of sum insured, up to $2,500",
-  "Side Mirror Protection — up to $250",
-  "Key Replacement — up to $250",
-  "Legal Liability to Passengers",
-  "Drivers & Passengers PA up to $5,000 per person",
-  "24-hour Emergency Towing & Roadside Assistance",
-  "Compassionate Flood Cover — up to $400",
-];
-
 const FAQS = [
   {
     q: "What is Motor Easy insurance?",
@@ -75,10 +50,6 @@ const FAQS = [
   {
     q: "How is my premium calculated?",
     a: "Your premium depends on the cover type (Comprehensive or Third Party), your car's market value (sum insured), your No Claim Discount (NCD), and any add-ons you pick. Online customers receive a 10% instant rebate on top of their NCD.",
-  },
-  {
-    q: "Who can apply for Motor Easy?",
-    a: "Drivers aged 18 to 99 with a valid driving licence. Private cars up to 20 years old and a sum insured up to $500,000 are eligible. High-performance and e-hailing vehicles are excluded.",
   },
   {
     q: "How fast can I buy online?",
@@ -96,12 +67,42 @@ const FAQS = [
 
 export default function MotorInsurance() {
   const [product, setProduct] = useState(null);
+  const { format } = useCurrency();
 
   useEffect(() => {
     api.get("/products?category=motor").then((r) => setProduct(r.data?.[0]));
   }, []);
 
   const quoteHref = product ? `/motor-quote/${product.id}` : "/motor-quote";
+
+  // Money values stored in base currency (MYR) and rendered via format()
+  const ADDONS = [
+    { icon: Umbrella, name: "Windscreen Coverage",
+      body: "A cracked windscreen can happen anytime. Repair & replacement without affecting your NCD." },
+    { icon: Wallet, name: "Inconvenience Allowance",
+      body: `Receive up to ${format(50, { decimals: 0 })}/day while your car is being repaired (up to 10 days).` },
+    { icon: Brush, name: "Spray Paint",
+      body: "Get the whole car repainted — not just the damaged area." },
+    { icon: ShieldCheck, name: "Strike, Riot & Civil Commotion",
+      body: "Cover damages to your vehicle caused by strikes, riots or public disturbance." },
+    { icon: Users, name: "Passenger PA Coverage",
+      body: "Additional personal accident coverage for your passengers." },
+    { icon: ScrollText, name: "Legal Liability to Passengers",
+      body: "Protect passengers in the event of an accident with compensation for injury or death." },
+  ];
+
+  const BUNDLE = [
+    `All Drivers — waiver of excess up to ${format(100, { decimals: 0 })}`,
+    `Convenience Cash Allowance — 10% of sum insured, up to ${format(2500, { decimals: 0 })}`,
+    `Side Mirror Protection — up to ${format(250, { decimals: 0 })}`,
+    `Key Replacement — up to ${format(250, { decimals: 0 })}`,
+    "Legal Liability to Passengers",
+    `Drivers & Passengers PA up to ${format(5000, { decimals: 0 })} per person`,
+    "24-hour Emergency Towing & Roadside Assistance",
+    `Compassionate Flood Cover — up to ${format(400, { decimals: 0 })}`,
+  ];
+
+  const eligibilityFAQ = `Drivers aged 18 to 99 with a valid driving licence. Private cars up to 20 years old and a sum insured up to ${format(500000, { decimals: 0 })} are eligible. High-performance and e-hailing vehicles are excluded.`;
 
   return (
     <div data-testid="motor-insurance-page">
@@ -186,7 +187,7 @@ export default function MotorInsurance() {
               Motor Bundle
             </div>
             <h2 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight mb-4">
-              Enhanced benefits, <span className="text-primary-700">$0.24/day.</span>
+              Enhanced benefits, <span className="text-primary-700">{format(0.24)}/day.</span>
             </h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
               Greater value with our curated motor bundle — All-Driver cover, side-mirror protection,
@@ -299,6 +300,14 @@ export default function MotorInsurance() {
           </h2>
         </div>
         <Accordion type="single" collapsible className="bg-white rounded-3xl border border-gray-100 p-2">
+          <AccordionItem value="elig" data-testid="motor-faq-eligibility">
+            <AccordionTrigger className="px-4 text-left font-medium hover:no-underline">
+              Who can apply for Motor Easy?
+            </AccordionTrigger>
+            <AccordionContent className="px-4 text-gray-600 leading-relaxed">
+              {eligibilityFAQ}
+            </AccordionContent>
+          </AccordionItem>
           {FAQS.map((f, i) => (
             <AccordionItem key={i} value={`f-${i}`} data-testid={`motor-faq-${i}`}>
               <AccordionTrigger className="px-4 text-left font-medium hover:no-underline">

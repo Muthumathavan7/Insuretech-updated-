@@ -12,7 +12,7 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [cat, setCat] = useState("all");
   const { user } = useAuth();
-  const { format } = useCurrency();
+  const { format, formatText } = useCurrency();
   const nav = useNavigate();
 
   useEffect(() => {
@@ -73,12 +73,12 @@ export default function Products() {
                   <span className="text-xs font-semibold uppercase tracking-wider">{p.category}</span>
                 </div>
                 <h3 className="font-display text-2xl font-semibold">{p.name}</h3>
-                <p className="text-sm text-gray-500 mt-1 mb-4">{p.description}</p>
+                <p className="text-sm text-gray-500 mt-1 mb-4">{formatText(p.description)}</p>
                 <ul className="space-y-2 mb-5">
                   {p.features?.slice(0, 4).map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
                       <Check className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" strokeWidth={3} />
-                      {f}
+                      {formatText(f)}
                     </li>
                   ))}
                 </ul>
@@ -86,7 +86,7 @@ export default function Products() {
                   <div>
                     <div className="text-xs text-gray-400">from</div>
                     <div className="font-display text-2xl font-semibold">
-                      ${p.base_premium.toFixed(0)}
+                      {format(p.base_premium, { decimals: 0 })}
                       <span className="text-xs text-gray-400 font-normal ml-1">/policy</span>
                     </div>
                   </div>

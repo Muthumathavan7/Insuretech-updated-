@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useAuth } from '../lib/auth';
+import { useCurrency } from '../lib/currency';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import SlideInPanel from '../components/elstar/SlideInPanel';
@@ -244,7 +245,7 @@ DealFormFields.displayName = 'DealFormFields';
 
 export default function Pipeline() {
   const { token } = useAuth();
-  const orgSettings = { currency: 'MYR', currency_symbol: 'RM' };
+  const { format: formatMoney } = useCurrency();
   const navigate = useNavigate();
   const [deals, setDeals] = useState([]);
   const [linkages, setLinkages] = useState([]); // Lead-deal linkages for the Kanban
@@ -564,12 +565,7 @@ export default function Pipeline() {
   };
   const getLinkageStageValue = (stageId) => getLinkagesByStage(stageId).reduce((sum, l) => sum + (l.deal_value || 0), 0);
   
-  const formatCurrency = (value) => {
-    const currency = orgSettings?.currency || 'USD';
-    const symbol = orgSettings?.currency_symbol || '$';
-    // Use symbol directly for cleaner display
-    return `${symbol}${parseFloat(value || 0).toLocaleString()}`;
-  };
+  const formatCurrency = (value) => formatMoney(parseFloat(value || 0), { decimals: 0 });
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
@@ -744,7 +740,7 @@ export default function Pipeline() {
               <optgroup label="Existing Deals">
                 {deals.map(deal => (
                   <option key={deal.id} value={deal.id}>
-                    {deal.title} - RM {(deal.value || 0).toLocaleString()}
+                    {deal.title} - {formatCurrency(deal.value || 0)}
                   </option>
                 ))}
               </optgroup>
@@ -767,7 +763,7 @@ export default function Pipeline() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground">Value</p>
-                  <p className="font-medium">RM {(selectedExistingDeal.value || 0).toLocaleString()}</p>
+                  <p className="font-medium">{formatCurrency(selectedExistingDeal.value || 0)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Expected Close</p>

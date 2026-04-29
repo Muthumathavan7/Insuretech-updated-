@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { User, Shield, Hammer, Clock, PhoneCall, TrendingUp, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ export default function Customer360() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [leadScore, setLeadScore] = useState(null);
+  const { format } = useCurrency();
 
   const load = async () => {
     const r = await api.get(`/crm/customers/${id}`);
@@ -69,7 +71,7 @@ export default function Customer360() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
               <Stat label="Active policies" value={stats.active_policies} />
               <Stat label="Total claims" value={stats.total_claims} />
-              <Stat label="LTV" value={`$${Math.round(stats.ltv).toLocaleString()}`} />
+              <Stat label="LTV" value={format(stats.ltv, { decimals: 0 })} />
               <Stat label="Risk score" value={`${Math.round((profile.risk_score || 0) * 100)}%`} />
             </div>
           </div>
@@ -126,7 +128,7 @@ export default function Customer360() {
               <Item
                 key={p.id}
                 primary={p.product_name}
-                meta={`${p.policy_number} · $${p.premium}`}
+                meta={`${p.policy_number} · ${format(p.premium)}`}
                 right={
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 capitalize">
                     {p.status}
@@ -144,7 +146,7 @@ export default function Customer360() {
             claims.map((c) => (
               <Item
                 key={c.id}
-                primary={`${c.incident_type} · $${c.amount_claimed}`}
+                primary={`${c.incident_type} · ${format(c.amount_claimed)}`}
                 meta={c.claim_number}
                 right={
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 capitalize">

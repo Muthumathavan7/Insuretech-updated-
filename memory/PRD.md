@@ -261,6 +261,22 @@ Frontend verified end-to-end — CSV download, Pipeline 6 columns, WhatsApp cont
 - Multi-tenancy for partner white-labels
 - Kafka event bus for cross-service async
 
+## Implemented (2026-04-29 — iteration 14: Dynamic currency everywhere)
+- Root cause: the site had **dozens of hardcoded `$` and `RM` symbols** across customer
+  pages (Products, Landing, PA / Motor marketing, PA / Travel / Motor quote flows, Claims,
+  FileClaim) and admin pages (Customers, ClaimsQueue, AdminProducts, Analytics, LeadsKanban,
+  Pipeline, Tasks, LeadDetailPage, Customer360). The currency switcher in the navbar updated
+  state correctly, but those hardcoded symbols never re-rendered.
+- Refactor: every monetary value now flows through `useCurrency().format(amount)` (or
+  `formatMoney()` alias). Stale `orgSettings = { currency_symbol: 'RM' }` patterns inside
+  CRM pages replaced with the real context.
+- Added `formatText(string)` helper to `currency.jsx` that scans free-text fields
+  (product `description`, `features` bullets seeded with `$10,000`-style legacy text) and
+  rewrites every `$X[,XXX]` token to the active currency. This covers the seeded copy
+  ("Hospital Income $50/day up to 30 days" etc.) without re-seeding the database.
+- Verified end-to-end: switching MYR ↔ USD on `/products` instantly converts hero card
+  prices, feature-bullet sums, and "from RM 29 / from $ 6" footer prices.
+
 ## Implemented (2026-04-29 — iteration 13: Admin panel mobile + tablet responsiveness)
 - `AdminLayout.jsx` refactored to a drawer pattern: persistent Lux sidebar at `lg` (>=1024px),
   slide-in drawer + hamburger button below `lg`. Drawer auto-closes on route change and

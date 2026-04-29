@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth';
+import { useCurrency } from '../lib/currency';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import SlideInPanel from '../components/elstar/SlideInPanel';
@@ -40,6 +41,7 @@ const initialFormData = {
 
 export default function Tasks() {
   const { token } = useAuth();
+  const { format: formatMoney } = useCurrency();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -608,7 +610,7 @@ export default function Tasks() {
             >
               <option value="">Select deal...</option>
               {deals.map(deal => (
-                <option key={deal.id} value={deal.id}>{deal.title} - RM {(deal.value || 0).toLocaleString()}</option>
+                <option key={deal.id} value={deal.id}>{deal.title} - {formatMoney(deal.value || 0, { decimals: 0 })}</option>
               ))}
             </select>
           </div>
@@ -791,7 +793,7 @@ export default function Tasks() {
                             <div>
                               <p className="font-semibold text-sm">{deal.deal_title || deal.deal_name || 'Untitled Deal'}</p>
                               <p className="text-sm text-muted-foreground">
-                                RM {(deal.deal_value || 0).toLocaleString()}
+                                {formatMoney(deal.deal_value || 0, { decimals: 0 })}
                                 {deal.expected_close_date && ` · Close: ${new Date(deal.expected_close_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
                               </p>
                             </div>

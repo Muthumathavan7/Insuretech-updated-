@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
+import { useCurrency } from '../lib/currency';
 import { toast } from 'sonner';
 import Modal from '../components/elstar/Modal';
 import SlideInPanel from '../components/elstar/SlideInPanel';
@@ -34,7 +35,8 @@ export default function LeadDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { token, user } = useAuth();
-  const orgSettings = { currency_symbol: 'RM' };
+  const { format: formatMoney } = useCurrency();
+  const fmt = (v) => formatMoney(parseFloat(v || 0), { decimals: 0 });
   const chatEndRef = useRef(null);
   
   const [lead, setLead] = useState(null);
@@ -1070,7 +1072,7 @@ export default function LeadDetailPage() {
                 <option value="">Select a deal (required)</option>
                 {allDeals.map(deal => (
                   <option key={deal.id} value={deal.id}>
-                    {deal.title} - {orgSettings?.currency_symbol || 'RM'}{(deal.value || 0).toLocaleString()}
+                    {deal.title} - {fmt(deal.value)}
                   </option>
                 ))}
               </select>
@@ -1305,7 +1307,7 @@ export default function LeadDetailPage() {
               <h3 className="text-xs font-semibold text-amber-500 uppercase tracking-wider">Deals ({deals.length})</h3>
               {deals.length > 0 && (
                 <p className="text-sm font-bold text-green-600">
-                  Total: {orgSettings?.currency_symbol || 'RM'}{deals.reduce((sum, d) => sum + (d.value || 0), 0).toLocaleString()}
+                  Total: {fmt(deals.reduce((sum, d) => sum + (d.value || 0), 0))}
                 </p>
               )}
             </div>
@@ -1317,7 +1319,7 @@ export default function LeadDetailPage() {
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-sm truncate">{deal.title}</p>
                         <p className="text-lg font-bold text-primary mt-1">
-                          {orgSettings?.currency_symbol || 'RM'}{(deal.value || 0).toLocaleString()}
+                          {fmt(deal.value)}
                         </p>
                       </div>
                       <span className="shrink-0 inline-block px-2 py-0.5 text-xs font-medium rounded bg-amber-500/20 text-amber-600">
@@ -1648,7 +1650,7 @@ export default function LeadDetailPage() {
               <option value="">Choose a deal...</option>
               {allDeals.map(deal => (
                 <option key={deal.id} value={deal.id}>
-                  {deal.title} - {orgSettings?.currency_symbol || 'RM'}{(deal.value || 0).toLocaleString()}
+                  {deal.title} - {fmt(deal.value)}
                 </option>
               ))}
             </select>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ const BADGE = {
 export default function ClaimsQueue() {
   const [claims, setClaims] = useState([]);
   const [filter, setFilter] = useState("all");
+  const { format } = useCurrency();
 
   const load = async () => {
     const r = await api.get("/claims/admin/queue");
@@ -75,7 +77,7 @@ export default function ClaimsQueue() {
                 <tr key={c.id} data-testid={`admin-claim-${c.claim_number}`} className="border-t border-gray-100">
                   <td className="p-4 font-mono text-xs whitespace-nowrap">{c.claim_number}</td>
                   <td className="p-4 whitespace-nowrap">{c.incident_type}</td>
-                  <td className="p-4 font-medium whitespace-nowrap">${c.amount_claimed.toFixed(2)}</td>
+                  <td className="p-4 font-medium whitespace-nowrap">{format(c.amount_claimed)}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 bg-gray-100 rounded-full">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -300,6 +301,7 @@ function ProductEditor({ product, onSaved }) {
 export default function AdminProducts() {
   const [items, setItems] = useState([]);
   const [openId, setOpenId] = useState(null);
+  const { format } = useCurrency();
 
   const load = () => api.get("/products").then((r) => setItems(r.data));
   useEffect(() => { load(); }, []);
@@ -329,12 +331,12 @@ export default function AdminProducts() {
                 </div>
                 <div className="ml-auto text-right">
                   <div className="text-xs text-gray-500">from</div>
-                  <div className="font-semibold" data-testid={`price-${p.category}`}>${p.base_premium}</div>
+                  <div className="font-semibold" data-testid={`price-${p.category}`}>{format(p.base_premium)}</div>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-4 line-clamp-2">{p.description}</p>
               <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                <span>Coverage <strong className="text-gray-800">${p.coverage_amount.toLocaleString()}</strong></span>
+                <span>Coverage <strong className="text-gray-800">{format(p.coverage_amount, { decimals: 0 })}</strong></span>
                 <span>Features <strong className="text-gray-800">{p.features?.length}</strong></span>
                 <span>Add-ons <strong className="text-gray-800">{p.addons?.length}</strong></span>
                 <span className={`ml-auto px-2 py-0.5 rounded-full ${p.active ? "bg-green-50 text-green-700" : "bg-gray-100"}`}>

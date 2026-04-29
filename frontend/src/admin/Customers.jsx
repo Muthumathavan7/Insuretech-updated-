@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Input } from "@/components/ui/input";
 import { Search, User } from "lucide-react";
 
@@ -16,6 +17,7 @@ const STAGE_COLORS = {
 export default function Customers() {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
+  const { format } = useCurrency();
 
   const load = async () => {
     const r = await api.get("/crm/customers", { params: q ? { q } : {} });
@@ -94,7 +96,7 @@ export default function Customers() {
                   <td className="p-4">
                     <div className="text-sm font-medium">{Math.round((u.risk_score || 0) * 100)}%</div>
                   </td>
-                  <td className="p-4 text-sm font-medium whitespace-nowrap">${Math.round(u.ltv || 0).toLocaleString()}</td>
+                  <td className="p-4 text-sm font-medium whitespace-nowrap">{format(u.ltv || 0, { decimals: 0 })}</td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1">
                       {u.tags?.slice(0, 2).map((t) => (

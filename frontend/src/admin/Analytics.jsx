@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, Legend, BarChart, Bar,
@@ -18,6 +19,7 @@ function KPI({ label, value }) {
 
 export default function Analytics() {
   const [data, setData] = useState(null);
+  const { format } = useCurrency();
   useEffect(() => {
     api.get("/analytics/overview").then((r) => setData(r.data));
   }, []);
@@ -27,14 +29,14 @@ export default function Analytics() {
   const funnelArr = Object.entries(funnel).map(([k, v]) => ({ stage: k, count: v }));
 
   return (
-    <div className="p-8" data-testid="analytics-page">
-      <div className="mb-8">
+    <div data-testid="analytics-page">
+      <div className="mb-6 sm:mb-8">
         <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold">Insights</div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight mt-1">Analytics</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight mt-1">Analytics</h1>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <KPI label="Revenue" value={`$${kpis.revenue.toLocaleString()}`} />
+        <KPI label="Revenue" value={format(kpis.revenue, { decimals: 0 })} />
         <KPI label="Active policies" value={kpis.active_policies} />
         <KPI label="Claim ratio" value={`${kpis.claim_ratio}%`} />
         <KPI label="Approval rate" value={`${kpis.approval_rate}%`} />

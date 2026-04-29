@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ const INCIDENT_TYPES = ["Medical", "Theft", "Loss", "Damage", "Cancellation", "D
 export default function FileClaim() {
   const { policyId } = useParams();
   const nav = useNavigate();
+  const { format, code } = useCurrency();
   const [step, setStep] = useState(1);
   const [policy, setPolicy] = useState(null);
   const [form, setForm] = useState({
@@ -129,7 +131,7 @@ export default function FileClaim() {
               />
             </div>
             <div>
-              <Label htmlFor="amt">Amount claimed (USD)</Label>
+              <Label htmlFor="amt">Amount claimed ({code})</Label>
               <Input
                 id="amt"
                 data-testid="claim-amount"
@@ -218,7 +220,7 @@ export default function FileClaim() {
               <div className="flex justify-between"><span className="text-gray-500">Policy</span><span className="font-mono font-medium">{policy?.policy_number}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">Incident date</span><span>{form.incident_date}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">Incident type</span><span>{form.incident_type}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Amount</span><span className="font-semibold">${parseFloat(form.amount_claimed || 0).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Amount</span><span className="font-semibold">{format(parseFloat(form.amount_claimed || 0))}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">Documents</span><span>{form.documents.length}</span></div>
             </div>
             <div className="flex gap-3">
