@@ -125,6 +125,7 @@ export default function Landing() {
             const href =
               p.category === "motor" ? "/products/motor-easy"
               : p.category === "pa" ? "/products/pa-easy"
+              : p.category === "travel" ? `/travel-quote/${p.id}`
               : "/products";
             return (
               <Link

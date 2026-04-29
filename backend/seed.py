@@ -20,7 +20,7 @@ DEFAULT_PRODUCTS = [
         "coverage_amount": 100000,
         "display_order": 10,
         "features": [
-            "Emergency medical up to $100k",
+            "Emergency medical up to RM100k",
             "Trip cancellation reimbursement",
             "Lost/delayed baggage cover",
             "24/7 global assistance",
@@ -31,6 +31,31 @@ DEFAULT_PRODUCTS = [
             {"name": "Rental Car Cover", "price": 12.0},
             {"name": "Cancel For Any Reason", "price": 25.0},
         ],
+        "form_config": {
+            "step1_fields": [
+                {"key": "region",         "label": "Region",          "type": "toggle",   "options": ["international", "domestic"], "required": True,  "show": True},
+                {"key": "trip_type",      "label": "Trip Type",       "type": "select",   "options": ["single_return", "one_way", "annual"], "required": True, "show": True},
+                {"key": "destinations",   "label": "Destination(s)",  "type": "multi",    "required": True, "show": True},
+                {"key": "traveler_type",  "label": "Traveller Type",  "type": "select",   "options": ["individual", "family", "group"], "required": True, "show": True},
+                {"key": "age_category",   "label": "Age Category",    "type": "select",   "options": ["child", "18_70", "70_plus"], "required": True, "show": True},
+                {"key": "travelers",      "label": "Travellers",      "type": "number",   "required": True, "show": True},
+                {"key": "email",          "label": "Email",           "type": "email",    "required": True, "show": True},
+                {"key": "start_date",     "label": "Start Date",      "type": "date",     "required": True, "show": True},
+                {"key": "end_date",       "label": "End Date",        "type": "date",     "required": True, "show": True},
+                {"key": "is_malaysian",   "label": "Malaysian/PR",    "type": "checkbox", "required": True, "show": True},
+                {"key": "accept_privacy", "label": "Privacy Notice",  "type": "checkbox", "required": True, "show": True},
+            ],
+            "step2_fields": [
+                {"key": "full_name",                "label": "Full Name",     "type": "text",     "required": True,  "show": True},
+                {"key": "id_type",                  "label": "ID Type",       "type": "select",   "options": ["nric", "passport"], "required": True, "show": True},
+                {"key": "id_number",                "label": "ID Number",     "type": "text",     "required": True,  "show": True},
+                {"key": "phone",                    "label": "Mobile",        "type": "tel",      "required": True,  "show": True},
+                {"key": "address",                  "label": "Address",       "type": "textarea", "required": False, "show": True},
+                {"key": "postcode",                 "label": "Postcode",      "type": "text",     "required": True,  "show": True},
+                {"key": "beneficiary_name",         "label": "Beneficiary",   "type": "text",     "required": False, "show": True},
+                {"key": "beneficiary_relationship", "label": "Relationship",  "type": "select",   "options": ["spouse", "parent", "child", "sibling", "other"], "required": False, "show": True},
+            ],
+        },
         "image_url": "https://images.unsplash.com/photo-1774663855124-9ede7464f37e?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80",
     },
     {
@@ -176,6 +201,8 @@ async def seed_all():
                 backfill["form_config"] = DEFAULT_MOTOR_FORM_CONFIG
             if p["category"] == "pa" and not exists.get("form_config"):
                 backfill["form_config"] = DEFAULT_PA_FORM_CONFIG
+            if p["category"] == "travel" and not exists.get("form_config") and p.get("form_config"):
+                backfill["form_config"] = p["form_config"]
             if "display_order" not in exists:
                 backfill["display_order"] = p.get("display_order", 100)
             if backfill:

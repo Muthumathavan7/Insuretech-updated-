@@ -61,10 +61,9 @@ def _parse_date(s: str) -> datetime:
 
 
 def _risk_score(destination: str, travelers: int, tier: str) -> float:
-    # Simple rule-based risk score (0..1). High-risk destinations bump the score.
     high_risk = {"syria", "afghanistan", "yemen", "somalia", "north korea"}
     base = 0.30
-    if destination.strip().lower() in high_risk:
+    if (destination or "").strip().lower() in high_risk:
         base += 0.40
     base += min(travelers * 0.03, 0.20)
     if tier == "basic":
@@ -72,19 +71,36 @@ def _risk_score(destination: str, travelers: int, tier: str) -> float:
     return round(min(base, 0.95), 2)
 
 
+# Tune-Protect-style multipliers
+TRIP_TYPE_MULT = {"single_return": 1.0, "one_way": 0.7, "annual": 5.0}
+AGE_MULT = {"child": 0.6, "18_70": 1.0, "70_plus": 1.8}
+REGION_MULT = {"domestic": 0.6, "international": 1.0}
+
+
 @router.post("/travel")
 async def create_travel_quote(body: TravelQuoteInput, user: dict = Depends(get_current_user)):
     product = await db.products.find_one({"id": body.product_id, "active": True}, {"_id": 0})
     if not product or product["category"] != "travel":
         raise HTTPException(404, "Travel product not found")
+    if not body.accept_privacy:
+        raise HTTPException(400, "Please accept the privacy notice to continue")
 
     start = _parse_date(body.start_date)
     end = _parse_date(body.end_date)
     days = max((end - start).days, 1)
+    if body.trip_type == "annual":
+        days = 365  # annual auto-renew style
+    if body.trip_type == "one_way":
+        days = max(days, 7)
 
     base = product["base_premium"]
     tier_mult = TIER_MULTIPLIER.get(body.coverage_tier, 1.0)
-    base_premium = round(base * (days / 7.0) * body.travelers * tier_mult, 2)
+    trip_mult = TRIP_TYPE_MULT.get(body.trip_type, 1.0)
+    age_mult = AGE_MULT.get(body.age_category, 1.0)
+    region_mult = REGION_MULT.get(body.region, 1.0)
+    base_premium = round(
+        base * (days / 7.0) * body.travelers * tier_mult * trip_mult * age_mult * region_mult, 2
+    )
 
     addon_total = 0.0
     if body.addons and product.get("addons"):
@@ -93,7 +109,8 @@ async def create_travel_quote(body: TravelQuoteInput, user: dict = Depends(get_c
             if a["name"] in names:
                 addon_total += float(a["price"]) * body.travelers
 
-    risk = _risk_score(body.destination, body.travelers, body.coverage_tier)
+    primary_dest = body.destination or (body.destinations[0] if body.destinations else "")
+    risk = _risk_score(primary_dest, body.travelers, body.coverage_tier)
     risk_loading = base_premium * (risk - 0.3) * 0.5 if risk > 0.3 else 0.0
     subtotal = base_premium + addon_total + max(risk_loading, 0)
     tax = round(subtotal * 0.08, 2)
@@ -111,13 +128,11 @@ async def create_travel_quote(body: TravelQuoteInput, user: dict = Depends(get_c
         coverage_tier=body.coverage_tier,
     )
     await db.quotes.insert_one(q.model_dump())
-
-    # update lead stage to "quoted"
     await db.users.update_one({"id": user["id"]}, {"$set": {"lead_stage": "quoted", "risk_score": risk}})
     await db.interactions.insert_one({
         "id": __import__("uuid").uuid4().hex, "user_id": user["id"],
         "kind": "action", "title": "Travel quote generated",
-        "body": f"Destination {body.destination}, {days}d, ${total}",
+        "body": f"Destination {primary_dest or '-'}, {days}d, total {total}",
         "meta": {"quote_id": q.id}, "created_at": datetime.now(timezone.utc).isoformat(),
     })
     return q.model_dump()

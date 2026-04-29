@@ -24,6 +24,7 @@ import MotorInsurance from "@/pages/MotorInsurance";
 import MotorQuote from "@/pages/MotorQuote";
 import PAInsurance from "@/pages/PAInsurance";
 import PAQuote from "@/pages/PAQuote";
+import TravelQuote from "@/pages/TravelQuote";
 
 import AdminDashboard from "@/admin/AdminDashboard";
 import Customers from "@/admin/Customers";
@@ -74,6 +75,9 @@ function AppRoutes() {
       <Route path="/products/pa-easy" element={<CustomerShell><PAInsurance /></CustomerShell>} />
       <Route path="/pa-quote" element={<CustomerShell><PAQuote /></CustomerShell>} />
       <Route path="/pa-quote/:productId" element={<CustomerShell><PAQuote /></CustomerShell>} />
+      <Route path="/products/travel" element={<CustomerShell><TravelQuote /></CustomerShell>} />
+      <Route path="/products/travel/:productId/quote" element={<CustomerShell><TravelQuote /></CustomerShell>} />
+      <Route path="/travel-quote/:productId" element={<CustomerShell><TravelQuote /></CustomerShell>} />
       <Route
         path="/dashboard"
         element={

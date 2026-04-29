@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
+import QuickFillBanner from "@/components/app/QuickFillBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -318,6 +319,22 @@ export default function PAQuote() {
             <p className="text-gray-500 mb-6">
               Tell us about yourself and nominate a beneficiary. Everything's encrypted.
             </p>
+
+            <QuickFillBanner
+              testIdPrefix="pa-quickfill"
+              onApply={(p) => update({
+                full_name: p.full_name || form.full_name,
+                id_type: p.id_type || form.id_type,
+                id_number: p.id_number || form.id_number,
+                phone: p.phone || form.phone,
+                email: p.email || form.email,
+                address: p.address || form.address,
+                postcode: p.postcode || form.postcode,
+                date_of_birth: p.date_of_birth || form.date_of_birth,
+                gender: p.gender || form.gender,
+                nationality: p.nationality || form.nationality,
+              })}
+            />
 
             <div className="grid md:grid-cols-2 gap-5">
               {show("full_name") && (
