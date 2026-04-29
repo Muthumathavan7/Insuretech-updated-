@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { FileText, Shield, Hammer, Download } from "lucide-react";
+import PolicyCard from "@/components/app/PolicyCard";
 
 const ICONS = { travel: "🧳", health: "❤️", motor: "🚗", device: "💻" };
 
@@ -18,6 +20,7 @@ const BADGE = {
 export default function MyPolicies() {
   const [policies, setPolicies] = useState([]);
   const [selected, setSelected] = useState(null);
+  const { user } = useAuth();
   const { format } = useCurrency();
 
   useEffect(() => {
@@ -55,32 +58,38 @@ export default function MyPolicies() {
           </Link>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {policies.map((p) => (
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-5">
+          {policies.map((p, idx) => (
             <Sheet key={p.id}>
               <SheetTrigger asChild>
                 <button
                   onClick={() => setSelected(p)}
                   data-testid={`policy-card-${p.policy_number}`}
-                  className="text-left bg-white rounded-2xl p-5 border border-gray-100 hover:-translate-y-1 hover:shadow-md transition-all"
+                  className="text-left rounded-2xl p-0 transition-transform hover:scale-[1.015] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="text-3xl">{ICONS[p.category]}</div>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${BADGE[p.status] || BADGE.pending}`}>
+                  <PolicyCard
+                    policy={{
+                      id: p.id,
+                      policy_number: p.policy_number,
+                      user_name: user?.full_name || "Policy Holder",
+                      product_name: p.product_name,
+                      category: p.category,
+                      start_date: p.start_date,
+                      end_date: p.end_date,
+                      status: p.status,
+                    }}
+                    variant={idx % 3 === 1 ? "obsidian" : idx % 3 === 2 ? "platinum" : "gold"}
+                  />
+                  <div className="mt-3 px-1 flex items-center justify-between text-xs text-gray-500">
+                    <span>
+                      Coverage <span className="font-medium text-gray-800">{format(p.coverage_amount, { decimals: 0 })}</span>
+                    </span>
+                    <span>
+                      Premium <span className="font-medium text-gray-800">{format(p.premium)}</span>
+                    </span>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize ${BADGE[p.status] || BADGE.pending}`}>
                       {p.status}
                     </span>
-                  </div>
-                  <div className="text-xs text-gray-500 font-mono">{p.policy_number}</div>
-                  <div className="font-semibold text-lg mt-1">{p.product_name}</div>
-                  <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
-                    <div className="flex justify-between mb-1">
-                      <span>Coverage</span>
-                      <span className="font-medium text-gray-800">{format(p.coverage_amount, { decimals: 0 })}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Premium</span>
-                      <span className="font-medium text-gray-800">${p.premium}</span>
-                    </div>
                   </div>
                 </button>
               </SheetTrigger>
@@ -91,13 +100,26 @@ export default function MyPolicies() {
                   </SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
+                  <PolicyCard
+                    policy={{
+                      id: p.id,
+                      policy_number: p.policy_number,
+                      user_name: user?.full_name || "Policy Holder",
+                      product_name: p.product_name,
+                      category: p.category,
+                      start_date: p.start_date,
+                      end_date: p.end_date,
+                      status: p.status,
+                    }}
+                    variant="gold"
+                  />
                   <div className="bg-gray-50 rounded-2xl p-4 space-y-2 text-sm">
                     <div className="flex justify-between"><span className="text-gray-500">Policy #</span><span className="font-mono font-medium">{p.policy_number}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Status</span><span className="capitalize font-medium">{p.status}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Start date</span><span>{new Date(p.start_date).toLocaleDateString()}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">End date</span><span>{new Date(p.end_date).toLocaleDateString()}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Coverage</span><span>{format(p.coverage_amount, { decimals: 0 })}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Premium</span><span>${p.premium}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Premium</span><span>{format(p.premium)}</span></div>
                     {p.meta?.tier && (
                       <div className="flex justify-between"><span className="text-gray-500">Tier</span><span className="capitalize">{p.meta.tier}</span></div>
                     )}

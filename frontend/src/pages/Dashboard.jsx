@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
+import PolicyCard from "@/components/app/PolicyCard";
 import { Shield, FileText, Hammer, TrendingUp, ArrowRight, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -110,25 +111,28 @@ export default function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
-              {active.slice(0, 4).map((p) => (
-                <div
+            <div className="grid sm:grid-cols-2 gap-4">
+              {active.slice(0, 4).map((p, idx) => (
+                <Link
+                  to="/policies"
                   key={p.id}
                   data-testid={`dash-policy-${p.policy_number}`}
-                  className="bg-white rounded-2xl p-5 border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow"
+                  className="block transition-transform hover:scale-[1.015]"
                 >
-                  <div className="text-3xl">{ICONS[p.category]}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-gray-500">{p.policy_number}</div>
-                    <div className="font-semibold truncate">{p.product_name}</div>
-                    <div className="text-xs text-gray-500">
-                      Coverage {format(p.coverage_amount, { decimals: 0 })} · Premium {format(p.premium)}
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-green-50 text-green-700">
-                    Active
-                  </span>
-                </div>
+                  <PolicyCard
+                    policy={{
+                      id: p.id,
+                      policy_number: p.policy_number,
+                      user_name: user?.full_name || "Policy Holder",
+                      product_name: p.product_name,
+                      category: p.category,
+                      start_date: p.start_date,
+                      end_date: p.end_date,
+                      status: p.status || "Active",
+                    }}
+                    variant={idx % 3 === 1 ? "obsidian" : idx % 3 === 2 ? "platinum" : "gold"}
+                  />
+                </Link>
               ))}
             </div>
           )}
