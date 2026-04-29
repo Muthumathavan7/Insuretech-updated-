@@ -13,11 +13,11 @@ function StatCard({ label, value, sub }) {
   return (
     <div
       data-testid={`dash-stat-${label.toLowerCase().replace(/\s/g, "-")}`}
-      className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
+      className="lux-card p-6"
     >
-      <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{label}</div>
-      <div className="font-display text-3xl font-semibold mt-2">{value}</div>
-      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
+      <div className="text-[10px] uppercase tracking-[0.22em] text-[rgba(15,15,15,0.5)] font-semibold">{label}</div>
+      <div className="lux-stat-num mt-3">{value}</div>
+      {sub && <div className="text-[11px] text-[rgba(15,15,15,0.4)] mt-1.5 uppercase tracking-wider">{sub}</div>}
     </div>
   );
 }
@@ -42,21 +42,32 @@ export default function Dashboard() {
   const active = policies.filter((p) => p.status === "active");
 
   return (
-    <div data-testid="dashboard-page" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="mb-8 animate-fade-in-up">
-        <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold">Dashboard</div>
-        <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight mt-1">
-          Welcome, {user?.full_name?.split(" ")[0]}.
-        </h1>
-        <p className="text-gray-500 mt-2">Here's a snapshot of your coverage.</p>
+    <div data-testid="dashboard-page" className="lux-bg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lux-fade">
+      <div className="lux-card p-8 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0">
+          <div className="lux-eyebrow mb-3">My Cabin</div>
+          <h1 className="lux-h1">Welcome, {user?.full_name?.split(" ")[0] || "there"}.</h1>
+          <p className="text-sm text-[rgba(15,15,15,0.55)] mt-2">Here's a snapshot of your coverage.</p>
+        </div>
+        <div className="lux-signed-in shrink-0">
+          <div className="lux-signed-in__avatar">
+            {(user?.full_name?.[0] || "U").toUpperCase()}
+          </div>
+          <div className="min-w-0 pr-2">
+            <div className="text-[10px] tracking-[0.22em] uppercase text-[rgba(15,15,15,0.55)] font-semibold">Member</div>
+            <div className="font-lux text-[20px] leading-tight text-[#0c0b09] truncate">{user?.full_name}</div>
+            <div className="text-[10px] tracking-[0.22em] uppercase text-[#a07a2c] font-semibold">Afinity Premium</div>
+          </div>
+        </div>
       </div>
 
       {/* stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Active policies" value={active.length} />
-        <StatCard label="Open claims" value={claims.filter((c) => !["approved", "rejected", "paid"].includes(c.status)).length} />
-        <StatCard label="Risk score" value={`${Math.round((user?.risk_score || 0.5) * 100)}%`} sub="lower is better" />
-        <StatCard label="Lifetime value" value={format(Math.round(user?.ltv || 0), { decimals: 0 })} />
+        <StatCard label="Active Policies" value={active.length} />
+        <StatCard label="Open Claims" value={claims.filter((c) => !["approved", "rejected", "paid"].includes(c.status)).length} />
+        <StatCard label="Risk Score" value={`${Math.round((user?.risk_score || 0.5) * 100)}%`} sub="lower is better" />
+        <StatCard label="Lifetime Value" value={format(Math.round(user?.ltv || 0), { decimals: 0 })} />
       </div>
 
       {/* recommendations */}
@@ -173,6 +184,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
