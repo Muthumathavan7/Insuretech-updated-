@@ -103,3 +103,19 @@ async def cancel_policy(policy_id: str, user: dict = Depends(get_current_user)):
         "meta": {}, "created_at": datetime.now(timezone.utc).isoformat(),
     })
     return {"cancelled": True}
+
+
+@router.post("/issue-from-quote/{quote_id}")
+async def issue_test_policy(quote_id: str, user: dict = Depends(get_current_user)):
+    """Test/demo helper: issue a policy directly from a quote without going through Stripe.
+    Useful when admin Stripe keys aren't configured yet. Owner-only."""
+    quote = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not quote:
+        raise HTTPException(404, "Quote not found")
+    if quote.get("user_id") != user["id"]:
+        raise HTTPException(403, "Not your quote")
+    payment_id = f"test_{quote_id[:12]}"
+    policy = await issue_policy_from_quote(
+        quote_id=quote_id, payment_id=payment_id, user_id=user["id"]
+    )
+    return {"issued": True, "policy": policy}

@@ -132,9 +132,9 @@ export default function TravelQuote() {
     if (!quote) return;
     setLoading(true);
     try {
-      const r = await api.post(`/payments/checkout/${quote.id}`, {
-        success_url: `${window.location.origin}/dashboard`,
-        cancel_url: window.location.href,
+      const r = await api.post(`/payments/checkout`, {
+        quote_id: quote.id,
+        origin_url: window.location.origin,
       });
       if (r.data?.url) window.location.href = r.data.url;
     } catch (e) {
@@ -449,16 +449,38 @@ export default function TravelQuote() {
               24/7 worldwide assistance, emergency medical, trip cancellation & baggage cover.
             </div>
           </div>
-          <div className="flex justify-between gap-3">
+          <div className="flex flex-wrap justify-between gap-3">
             <button onClick={() => setStep(1)} className="px-4 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-50 inline-flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> Edit</button>
-            <button
-              onClick={checkout}
-              disabled={loading}
-              data-testid="travel-checkout-btn"
-              className="px-5 py-2.5 rounded-xl bg-primary-700 text-white text-sm font-medium hover:bg-primary-800 inline-flex items-center gap-2 disabled:opacity-50"
-            >
-              {loading ? "Redirecting…" : "Pay Now"} <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const r = await api.post(`/policies/issue-from-quote/${quote.id}`);
+                    toast.success(`Policy issued: ${r.data.policy.policy_number}`);
+                    nav("/policies");
+                  } catch (e) {
+                    toast.error(e?.response?.data?.detail || "Failed to issue policy");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                data-testid="travel-test-issue-btn"
+                className="px-4 py-2.5 rounded-xl border border-dashed border-gray-300 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                title="Skip payment & issue policy (demo mode)"
+              >
+                Skip payment (demo)
+              </button>
+              <button
+                onClick={checkout}
+                disabled={loading}
+                data-testid="travel-checkout-btn"
+                className="px-5 py-2.5 rounded-xl bg-primary-700 text-white text-sm font-medium hover:bg-primary-800 inline-flex items-center gap-2 disabled:opacity-50"
+              >
+                {loading ? "Redirecting…" : "Pay Now"} <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
