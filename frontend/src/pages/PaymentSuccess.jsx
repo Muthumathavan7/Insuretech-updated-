@@ -95,7 +95,6 @@ export default function PaymentSuccess() {
                   end_date: policy.end_date,
                   status: policy.status || "Active",
                 }}
-                variant="gold"
               />
               <p className="text-xs text-center text-gray-400 mt-3">
                 Tip: tap "View my policies" to see all your cards in one wallet.

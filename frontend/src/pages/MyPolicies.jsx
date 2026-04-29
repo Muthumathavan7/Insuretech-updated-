@@ -59,7 +59,7 @@ export default function MyPolicies() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-5">
-          {policies.map((p, idx) => (
+          {policies.map((p) => (
             <Sheet key={p.id}>
               <SheetTrigger asChild>
                 <button
@@ -78,7 +78,6 @@ export default function MyPolicies() {
                       end_date: p.end_date,
                       status: p.status,
                     }}
-                    variant={idx % 3 === 1 ? "obsidian" : idx % 3 === 2 ? "platinum" : "gold"}
                   />
                   <div className="mt-3 px-1 flex items-center justify-between text-xs text-gray-500">
                     <span>
@@ -114,7 +113,6 @@ export default function MyPolicies() {
                       end_date: p.end_date,
                       status: p.status,
                     }}
-                    variant="gold"
                   />
                   <div className="bg-gray-50 rounded-2xl p-4 space-y-2 text-sm">
                     <div className="flex justify-between"><span className="text-gray-500">Policy #</span><span className="font-mono font-medium">{p.policy_number}</span></div>

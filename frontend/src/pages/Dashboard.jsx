@@ -123,7 +123,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
-              {active.slice(0, 4).map((p, idx) => (
+              {active.slice(0, 4).map((p) => (
                 <Link
                   to="/policies"
                   key={p.id}
@@ -141,7 +141,6 @@ export default function Dashboard() {
                       end_date: p.end_date,
                       status: p.status || "Active",
                     }}
-                    variant={idx % 3 === 1 ? "obsidian" : idx % 3 === 2 ? "platinum" : "gold"}
                   />
                 </Link>
               ))}

@@ -261,8 +261,23 @@ Frontend verified end-to-end — CSV download, Pipeline 6 columns, WhatsApp cont
 - Multi-tenancy for partner white-labels
 - Kafka event bus for cross-service async
 
+## Implemented (2026-04-29 — iteration 12: Category-aware policy card variants)
+- `PolicyCard.jsx` now auto-picks a credit-card visual variant from `policy.category`:
+  - **motor → obsidian** (jet black + champagne gold accents)
+  - **health → copper** (rich burnt orange with gloss)
+  - **pa → sunset** (peach/cantaloupe gold)
+  - **travel/device/other → gold** (default Afinity gold)
+- Removed forced `variant` overrides on `Dashboard.jsx`, `MyPolicies.jsx`, `PaymentSuccess.jsx`
+  so each card now reflects its actual policy category (no more rotating index hack).
+- Card renders dynamic `policy_number`, `user_name` (Card Holder), `Valid From` (MM/YY) and
+  `Valid Thru` (MM/YY) parsed from the policy `start_date` / `end_date`.
+- Verified visually for the demo customer with seeded Motor / Health / PA / Travel policies.
+- Added `/app/backend/seed_demo_policies.py` helper to seed Motor + Health + PA policies
+  for any user (guarded by `payment_id LIKE demo_seed_*`, idempotent).
+
 ## Next tasks
-1. Ship Health / Motor / Device quote flows
+1. Ship Health / Motor / Device quote flows (Health is P0 — no quote endpoint yet)
 2. Add server-side PDF policy document generation
 3. Wire SendGrid or Resend for real email notifications
 4. Build partner-scoped bearer token auth for /partner endpoints
+5. Marketing automation: campaigns, referrals, coupon engine wired to CRM triggers
