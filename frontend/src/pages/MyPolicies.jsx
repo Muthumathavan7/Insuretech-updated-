@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { FileText, Shield, Hammer, Download } from "lucide-react";
 import PolicyCard from "@/components/app/PolicyCard";
 
@@ -64,7 +64,7 @@ export default function MyPolicies() {
               <SheetTrigger asChild>
                 <button
                   onClick={() => setSelected(p)}
-                  data-testid={`policy-card-${p.policy_number}`}
+                  data-testid={`policy-card-trigger-${p.policy_number}`}
                   className="text-left rounded-2xl p-0 transition-transform hover:scale-[1.015] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <PolicyCard
@@ -98,6 +98,9 @@ export default function MyPolicies() {
                   <SheetTitle className="font-display text-2xl flex items-center gap-2">
                     <span className="text-3xl">{ICONS[p.category]}</span> {p.product_name}
                   </SheetTitle>
+                  <SheetDescription>
+                    Policy details and downloadable documents.
+                  </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
                   <PolicyCard
