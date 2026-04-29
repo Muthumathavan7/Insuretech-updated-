@@ -1,31 +1,38 @@
 import React from "react";
 
-/** Afinity.ai serif lockup with leaf-like A monogram (gold). */
-export default function AfinityLogo({ size = 32, color = "#DEB25E", textColor = "#f0deb1", showText = true }) {
+/**
+ * Afinity brand mark (red Bélo-style "A" loop) + serif wordmark.
+ *
+ * The icon ships as a transparent PNG at /afinity-logo.png so it keeps the
+ * exact brand red regardless of the card palette behind it.
+ *
+ * Props:
+ *   size       — pixel size of the icon (height = width)
+ *   textColor  — color of the "afinity" wordmark (".ai" inherits `color`)
+ *   color      — color of the ".ai" suffix (legacy prop, kept for API compat)
+ *   showText   — show the wordmark next to the icon
+ */
+export default function AfinityLogo({
+  size = 32,
+  color = "#DEB25E",
+  textColor = "#f0deb1",
+  showText = true,
+}) {
   return (
     <span className="inline-flex items-center gap-2" data-testid="afinity-logo">
-      <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path
-          d="M32 6 C 21 18, 16 30, 16 42 C 16 52, 22 58, 32 58 C 42 58, 48 52, 48 42 C 48 30, 43 18, 32 6 Z"
-          stroke={color}
-          strokeWidth="2.4"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <path
-          d="M22 38 L32 22 L42 38"
-          stroke={color}
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M26 42 L38 42"
-          stroke={color}
-          strokeWidth="2.2"
-          strokeLinecap="round"
-        />
-      </svg>
+      <img
+        src="/afinity-logo.png"
+        alt="Afinity"
+        width={size}
+        height={size}
+        style={{
+          width: size,
+          height: size,
+          objectFit: "contain",
+          // soft drop-shadow so the red mark reads on any card palette
+          filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.25))",
+        }}
+      />
       {showText && (
         <span
           className="font-lux"
