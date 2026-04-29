@@ -17,6 +17,42 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
 
+## Implemented (2026-04-29 — iteration 9: Travel flow + Quick-fill profile)
+
+### Travel Insurance Quote Flow (mirrors Tune Protect)
+- New customer-facing route `/travel-quote/:productId` — 3-step flow
+  (Plan Selection → Personal Details → Summary & Payment) modelled after
+  `https://shop.tuneprotect.com/travel-insurance/quote/`.
+- Step 1 fields: International/Domestic toggle, trip type
+  (single_return/one_way/annual), destinations multi-select (21 popular
+  countries pre-seeded), traveller type, age category, # travellers, email,
+  travel period, plan tier, addons, Malaysian-PR + privacy-notice consent.
+- Step 2: Full Name + ID type/number + Mobile + Address + Postcode +
+  optional Beneficiary, with **QuickFillBanner** at top.
+- Step 3: total breakdown + Pay Now → Stripe checkout.
+- Backend: `TravelQuoteInput` extended with 22 fields. Pricing multipliers
+  applied: trip_type (single 1×, one_way 0.7×, annual 5×), age_category
+  (child 0.6×, 18-70 1×, 70+ 1.8×), region (international 1×, domestic 0.6×).
+  Rejects with 400 when `accept_privacy=false`.
+- Admin: Travel product seeded with `form_config` (11 step1 + 8 step2 fields)
+  — fully editable in the existing AdminProducts UI. Backfills onto
+  existing docs on every boot.
+
+### Repeat-Customer Quick Fill Banner
+- New endpoint `GET /api/profile/quick-fill` aggregates the customer's
+  latest non-empty Name, IC/Passport, Mobile, Email, Address from their
+  prior `quotes.input` + `policies.details` + `users` doc.
+- New reusable component `QuickFillBanner.jsx` shown at the top of Motor,
+  PA, and Travel quote forms. Click "Use this info" to auto-fill the
+  current form. Per-session dismissible.
+- Example: customer who bought PA via Petron now buying Motor →
+  banner shows "Welcome back, Demo! We found your saved details from your
+  PA Easy purchase" with chips (Name, IC, Mobile, Email).
+
+**Test results**: Backend 168/168 (12 new + 156 regression). Frontend 100%
+verified end-to-end (Travel 3-step flow, QuickFillBanner across all 3 quote
+forms, apply button populates fields).
+
 ## Implemented (2026-04-28 — iteration 8: Tasks page + Multi-currency)
 
 ### Tasks Page (admin)
