@@ -47,6 +47,7 @@ const fieldReq = (product, key) => {
 export default function PAQuote() {
   const { productId } = useParams();
   const { user } = useAuth();
+  const { format } = useCurrency();
   const nav = useNavigate();
 
   const [product, setProduct] = useState(null);
