@@ -981,19 +981,19 @@ export default function Leads() {
         ) : (
           <>
             <div className="w-full overflow-x-auto">
-              <table className="elstar-table w-full min-w-[720px]" style={{ tableLayout: 'fixed' }}>
+              <table className="elstar-table w-full min-w-[1280px]" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
-                  <col style={{ width: '32px' }} />
-                  <col style={{ width: '18%' }} />
-                  <col className="hidden sm:table-column" style={{ width: '11%' }} />
-                  <col className="hidden md:table-column" style={{ width: '11%' }} />
-                  <col className="hidden md:table-column" style={{ width: '10%' }} />
-                  <col className="hidden lg:table-column" style={{ width: '11%' }} />
-                  <col className="hidden xl:table-column" style={{ width: '14%' }} />
-                  <col className="hidden 2xl:table-column" style={{ width: '10%' }} />
+                  <col style={{ width: '36px' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '10%' }} />
                   <col style={{ width: '9%' }} />
-                  <col className="hidden sm:table-column" style={{ width: '6%' }} />
-                  <col style={{ width: '40px' }} />
+                  <col style={{ width: '6%' }} />
+                  <col style={{ width: '44px' }} />
                 </colgroup>
                 <thead>
                   <tr>
@@ -1007,14 +1007,14 @@ export default function Leads() {
                       />
                     </th>
                     <th className="px-2 text-left whitespace-nowrap">Customer Name</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden sm:table-cell">PIC</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden md:table-cell">IC Number</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden md:table-cell">Passport</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden lg:table-cell">Mobile</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden xl:table-cell">Email</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden 2xl:table-cell">Location</th>
+                    <th className="px-2 text-left whitespace-nowrap">PIC</th>
+                    <th className="px-2 text-left whitespace-nowrap">IC Number</th>
+                    <th className="px-2 text-left whitespace-nowrap">Passport</th>
+                    <th className="px-2 text-left whitespace-nowrap">Mobile</th>
+                    <th className="px-2 text-left whitespace-nowrap">Email</th>
+                    <th className="px-2 text-left whitespace-nowrap">Location</th>
                     <th className="px-2 text-left whitespace-nowrap">Status</th>
-                    <th className="px-1 text-center whitespace-nowrap hidden sm:table-cell">Score</th>
+                    <th className="px-1 text-center whitespace-nowrap">Score</th>
                     <th className="px-1"></th>
                   </tr>
                 </thead>
@@ -1040,29 +1040,26 @@ export default function Leads() {
                       </td>
                       <td className="px-2">
                         <div className="flex items-center gap-1 min-w-0 overflow-hidden">
-                          <Building2 className="w-4 h-4 shrink-0 text-muted-foreground hidden sm:block" />
-                          <div className="min-w-0 flex-1 overflow-hidden">
-                            <span className="font-medium text-sm truncate block">{lead.name}</span>
-                            <span className="text-xs text-muted-foreground sm:hidden truncate block">{lead.pic_name || ''}</span>
-                          </div>
+                          <Building2 className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          <span className="font-medium text-sm truncate block">{lead.name}</span>
                         </div>
                       </td>
-                      <td className="px-2 hidden sm:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm truncate block">{lead.pic_name || '-'}</span>
                       </td>
-                      <td className="px-2 hidden md:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground font-mono truncate block">{lead.ic_number || '-'}</span>
                       </td>
-                      <td className="px-2 hidden md:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground font-mono truncate block">{lead.passport_number || '-'}</span>
                       </td>
-                      <td className="px-2 hidden lg:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground truncate block">{lead.phone || '-'}</span>
                       </td>
-                      <td className="px-2 hidden xl:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground truncate block">{lead.email || '-'}</span>
                       </td>
-                      <td className="px-2 hidden 2xl:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground truncate block">{lead.city || '-'}</span>
                       </td>
                       <td className="px-2 overflow-hidden">
@@ -1070,7 +1067,7 @@ export default function Leads() {
                           {statusConfig[lead.status]?.label || lead.status}
                         </span>
                       </td>
-                      <td className="px-1 text-center hidden sm:table-cell">
+                      <td className="px-1 text-center">
                         <span className={`font-mono text-xs font-bold ${getScoreClass(lead.ai_score)}`}>{lead.ai_score}</span>
                       </td>
                       <td className="px-1" onClick={(e) => e.stopPropagation()}>

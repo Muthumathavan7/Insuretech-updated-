@@ -29,10 +29,10 @@ export default function LeadsKanban() {
   };
 
   return (
-    <div className="p-8" data-testid="leads-kanban">
-      <div className="mb-8">
+    <div data-testid="leads-kanban">
+      <div className="mb-6 sm:mb-8">
         <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold">Pipeline</div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight mt-1">Leads Kanban</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight mt-1">Leads Kanban</h1>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">

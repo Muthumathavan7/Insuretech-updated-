@@ -305,12 +305,12 @@ export default function AdminProducts() {
   useEffect(() => { load(); }, []);
 
   return (
-    <div className="p-8" data-testid="admin-products">
-      <div className="mb-8 flex items-end justify-between">
+    <div data-testid="admin-products">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold">Catalog</div>
-          <h1 className="font-display text-4xl font-semibold tracking-tight mt-1">Products</h1>
-          <p className="text-gray-500 mt-1">Edit pricing, features, add-ons, and which form fields appear to customers.</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight mt-1">Products</h1>
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">Edit pricing, features, add-ons, and which form fields appear to customers.</p>
         </div>
       </div>
 
