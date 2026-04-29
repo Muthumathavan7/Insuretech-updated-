@@ -101,13 +101,8 @@ export default function AdminLayout({ children }) {
 
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex-1 px-6 sm:px-10 pt-8 pb-12 lux-fade">
-          {/* Top header strip with welcome card on the right */}
-          <div className="mb-8 flex items-start justify-between gap-6">
-            <div className="min-w-0">
-              {/* Eyebrow + lux-h1 are intentionally left to be set by individual pages.
-                  We provide a sensible fallback if the page doesn't render its own. */}
-            </div>
-
+          {/* Top header strip — page title is rendered by each page inside .lux-card; only the Signed-in card is shared here */}
+          <div className="mb-8 flex items-start justify-end">
             <div className="lux-signed-in shrink-0" data-testid="admin-signed-in">
               <div className="lux-signed-in__avatar">
                 {(user?.full_name?.[0] || "A").toUpperCase()}
