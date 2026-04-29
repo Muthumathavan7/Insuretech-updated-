@@ -586,7 +586,18 @@ export default function Settings() {
                     <td className="px-4 py-2 text-right whitespace-nowrap">
                       {c.code !== form.default_currency && (
                         <button
-                          onClick={() => setCurrencies(currencies.filter((x) => x.code !== c.code))}
+                          onClick={async () => {
+                            const next = currencies.filter((x) => x.code !== c.code);
+                            setCurrencies(next);
+                            try {
+                              await api.patch("/admin/settings", { supported_currencies: next });
+                              toast.success(`${c.code} removed`);
+                            } catch (e) {
+                              toast.error("Could not remove. Reverted.");
+                              setCurrencies(currencies);
+                            }
+                          }}
+                          data-testid={`remove-currency-${c.code}`}
                           className="text-xs text-red-500 hover:underline"
                         >Remove</button>
                       )}
@@ -609,22 +620,33 @@ export default function Settings() {
           <Input type="number" step="0.0001" placeholder="Rate" className="h-9 w-28 rounded-lg text-right font-mono" id="newcur-rate" />
           <Button
             type="button" variant="outline" className="h-9 rounded-lg"
-            onClick={() => {
+            onClick={async () => {
               const code = document.getElementById('newcur-code').value.trim().toUpperCase();
               const symbol = document.getElementById('newcur-sym').value.trim();
               const name = document.getElementById('newcur-name').value.trim();
               const rate = parseFloat(document.getElementById('newcur-rate').value);
               if (!code || !symbol || !name || !rate) { toast.error('Fill all fields'); return; }
               if (currencies.some((c) => c.code === code)) { toast.error('Code already exists'); return; }
-              setCurrencies([...currencies, { code, symbol, name, rate }]);
-              document.getElementById('newcur-code').value = '';
-              document.getElementById('newcur-sym').value = '';
-              document.getElementById('newcur-name').value = '';
-              document.getElementById('newcur-rate').value = '';
+              const next = [...currencies, { code, symbol, name, rate }];
+              setCurrencies(next);
+              try {
+                await api.patch("/admin/settings", { supported_currencies: next });
+                toast.success(`${code} added & saved`);
+                document.getElementById('newcur-code').value = '';
+                document.getElementById('newcur-sym').value = '';
+                document.getElementById('newcur-name').value = '';
+                document.getElementById('newcur-rate').value = '';
+              } catch (e) {
+                toast.error('Could not persist currency. Reverted.');
+                setCurrencies(currencies);
+              }
             }}
             data-testid="add-currency-btn"
           >+ Add</Button>
         </div>
+        <p className="text-xs text-gray-400 mt-2">
+          New currencies are saved instantly. Edits to existing rows persist when you click <strong>Save settings</strong> below.
+        </p>
       </div>
 
       {/* Premium plan helper card */}
