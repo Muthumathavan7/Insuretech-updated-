@@ -54,12 +54,12 @@ function Protected({ children, adminOnly = false }) {
 }
 
 // Jumps the window (and any internal scroll containers) to the top on every
-// route change. Runs BEFORE paint so users never see the previous scroll
-// position. Respects hash anchors (#section) so in-page links still work.
+// route change. Runs before paint AND re-runs after async layout shifts so
+// images / fetched data can't drag the page back down.
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
 
-  // Disable the browser's own scroll restoration so it can't fight with ours.
+  // Disable the browser's own scroll restoration so it can't fight us.
   React.useEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -68,20 +68,34 @@ function ScrollToTop() {
 
   React.useLayoutEffect(() => {
     if (hash) return; // let the browser handle #anchor targets
-    // Double-tap: synchronous jump before paint, then one more after layout
-    // settles (in case async data / images push content around).
     const jump = () => {
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      // Target every possible scroll root. Any browser / OS combo of
+      // mobile Safari, Chrome, Firefox — one of these will apply.
+      if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
     };
+
     jump();
-    // Deferred jump catches late layout shifts from data fetches / image loads.
-    const t1 = window.requestAnimationFrame(jump);
-    const t2 = window.setTimeout(jump, 120);
+
+    // Chain of re-jumps to cover: first paint, image decode, async fetches,
+    // font swaps, and any late layout shift. Cheap to run, very robust.
+    const rafs = [];
+    const timers = [];
+    let ticks = 0;
+    const rafJump = () => {
+      jump();
+      if (ticks++ < 3) rafs.push(window.requestAnimationFrame(rafJump));
+    };
+    rafs.push(window.requestAnimationFrame(rafJump));
+    [50, 150, 350, 700, 1200].forEach((ms) => {
+      timers.push(window.setTimeout(jump, ms));
+    });
+
     return () => {
-      window.cancelAnimationFrame(t1);
-      window.clearTimeout(t2);
+      rafs.forEach(window.cancelAnimationFrame);
+      timers.forEach(window.clearTimeout);
     };
   }, [pathname, hash]);
   return null;
