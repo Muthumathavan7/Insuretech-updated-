@@ -1,6 +1,6 @@
 import React from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { CurrencyProvider } from "@/lib/currency";
 import { Toaster } from "sonner";
@@ -53,6 +53,25 @@ function Protected({ children, adminOnly = false }) {
   return children;
 }
 
+// Jumps the window (and any internal scroll containers) to the top on every
+// route change. Runs BEFORE paint so users never see the previous scroll
+// position. Respects hash anchors (#section) so in-page links still work.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  React.useLayoutEffect(() => {
+    if (hash) return; // let the browser handle #anchor targets
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    } catch {
+      window.scrollTo(0, 0);
+    }
+    // Reset `body` in case a drawer/modal left it scrolled.
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, [pathname, hash]);
+  return null;
+}
+
 function CustomerShell({ children }) {
   return (
     <Layout>
@@ -64,7 +83,9 @@ function CustomerShell({ children }) {
 
 function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/" element={<CustomerShell><Landing /></CustomerShell>} />
       <Route path="/login" element={<CustomerShell><Login /></CustomerShell>} />
       <Route path="/signup" element={<CustomerShell><Signup /></CustomerShell>} />
@@ -250,6 +271,7 @@ function AppRoutes() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 
