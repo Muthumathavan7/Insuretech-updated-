@@ -18,8 +18,8 @@ export default function PolicyCard({ policy = {}, variant, className = "" }) {
   const padded = (number + "0000000000000000").slice(0, 16);
   const grouped = padded.match(/.{1,4}/g)?.join(" ") || padded;
 
-  const validFrom = formatMMYY(policy.start_date);
-  const validThru = formatMMYY(policy.end_date);
+  const validFrom = formatValidDate(policy.start_date);
+  const validThru = formatValidDate(policy.end_date);
 
   const resolved =
     variant ||
@@ -235,13 +235,14 @@ function WorldMapStripe({ palette }) {
   );
 }
 
-function formatMMYY(iso) {
+function formatValidDate(iso) {
   if (!iso) return "";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "";
+  const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${mm}/${yy}`;
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 const PALETTES = {

@@ -261,6 +261,17 @@ Frontend verified end-to-end — CSV download, Pipeline 6 columns, WhatsApp cont
 - Multi-tenancy for partner white-labels
 - Kafka event bus for cross-service async
 
+## Implemented (2026-05-01 — iteration 15: Annual-term default for PA / Motor / Health / Device)
+- `routers/policies.py → issue_policy_from_quote()` now computes `end_date = start_date + 1 year`
+  for every non-Travel category (PA, Motor, Health, Device). Travel still honours its trip
+  start/end. Leap-year safe (29 Feb → 1 Mar fallback).
+- Added startup migration in `server.py` that backfills any legacy annual-category policy
+  where `end_date - start_date < 30 days` and rewrites the end to start + 1 year.
+- `PolicyCard.jsx` — Valid From / Valid Thru now render `DD/MM/YYYY` (e.g. `29/04/2026`)
+  instead of the old `MM/YY` credit-card style, per the user's printable-policy requirement.
+- Verified: issued PA / Motor / Health / Travel policies render correctly on `/policies`,
+  with PA / Motor / Health showing exactly a 1-year span.
+
 ## Implemented (2026-04-29 — iteration 14: Dynamic currency everywhere)
 - Root cause: the site had **dozens of hardcoded `$` and `RM` symbols** across customer
   pages (Products, Landing, PA / Motor marketing, PA / Travel / Motor quote flows, Claims,
