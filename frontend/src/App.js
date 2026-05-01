@@ -58,16 +58,31 @@ function Protected({ children, adminOnly = false }) {
 // position. Respects hash anchors (#section) so in-page links still work.
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
+
+  // Disable the browser's own scroll restoration so it can't fight with ours.
+  React.useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
   React.useLayoutEffect(() => {
     if (hash) return; // let the browser handle #anchor targets
-    try {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    } catch {
+    // Double-tap: synchronous jump before paint, then one more after layout
+    // settles (in case async data / images push content around).
+    const jump = () => {
       window.scrollTo(0, 0);
-    }
-    // Reset `body` in case a drawer/modal left it scrolled.
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    };
+    jump();
+    // Deferred jump catches late layout shifts from data fetches / image loads.
+    const t1 = window.requestAnimationFrame(jump);
+    const t2 = window.setTimeout(jump, 120);
+    return () => {
+      window.cancelAnimationFrame(t1);
+      window.clearTimeout(t2);
+    };
   }, [pathname, hash]);
   return null;
 }
