@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr, Field
 from auth import get_current_user
 from database import db
 from models import TravelQuoteInput, Quote
+from routers.pricing_rules import evaluate_rules
 
 router = APIRouter(prefix="/quotes", tags=["quotes"])
 
@@ -113,6 +114,24 @@ async def create_travel_quote(body: TravelQuoteInput, user: dict = Depends(get_c
     risk = _risk_score(primary_dest, body.travelers, body.coverage_tier)
     risk_loading = base_premium * (risk - 0.3) * 0.5 if risk > 0.3 else 0.0
     subtotal = base_premium + addon_total + max(risk_loading, 0)
+
+    # ---- Pricing Rules Engine: dynamic adjustments ----
+    rule_inputs = {
+        "destination": primary_dest,
+        "trip_type": body.trip_type,
+        "travelers": body.travelers,
+        "duration_days": days,
+        "coverage_tier": body.coverage_tier,
+        "region": body.region,
+        "age_category": body.age_category,
+    }
+    eval_result = await evaluate_rules(
+        product="travel", base_premium=subtotal, inputs=rule_inputs,
+        record_audit=True, user_id=user["id"],
+    )
+    rules_delta = round(eval_result["final_premium"] - subtotal, 2)
+    subtotal = eval_result["final_premium"]
+
     tax = round(subtotal * 0.08, 2)
     total = round(subtotal + tax, 2)
 
@@ -127,7 +146,12 @@ async def create_travel_quote(body: TravelQuoteInput, user: dict = Depends(get_c
         risk_score=risk,
         coverage_tier=body.coverage_tier,
     )
-    await db.quotes.insert_one(q.model_dump())
+    quote_doc = q.model_dump()
+    quote_doc["meta"] = {
+        "rules_delta": rules_delta,
+        "applied_rules": eval_result["applied_rules"],
+    }
+    await db.quotes.insert_one(quote_doc)
     await db.users.update_one({"id": user["id"]}, {"$set": {"lead_stage": "quoted", "risk_score": risk}})
     await db.interactions.insert_one({
         "id": __import__("uuid").uuid4().hex, "user_id": user["id"],
@@ -193,6 +217,25 @@ async def create_motor_quote(body: MotorQuoteInput, user: dict = Depends(get_cur
     online_rebate = round((base_premium - ncd_discount) * 0.10, 2)
 
     subtotal = max(0.0, base_premium - ncd_discount - online_rebate) + addon_total
+
+    # ---- Pricing Rules Engine: dynamic adjustments on subtotal ----
+    rule_inputs = {
+        "age": age,
+        "vehicle_type": "car",
+        "cover_type": body.cover_type,
+        "sum_insured": body.sum_insured,
+        "ncd_percent": body.ncd_percent,
+        "postcode": body.postcode,
+        "account_type": body.account_type,
+    }
+    eval_result = await evaluate_rules(
+        product="motor", base_premium=subtotal, inputs=rule_inputs,
+        record_audit=True, user_id=user["id"],
+    )
+    rule_adjusted = eval_result["final_premium"]
+    rules_delta = round(rule_adjusted - subtotal, 2)
+    subtotal = rule_adjusted
+
     tax = round(subtotal * 0.08, 2)
     total = round(subtotal + tax, 2)
 
@@ -218,6 +261,8 @@ async def create_motor_quote(body: MotorQuoteInput, user: dict = Depends(get_cur
         "sum_insured": body.sum_insured,
         "cover_type": body.cover_type,
         "vehicle_reg": body.vehicle_reg,
+        "rules_delta": rules_delta,
+        "applied_rules": eval_result["applied_rules"],
     }
     response = {**doc, "policy_id": None}
     await db.quotes.insert_one(doc)
@@ -283,6 +328,22 @@ async def create_pa_quote(body: PAQuoteInput, user: dict = Depends(get_current_u
     gross = round(base_per_person * (1 + occ_loading) * body.num_persons, 2)
     online_discount = round(gross * 0.25, 2)  # 25% online rebate
     subtotal = round(gross - online_discount, 2)
+
+    # ---- Pricing Rules Engine: dynamic adjustments ----
+    rule_inputs = {
+        "age": age,
+        "occupation_class": body.occupation_class,
+        "num_persons": body.num_persons,
+        "gender": body.gender,
+        "nationality": body.nationality,
+    }
+    eval_result = await evaluate_rules(
+        product="pa", base_premium=subtotal, inputs=rule_inputs,
+        record_audit=True, user_id=user["id"],
+    )
+    rules_delta = round(eval_result["final_premium"] - subtotal, 2)
+    subtotal = eval_result["final_premium"]
+
     tax = round(subtotal * 0.08, 2)
     total = round(subtotal + tax, 2)
 
@@ -307,6 +368,8 @@ async def create_pa_quote(body: PAQuoteInput, user: dict = Depends(get_current_u
         "num_persons": body.num_persons,
         "insured_name": body.full_name,
         "age": age,
+        "rules_delta": rules_delta,
+        "applied_rules": eval_result["applied_rules"],
     }
     response = {**doc, "policy_id": None}
     await db.quotes.insert_one(doc)

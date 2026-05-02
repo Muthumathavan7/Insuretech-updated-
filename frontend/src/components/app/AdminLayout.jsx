@@ -33,6 +33,7 @@ const NAV_SECTIONS = [
       { to: "/admin/analytics", label: "Analytics", icon: TrendingUp },
       { to: "/admin/claims", label: "Claims Queue", icon: Hammer },
       { to: "/admin/products", label: "Products", icon: Package },
+      { to: "/admin/rules", label: "Rules Engine", icon: GitBranch },
       { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
     ],
   },

@@ -39,6 +39,7 @@ import Analytics from "@/admin/Analytics";
 import ClaimsQueue from "@/admin/ClaimsQueue";
 import AdminProducts from "@/admin/AdminProducts";
 import Campaigns from "@/admin/Campaigns";
+import PricingRulesEngine from "@/admin/pricing/PricingRulesEngine";
 import VoiceCalls from "@/admin/VoiceCalls";
 import Settings from "@/admin/Settings";
 
@@ -287,6 +288,14 @@ function AppRoutes() {
         element={
           <Protected adminOnly>
             <AdminLayout><Campaigns /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
+        path="/admin/rules"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><PricingRulesEngine /></AdminLayout>
           </Protected>
         }
       />
