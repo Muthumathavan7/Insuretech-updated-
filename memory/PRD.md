@@ -1,5 +1,37 @@
 # PRD — Tune Protect · Insurance Technology Platform
 
+## Implemented (2026-05-02 — iteration 16: Pricing Rules Engine)
+**Production-grade no-code pricing engine integrated into the admin panel.**
+
+### Backend (`routers/pricing_rules.py`)
+- Full CRUD: `POST/GET/PUT/DELETE /api/rules`, plus `/clone`, `/toggle`.
+- Evaluator: `evaluate_rules(product, base_premium, inputs, ...)` sorts active rules by
+  priority, evaluates conditions (AND/OR), applies actions sequentially.
+- Action types: `increase_percentage`, `decrease_percentage`, `flat_fee`, `discount_fee`,
+  `override_premium`. Operators: `==, !=, <, >, <=, >=, in, not_in, contains`.
+- `POST /api/rules/simulate` — no-persist preview for the admin Simulator screen.
+- `POST /api/rules/evaluate` — auth'd customer call that records audit.
+- Formula config + version history: `GET/PUT /api/rules/formula/config`, `GET /api/rules/formula/history`.
+- Audit logs: `GET /api/rules/audit/logs?product=`.
+- Field catalogue: `GET /api/rules/meta/fields` exposes operators, action types, and
+  per-product field options (drives the no-code Conditions Builder UI).
+
+### Quote integration
+- `routers/quotes.py` Motor / PA / Travel endpoints all call `evaluate_rules()` after
+  computing the subtotal — rule deltas land before tax. Each quote stores `meta.rules_delta`
+  + `meta.applied_rules` for traceability. Audit log written on every evaluation.
+
+### Admin UI (`/admin/rules` — `admin/pricing/PricingRulesEngine.jsx`)
+- Five-tab single-page module: **Rules · Editor · Simulator · Formula · Audit Logs**.
+- Sidebar entry "Rules Engine" added under Operations.
+- Editor: 3-section flow (Details → Conditions → Action) with live JSON preview.
+- Simulator: split layout, real-time recompute (250ms debounce), animated rule deltas.
+- Formula: editable Risk weight / Coverage multiplier / Tax % / Online discount %, with
+  per-save snapshot + version history.
+- Audit Logs: expandable per-row panel showing input dict + rule cascade.
+- Verified end-to-end by testing agent (iteration_13.json) — 18/18 pytest tests pass,
+  100% backend + frontend success.
+
 ## Original problem statement
 Build a production-grade Insurance Technology Platform (Tune Protect style): CRM-first, AI-powered, modular. Must support lead generation → policy purchase → claims → retention, across Travel / Health / Motor / Device insurance products. Primary color #DEB25E (gold) + secondary #FFFFFF (white).
 
