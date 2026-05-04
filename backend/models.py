@@ -190,6 +190,7 @@ class ProductUpdate(BaseModel):
     active: Optional[bool] = None
     display_order: Optional[int] = None
     form_config: Optional[Dict[str, FieldConfig]] = None
+    meta: Optional[Dict[str, Any]] = None  # rate tables (Health Secure+, etc.)
 
 
 # ============ VEHICLE LOOKUP ============

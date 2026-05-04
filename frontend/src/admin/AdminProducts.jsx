@@ -54,6 +54,7 @@ function ProductEditor({ product, onSaved }) {
     features: product.features || [],
     addons: product.addons || [],
     form_config: product.form_config || {},
+    meta: product.meta || {},
   }));
   const [saving, setSaving] = useState(false);
   const [newFeature, setNewFeature] = useState("");
@@ -74,10 +75,28 @@ function ProductEditor({ product, onSaved }) {
       },
     }));
 
+  // ---- Health Secure+ rate-table mutators ----
+  const updateMeta = (patch) =>
+    setDraft((d) => ({ ...d, meta: { ...(d.meta || {}), ...patch } }));
+  const updateMetaList = (key, idx, patch) =>
+    setDraft((d) => {
+      const list = [...((d.meta || {})[key] || [])];
+      list[idx] = { ...list[idx], ...patch };
+      return { ...d, meta: { ...(d.meta || {}), [key]: list } };
+    });
+  const updateAgeLoading = (bucket, value) =>
+    setDraft((d) => ({
+      ...d,
+      meta: {
+        ...(d.meta || {}),
+        age_loading: { ...((d.meta || {}).age_loading || {}), [bucket]: parseFloat(value) || 0 },
+      },
+    }));
+
   const save = async () => {
     setSaving(true);
     try {
-      await api.patch(`/products/${product.id}`, {
+      const payload = {
         name: draft.name,
         description: draft.description,
         base_premium: parseFloat(draft.base_premium),
@@ -88,7 +107,12 @@ function ProductEditor({ product, onSaved }) {
         form_config: draft.form_config,
         image_url: draft.image_url,
         active: draft.active,
-      });
+      };
+      // Health Secure+ ships rate tables in `meta` — persist when present.
+      if (product.category === "health" && draft.meta) {
+        payload.meta = draft.meta;
+      }
+      await api.patch(`/products/${product.id}`, payload);
       toast.success("Product updated");
       onSaved?.();
     } catch (e) {
@@ -100,6 +124,7 @@ function ProductEditor({ product, onSaved }) {
 
   const isMotor = product.category === "motor";
   const isPA = product.category === "pa";
+  const isHealth = product.category === "health";
   const fieldLabels = isMotor ? FIELD_LABELS_MOTOR : isPA ? FIELD_LABELS_PA : null;
 
   return (
@@ -284,6 +309,148 @@ function ProductEditor({ product, onSaved }) {
           </div>
         </div>
       )}
+
+      {/* Health Secure+ rate tables — admin-configurable */}
+      {isHealth && (
+        <div className="border-t border-gray-100 pt-6 space-y-5">
+          <div>
+            <Label className="mb-1 block text-base">Critical Safe+ rate tables</Label>
+            <p className="text-xs text-gray-500">
+              All numbers below feed the customer's Coverage Calculator and the
+              <code className="mx-1 px-1.5 py-0.5 rounded bg-gray-100 text-[11px]">/api/quotes/health</code>
+              endpoint. Formula: <span className="font-mono text-[11px]">base × option × plan × age × (1+30% if smoker) → −online% → +SST%</span>.
+            </p>
+          </div>
+
+          {/* Coverage option multipliers */}
+          <div>
+            <Label className="text-sm font-semibold">Coverage options</Label>
+            <div className="mt-2 rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                <div className="col-span-2">Key</div>
+                <div className="col-span-5">Label</div>
+                <div className="col-span-2 text-right">Multiplier ×</div>
+                <div className="col-span-3">Illnesses (comma sep.)</div>
+              </div>
+              {(draft.meta?.coverage_options || []).map((o, idx) => (
+                <div key={o.key} className="grid grid-cols-12 gap-2 px-3 py-2 border-t border-gray-100 items-center" data-testid={`opt-row-${o.key}`}>
+                  <div className="col-span-2 font-mono text-xs text-gray-500">{o.key}</div>
+                  <Input className="col-span-5 rounded-lg h-9 text-sm" value={o.label} onChange={(e) => updateMetaList("coverage_options", idx, { label: e.target.value })} />
+                  <Input
+                    type="number" step="0.01"
+                    className="col-span-2 rounded-lg h-9 text-sm text-right font-mono"
+                    value={o.multiplier}
+                    data-testid={`opt-mult-${o.key}`}
+                    onChange={(e) => updateMetaList("coverage_options", idx, { multiplier: parseFloat(e.target.value) || 0 })}
+                  />
+                  <Input
+                    className="col-span-3 rounded-lg h-9 text-sm"
+                    value={(o.illnesses || []).join(", ")}
+                    onChange={(e) => updateMetaList("coverage_options", idx, { illnesses: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Plans */}
+          <div>
+            <Label className="text-sm font-semibold">Plans (sum-insured tiers)</Label>
+            <div className="mt-2 rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                <div className="col-span-2">Key</div>
+                <div className="col-span-3">Label</div>
+                <div className="col-span-4 text-right">Sum insured</div>
+                <div className="col-span-3 text-right">Multiplier ×</div>
+              </div>
+              {(draft.meta?.plans || []).map((p, idx) => (
+                <div key={p.key} className="grid grid-cols-12 gap-2 px-3 py-2 border-t border-gray-100 items-center" data-testid={`plan-row-${p.key}`}>
+                  <div className="col-span-2 font-mono text-xs text-gray-500">{p.key}</div>
+                  <Input className="col-span-3 rounded-lg h-9 text-sm" value={p.label} onChange={(e) => updateMetaList("plans", idx, { label: e.target.value })} />
+                  <Input
+                    type="number" step="100"
+                    className="col-span-4 rounded-lg h-9 text-sm text-right font-mono"
+                    value={p.sum_insured}
+                    data-testid={`plan-si-${p.key}`}
+                    onChange={(e) => updateMetaList("plans", idx, { sum_insured: parseFloat(e.target.value) || 0 })}
+                  />
+                  <Input
+                    type="number" step="0.01"
+                    className="col-span-3 rounded-lg h-9 text-sm text-right font-mono"
+                    value={p.multiplier}
+                    data-testid={`plan-mult-${p.key}`}
+                    onChange={(e) => updateMetaList("plans", idx, { multiplier: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Age loadings + global knobs */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-semibold">Age-bucket loadings</Label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {Object.entries(draft.meta?.age_loading || {}).map(([bucket, val]) => (
+                  <div key={bucket} className="flex items-center gap-2 bg-gray-50 rounded-xl px-2.5 py-1.5">
+                    <span className="text-xs font-mono text-gray-500 w-14">{bucket}</span>
+                    <Input
+                      type="number" step="0.01"
+                      className="rounded-lg h-9 text-sm text-right font-mono flex-1"
+                      value={val}
+                      data-testid={`age-${bucket}`}
+                      onChange={(e) => updateAgeLoading(bucket, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Global knobs</Label>
+              <div className="mt-2 grid grid-cols-1 gap-2">
+                <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-2.5 py-1.5">
+                  <span className="text-xs text-gray-500 flex-1">Smoker loading %</span>
+                  <Input
+                    type="number" step="1"
+                    className="rounded-lg h-9 text-sm text-right font-mono w-24"
+                    value={draft.meta?.smoker_loading_pct ?? 30}
+                    data-testid="meta-smoker"
+                    onChange={(e) => updateMeta({ smoker_loading_pct: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-2.5 py-1.5">
+                  <span className="text-xs text-gray-500 flex-1">Online discount %</span>
+                  <Input
+                    type="number" step="0.5"
+                    className="rounded-lg h-9 text-sm text-right font-mono w-24"
+                    value={draft.meta?.online_discount_pct ?? 15}
+                    data-testid="meta-online-discount"
+                    onChange={(e) => updateMeta({ online_discount_pct: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-2.5 py-1.5">
+                  <span className="text-xs text-gray-500 flex-1">SST / Tax %</span>
+                  <Input
+                    type="number" step="0.5"
+                    className="rounded-lg h-9 text-sm text-right font-mono w-24"
+                    value={draft.meta?.tax_pct ?? 8}
+                    data-testid="meta-tax"
+                    onChange={(e) => updateMeta({ tax_pct: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-gray-400">
+            Tip: combine these with the <strong>Pricing Rules Engine</strong> for conditional
+            adjustments (e.g. +10% during a campaign, −5% loyalty). The rules apply
+            <em> after</em> these tables and online discount, before tax.
+          </p>
+        </div>
+      )}
+
+
 
       <Button
         onClick={save}
