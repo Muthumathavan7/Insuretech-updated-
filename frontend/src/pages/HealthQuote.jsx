@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
@@ -19,6 +19,7 @@ const STEPS = [
 
 export default function HealthQuote() {
   const { productId } = useParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { format } = useCurrency();
   const nav = useNavigate();
@@ -28,10 +29,11 @@ export default function HealthQuote() {
   const [loading, setLoading] = useState(false);
   const [quote, setQuote] = useState(null);
 
-  // Form state
+  // Form state — initial values may be overridden by URL params from the
+  // landing page's coverage calculator deep-link.
   const [form, setForm] = useState({
-    coverage_option: "top5",
-    plan_key: "plan3",
+    coverage_option: searchParams.get("option") || "top5",
+    plan_key: searchParams.get("plan") || "plan3",
     full_name: user?.full_name || "",
     id_type: "nric",
     id_number: "",
@@ -53,6 +55,15 @@ export default function HealthQuote() {
       api.get("/products?category=health").then((r) => setProduct(r.data?.[0]));
     });
   }, [productId]);
+
+  // If the user came from the landing-page calculator with option+plan in the URL,
+  // skip Step 0 and land directly on the personal-details step.
+  useEffect(() => {
+    if (searchParams.get("option") && searchParams.get("plan") && step === 0) {
+      setStep(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Quick-fill from profile
   useEffect(() => {

@@ -429,3 +429,55 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 .lux-fade { animation: luxFade 0.42s ease-out forwards; }
+
+/* ================= Health Coverage Calculator slider ================= */
+.health-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  outline: none;
+  background: linear-gradient(
+    90deg,
+    #DEB25E 0%,
+    #DEB25E var(--progress, 50%),
+    rgba(15, 23, 42, 0.08) var(--progress, 50%),
+    rgba(15, 23, 42, 0.08) 100%
+  );
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.health-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #DEB25E;
+  box-shadow: 0 6px 18px -4px rgba(222, 178, 94, 0.55),
+              0 2px 4px rgba(15, 23, 42, 0.08);
+  cursor: grab;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.health-slider::-webkit-slider-thumb:hover { transform: scale(1.08); }
+.health-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.12);
+  box-shadow: 0 10px 24px -6px rgba(222, 178, 94, 0.7),
+              0 3px 6px rgba(15, 23, 42, 0.12);
+}
+.health-slider::-moz-range-thumb {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #DEB25E;
+  box-shadow: 0 6px 18px -4px rgba(222, 178, 94, 0.55);
+  cursor: grab;
+  transition: transform 0.15s;
+}
+.health-slider::-moz-range-thumb:hover { transform: scale(1.08); }
+.health-slider:focus-visible {
+  box-shadow: 0 0 0 4px rgba(222, 178, 94, 0.22);
+}
