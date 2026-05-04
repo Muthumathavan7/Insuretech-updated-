@@ -400,6 +400,146 @@ async def create_pa_quote(body: PAQuoteInput, user: dict = Depends(get_current_u
     return response
 
 
+class HealthQuoteInput(BaseModel):
+    product_id: str
+    # Step 1 — Plan selection
+    coverage_option: Literal["top2", "top5", "ci39"] = "top5"
+    plan_key: Literal["plan1", "plan2", "plan3", "plan4", "plan5"] = "plan3"
+    # Step 2 — Personal details
+    full_name: str
+    id_type: Literal["nric", "passport"] = "nric"
+    id_number: str
+    date_of_birth: str             # YYYY-MM-DD
+    gender: Literal["male", "female"]
+    smoker: bool = False
+    email: EmailStr
+    phone: str
+    # Step 3 — Declarations
+    malaysian_resident: bool = True
+    accept_privacy: bool
+    # Optional beneficiary
+    beneficiary_name: Optional[str] = None
+    beneficiary_relationship: Optional[str] = None
+
+
+def _age_bucket(age: int) -> str:
+    if age <= 29:
+        return "15-29"
+    if age <= 39:
+        return "30-39"
+    if age <= 49:
+        return "40-49"
+    return "50-60"
+
+
+def _derive_age(dob_str: str) -> int:
+    try:
+        dob = datetime.fromisoformat(dob_str).replace(tzinfo=timezone.utc)
+    except Exception:
+        raise HTTPException(400, "Invalid date_of_birth — use YYYY-MM-DD")
+    return max(0, (datetime.now(timezone.utc) - dob).days // 365)
+
+
+@router.post("/health")
+async def create_health_quote(body: HealthQuoteInput, user: dict = Depends(get_current_user)):
+    product = await db.products.find_one({"id": body.product_id, "active": True}, {"_id": 0})
+    if not product or product["category"] != "health":
+        raise HTTPException(404, "Health product not found")
+    if not body.accept_privacy:
+        raise HTTPException(400, "Please accept the privacy notice to continue")
+    if not body.malaysian_resident:
+        raise HTTPException(400, "Critical Safe+ is available to Malaysian residents only")
+
+    meta = product.get("meta") or {}
+    opts = {o["key"]: o for o in meta.get("coverage_options", [])}
+    plans = {p["key"]: p for p in meta.get("plans", [])}
+    option = opts.get(body.coverage_option)
+    plan = plans.get(body.plan_key)
+    if not option or not plan:
+        raise HTTPException(400, "Invalid coverage option or plan")
+
+    # Age
+    age = _derive_age(body.date_of_birth)
+    if age < meta.get("eligibility", {}).get("age_min", 15):
+        raise HTTPException(400, "Applicant is below minimum eligible age")
+    if age > meta.get("eligibility", {}).get("age_max", 60):
+        raise HTTPException(400, "Applicant exceeds maximum entry age (60)")
+
+    age_mult = (meta.get("age_loading") or {}).get(_age_bucket(age), 1.0)
+    smoker_loading = 1.0 + (meta.get("smoker_loading_pct", 30) / 100.0 if body.smoker else 0.0)
+
+    # Premium maths — all amounts per-year in MYR
+    base_rate = float(product["base_premium"])                   # 22 MYR /year baseline
+    gross = round(base_rate * option["multiplier"] * plan["multiplier"] * age_mult * smoker_loading, 2)
+    online_discount_pct = float(meta.get("online_discount_pct", 15))
+    online_discount = round(gross * online_discount_pct / 100.0, 2)
+    subtotal = round(gross - online_discount, 2)
+
+    # Rules engine adjustments
+    rule_inputs = {
+        "age": age, "gender": body.gender, "smoker": body.smoker,
+        "coverage_option": body.coverage_option, "plan": body.plan_key,
+        "sum_insured": plan["sum_insured"],
+    }
+    eval_result = await evaluate_rules(
+        product="health", base_premium=subtotal, inputs=rule_inputs,
+        record_audit=True, user_id=user["id"],
+    )
+    rules_delta = round(eval_result["final_premium"] - subtotal, 2)
+    subtotal = eval_result["final_premium"]
+
+    tax = round(subtotal * (float(meta.get("tax_pct", 8)) / 100.0), 2)
+    total = round(subtotal + tax, 2)
+
+    q = Quote(
+        user_id=user["id"],
+        product_id=body.product_id,
+        input=body.model_dump(),
+        base_premium=round(gross, 2),
+        addon_total=0.0,
+        tax=tax,
+        total=total,
+        risk_score=round(min(1.0, (age_mult - 1) / 2.0 + (0.2 if body.smoker else 0.0)), 3),
+        coverage_tier=body.coverage_option,
+    )
+    doc = q.model_dump()
+    doc["meta"] = {
+        "gross_premium": round(gross, 2),
+        "online_discount": online_discount,
+        "online_discount_pct": online_discount_pct,
+        "coverage_option": option,
+        "plan": plan,
+        "age": age,
+        "age_multiplier": age_mult,
+        "smoker_loading_applied": body.smoker,
+        "insured_name": body.full_name,
+        "rules_delta": rules_delta,
+        "applied_rules": eval_result["applied_rules"],
+    }
+    await db.quotes.insert_one(doc)
+    doc.pop("_id", None)
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "lead_stage": "quoted",
+            "full_name": body.full_name,
+            "kyc_data": {
+                "id_type": body.id_type, "id_number": body.id_number,
+                "gender": body.gender, "date_of_birth": body.date_of_birth,
+                "smoker": body.smoker, "phone": body.phone,
+            },
+        }},
+    )
+    await db.interactions.insert_one({
+        "id": __import__("uuid").uuid4().hex, "user_id": user["id"],
+        "kind": "action", "title": "Health Secure+ quote generated",
+        "body": f"{option['label']} · {plan['label']} ({plan['sum_insured']}) · total {total}",
+        "meta": {"quote_id": q.id}, "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return doc
+
+
 @router.get("")
 async def list_my_quotes(user: dict = Depends(get_current_user)):
     items = await db.quotes.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)

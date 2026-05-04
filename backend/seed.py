@@ -61,20 +61,55 @@ DEFAULT_PRODUCTS = [
     {
         "name": "Health Secure Plus",
         "category": "health",
-        "description": "Comprehensive health coverage for individuals and families.",
-        "base_premium": 89.0,
-        "coverage_amount": 500000,
+        "description": "Critical illness insurance with 39-condition cover, early-stage pay-outs and instant 15% online discount. From as low as RM 22 / year.",
+        "base_premium": 22.0,
+        "coverage_amount": 100000,
         "features": [
-            "Cashless hospitalization",
-            "Pre & post-hospital care",
-            "Annual health check-up",
-            "Maternity cover (optional)",
-            "Critical illness rider",
+            "Choose Top 2, Top 5 or 39 Critical Illnesses cover",
+            "Early-Stage pay-out (50% of sum insured)",
+            "Diabetic Care Disease benefit",
+            "15% instant online discount",
+            "Fast claims — pay-out in 3 working days from approval",
         ],
         "addons": [
             {"name": "Maternity Cover", "price": 30.0},
-            {"name": "Critical Illness", "price": 22.0},
+            {"name": "Accidental Death Rider", "price": 22.0},
         ],
+        # Critical-illness specific config consumed by /quotes/health & the
+        # Health landing/quote pages. Base premium formula:
+        #   monthly_rate × 12 × plan_multiplier × option_multiplier
+        # All numbers below are per-year MYR.
+        "meta": {
+            "coverage_options": [
+                {"key": "top2",  "label": "Top 2 Critical Illnesses",
+                 "multiplier": 1.0,
+                 "illnesses": ["Heart Attack", "Cancer"]},
+                {"key": "top5",  "label": "Top 5 Critical Illnesses",
+                 "multiplier": 1.8,
+                 "illnesses": ["Heart Attack", "Cancer", "Stroke",
+                               "Serious Coronary Artery Disease", "Kidney Failure"]},
+                {"key": "ci39",  "label": "39 Critical Illnesses",
+                 "multiplier": 2.5,
+                 "illnesses": ["All 39 listed critical illnesses"]},
+            ],
+            "plans": [
+                {"key": "plan1", "label": "Plan 1", "sum_insured":  20000, "multiplier": 0.40},
+                {"key": "plan2", "label": "Plan 2", "sum_insured":  50000, "multiplier": 0.80},
+                {"key": "plan3", "label": "Plan 3", "sum_insured": 100000, "multiplier": 1.00},
+                {"key": "plan4", "label": "Plan 4", "sum_insured": 150000, "multiplier": 1.35},
+                {"key": "plan5", "label": "Plan 5", "sum_insured": 200000, "multiplier": 1.65},
+            ],
+            "online_discount_pct": 15,
+            "tax_pct": 8,
+            "age_loading": {
+                "15-29": 1.0,
+                "30-39": 1.3,
+                "40-49": 1.8,
+                "50-60": 2.4,
+            },
+            "smoker_loading_pct": 30,
+            "eligibility": {"age_min": 15, "age_max": 60, "renewal_max": 70},
+        },
         "image_url": "https://images.pexels.com/photos/4617309/pexels-photo-4617309.jpeg?auto=compress&cs=tinysrgb&w=1200",
     },
     {
@@ -203,6 +238,14 @@ async def seed_all():
                 backfill["form_config"] = DEFAULT_PA_FORM_CONFIG
             if p["category"] == "travel" and not exists.get("form_config") and p.get("form_config"):
                 backfill["form_config"] = p["form_config"]
+            if p["category"] == "health" and p.get("meta") and not exists.get("meta", {}).get("coverage_options"):
+                backfill["meta"] = p["meta"]
+                # Also reset base_premium + coverage to new critical-illness values
+                backfill["base_premium"] = p["base_premium"]
+                backfill["coverage_amount"] = p["coverage_amount"]
+                backfill["description"] = p["description"]
+                backfill["features"] = p["features"]
+                backfill["addons"] = p["addons"]
             if "display_order" not in exists:
                 backfill["display_order"] = p.get("display_order", 100)
             if backfill:

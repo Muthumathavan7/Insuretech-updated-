@@ -26,7 +26,8 @@ export default function Products() {
     if (p.category === "travel") nav(`/travel-quote/${p.id}`);
     else if (p.category === "motor") nav(`/products/motor-easy`);
     else if (p.category === "pa") nav(`/products/pa-easy`);
-    else alert(`${p.name} quote coming soon! Travel, Motor and PA insurance are fully live.`);
+    else if (p.category === "health") nav(`/products/health-secure-plus`);
+    else alert(`${p.name} quote coming soon! Travel, Motor, PA and Health insurance are fully live.`);
   };
 
   return (

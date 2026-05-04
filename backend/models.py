@@ -161,6 +161,7 @@ class Product(BaseModel):
     active: bool = True
     display_order: int = 100
     form_config: Dict[str, FieldConfig] = Field(default_factory=dict)
+    meta: Dict[str, Any] = Field(default_factory=dict)
     created_at: str = Field(default_factory=_now)
 
 
