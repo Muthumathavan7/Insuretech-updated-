@@ -1,5 +1,38 @@
 # PRD — Tune Protect · Insurance Technology Platform
 
+## Implemented (2026-05-04 — iteration 17: Health Secure+ · Critical Safe+ flow)
+End-to-end critical illness product modelled on Tune Protect's shop flow
+(https://shop.tuneprotect.com/criticalsafe/).
+
+### Backend
+- Re-seeded **Health Secure Plus** product (`seed.py`) with `meta.coverage_options`
+  (top2/top5/ci39 × multipliers 1.0/1.8/2.5), `meta.plans` (Plan 1–5 sum insured
+  20k–200k × multipliers 0.40/0.80/1.00/1.35/1.65), `meta.age_loading`
+  (1.0/1.3/1.8/2.4 by 10-year bucket), 30% smoker loading, 15% online discount, 8% SST.
+- `Product` model now persists `meta: Dict` (was previously dropped by `extra="ignore"`).
+- `POST /api/quotes/health` endpoint with `HealthQuoteInput` (plan, NRIC/passport, DOB,
+  gender, smoker flag, Malaysian resident & privacy consent, optional beneficiary).
+- Validations: age 15–60 hard gate, privacy + residency must be true.
+- Premium formula: `base_premium × option × plan × age_bucket × (1+30% if smoker)`
+  → `-15% online` → `+rules_delta` (Pricing Rules Engine) → `+8% SST`.
+- Integrates with existing `/api/policies/issue-from-quote/:quote_id` — `HL-` prefix,
+  1-year annual term (automatic via existing `ANNUAL_CATEGORIES`).
+
+### Frontend
+- `pages/HealthInsurance.jsx` — Critical Safe+ landing page (hero, 5 key benefits,
+  3:3:3 promise banner, 3 coverage-option cards, FAQ, CTA). Routes: `/products/health-secure-plus`.
+- `pages/HealthQuote.jsx` — 3-step wizard: Plan Selection → Personal Details →
+  Summary & Payment. Profile quick-fill, Stripe checkout button + "Skip payment (demo)"
+  bypass. Route: `/health-quote/:productId`.
+- `pages/Products.jsx` — Health product tile now navigates to the new landing page.
+
+### Verification
+- Testing agent (iteration_14.json): 7/7 pytest cases pass, 100% backend + frontend.
+- Math confirmed to the cent: non-smoker age 30 + Top 5 + Plan 3 →
+  `22 × 1.8 × 1.0 × 1.3 = 51.48` gross → `-15%` = 43.76 → `+8% SST` = **RM 47.26** total.
+- Policy issuance renders a copper-orange credit-card PolicyCard on `/policies`
+  with `HL-260504-xxxxx` and exactly 1-year validity.
+
 ## Implemented (2026-05-02 — iteration 16: Pricing Rules Engine)
 **Production-grade no-code pricing engine integrated into the admin panel.**
 
