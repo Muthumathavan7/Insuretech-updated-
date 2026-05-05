@@ -27,6 +27,7 @@ export default function PolicyCard({ policy = {}, variant, className = "" }) {
       motor: "obsidian",
       health: "copper",
       pa: "sunset",
+      home: "ocean",
       travel: "gold",
       device: "platinum",
     }[policy.category] ||
@@ -328,6 +329,27 @@ const PALETTES = {
     statusFg: "#3a1f06",
     embossDark: "rgba(80,40,8,0.40)",
     embossLight: "rgba(255,255,255,0.40)",
+  },
+
+  // HOME — deep ocean blue with silver-platinum sheen (trust / safety)
+  ocean: {
+    bg: "linear-gradient(135deg, #0a1f3d 0%, #123a6b 45%, #1b5293 100%)",
+    fg: "#E8F0FA",
+    brandGold: "#CBDAEF",
+    brandText: "#ffffff",
+    border: "rgba(203,218,239,0.38)",
+    gloss:
+      "linear-gradient(110deg, transparent 28%, rgba(255,255,255,0.14) 45%, rgba(255,255,255,0.04) 60%, transparent 78%)",
+    shine: "radial-gradient(ellipse at 20% 0%, rgba(180,210,245,0.22) 0%, transparent 58%)",
+    glow: "radial-gradient(circle, #4a90e2 0%, transparent 70%)",
+    chipA: "#D6E1ED",
+    chipB: "#6F88A6",
+    chipLine: "rgba(0,0,0,0.4)",
+    contactless: "#E8F0FA",
+    statusBg: "rgba(232,240,250,0.18)",
+    statusFg: "#E8F0FA",
+    embossDark: "rgba(0,0,0,0.55)",
+    embossLight: "rgba(255,255,255,0.10)",
   },
 
   // Optional platinum for device etc.

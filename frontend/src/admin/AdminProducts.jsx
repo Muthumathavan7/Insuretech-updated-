@@ -9,10 +9,10 @@ import { Switch } from "@/components/ui/switch";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plane, HeartPulse, Car, Smartphone, Plus, Trash2, Pencil, Save, Activity } from "lucide-react";
+import { Plane, HeartPulse, Car, Smartphone, Plus, Trash2, Pencil, Save, Activity, Home } from "lucide-react";
 import { toast } from "sonner";
 
-const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity };
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity, home: Home };
 
 const FIELD_LABELS_MOTOR = {
   account_type: "Personal / Business toggle",
@@ -112,6 +112,10 @@ function ProductEditor({ product, onSaved }) {
       if (product.category === "health" && draft.meta) {
         payload.meta = draft.meta;
       }
+      // Home Easy ships rate tables + plans in `meta` — persist when present.
+      if (product.category === "home" && draft.meta) {
+        payload.meta = draft.meta;
+      }
       await api.patch(`/products/${product.id}`, payload);
       toast.success("Product updated");
       onSaved?.();
@@ -125,6 +129,7 @@ function ProductEditor({ product, onSaved }) {
   const isMotor = product.category === "motor";
   const isPA = product.category === "pa";
   const isHealth = product.category === "health";
+  const isHome = product.category === "home";
   const fieldLabels = isMotor ? FIELD_LABELS_MOTOR : isPA ? FIELD_LABELS_PA : null;
 
   return (
@@ -450,6 +455,116 @@ function ProductEditor({ product, onSaved }) {
         </div>
       )}
 
+      {/* Home Easy rate tables — admin-configurable */}
+      {isHome && (
+        <div className="border-t border-gray-100 pt-6 space-y-5">
+          <div>
+            <Label className="mb-1 block text-base">Home Easy rate tables</Label>
+            <p className="text-xs text-gray-500">
+              Drives the Coverage Calculator and the
+              <code className="mx-1 px-1.5 py-0.5 rounded bg-gray-100 text-[11px]">/api/quotes/home</code>
+              endpoint. Formula: <span className="font-mono text-[11px]">(building/100k × base × plan × prop) + (contents/100k × cRate × plan)</span>.
+            </p>
+          </div>
+
+          {/* Plans */}
+          <div>
+            <Label className="text-sm font-semibold">Plan tiers</Label>
+            <div className="mt-2 rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                <div className="col-span-2">Key</div>
+                <div className="col-span-3">Label</div>
+                <div className="col-span-2 text-right">Building ×</div>
+                <div className="col-span-2 text-right">Contents ×</div>
+                <div className="col-span-3">Benefits (comma sep.)</div>
+              </div>
+              {(draft.meta?.plans || []).map((p, idx) => (
+                <div key={p.key} className="grid grid-cols-12 gap-2 px-3 py-2 border-t border-gray-100 items-center" data-testid={`home-plan-row-${p.key}`}>
+                  <div className="col-span-2 font-mono text-xs text-gray-500">{p.key}</div>
+                  <Input className="col-span-3 rounded-lg h-9 text-sm" value={p.label} onChange={(e) => updateMetaList("plans", idx, { label: e.target.value })} />
+                  <Input
+                    type="number" step="0.01"
+                    className="col-span-2 rounded-lg h-9 text-sm text-right font-mono"
+                    value={p.building_mult}
+                    data-testid={`home-plan-bm-${p.key}`}
+                    onChange={(e) => updateMetaList("plans", idx, { building_mult: parseFloat(e.target.value) || 0 })}
+                  />
+                  <Input
+                    type="number" step="0.01"
+                    className="col-span-2 rounded-lg h-9 text-sm text-right font-mono"
+                    value={p.contents_mult}
+                    data-testid={`home-plan-cm-${p.key}`}
+                    onChange={(e) => updateMetaList("plans", idx, { contents_mult: parseFloat(e.target.value) || 0 })}
+                  />
+                  <Input
+                    className="col-span-3 rounded-lg h-9 text-sm"
+                    value={(p.benefits || []).join(", ")}
+                    onChange={(e) => updateMetaList("plans", idx, { benefits: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Property types */}
+          <div>
+            <Label className="text-sm font-semibold">Property types</Label>
+            <div className="mt-2 rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                <div className="col-span-3">Key</div>
+                <div className="col-span-6">Label</div>
+                <div className="col-span-3 text-right">Multiplier ×</div>
+              </div>
+              {(draft.meta?.property_types || []).map((t, idx) => (
+                <div key={t.key} className="grid grid-cols-12 gap-2 px-3 py-2 border-t border-gray-100 items-center" data-testid={`home-ptype-row-${t.key}`}>
+                  <div className="col-span-3 font-mono text-xs text-gray-500">{t.key}</div>
+                  <Input className="col-span-6 rounded-lg h-9 text-sm" value={t.label} onChange={(e) => updateMetaList("property_types", idx, { label: e.target.value })} />
+                  <Input
+                    type="number" step="0.01"
+                    className="col-span-3 rounded-lg h-9 text-sm text-right font-mono"
+                    value={t.multiplier}
+                    data-testid={`home-ptype-mult-${t.key}`}
+                    onChange={(e) => updateMetaList("property_types", idx, { multiplier: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Rate / sum-insured / global knobs */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-semibold">Rates per RM 100,000</Label>
+              <div className="mt-2 grid grid-cols-1 gap-2">
+                <KnobInput label="Building rate /100k" testId="home-rate-building" value={draft.meta?.base_rate_per_100k ?? 120} onChange={(v) => updateMeta({ base_rate_per_100k: v })} step="1" />
+                <KnobInput label="Contents rate /100k" testId="home-rate-contents" value={draft.meta?.contents_rate_per_100k ?? 150} onChange={(v) => updateMeta({ contents_rate_per_100k: v })} step="1" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Sum-insured limits</Label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <KnobInput label="Building min" testId="home-bmin" value={draft.meta?.building_min ?? 50000} onChange={(v) => updateMeta({ building_min: v })} step="1000" />
+                <KnobInput label="Building max" testId="home-bmax" value={draft.meta?.building_max ?? 2000000} onChange={(v) => updateMeta({ building_max: v })} step="1000" />
+                <KnobInput label="Contents min" testId="home-cmin" value={draft.meta?.contents_min ?? 10000} onChange={(v) => updateMeta({ contents_min: v })} step="1000" />
+                <KnobInput label="Contents max" testId="home-cmax" value={draft.meta?.contents_max ?? 500000} onChange={(v) => updateMeta({ contents_max: v })} step="1000" />
+              </div>
+            </div>
+            <div className="md:col-span-2">
+              <Label className="text-sm font-semibold">Global knobs</Label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <KnobInput label="Online discount %" testId="home-online-pct" value={draft.meta?.online_discount_pct ?? 10} onChange={(v) => updateMeta({ online_discount_pct: v })} step="0.5" />
+                <KnobInput label="SST / Tax %" testId="home-tax-pct" value={draft.meta?.tax_pct ?? 8} onChange={(v) => updateMeta({ tax_pct: v })} step="0.5" />
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-gray-400">
+            Tip: combine these with the <strong>Pricing Rules Engine</strong> for conditional
+            adjustments (e.g. +10% during a campaign, −5% loyalty).
+          </p>
+        </div>
+      )}
+
 
 
       <Button
@@ -465,11 +580,26 @@ function ProductEditor({ product, onSaved }) {
   );
 }
 
+function KnobInput({ label, value, onChange, step = "1", testId }) {
+  return (
+    <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-2.5 py-1.5">
+      <span className="text-xs text-gray-500 flex-1">{label}</span>
+      <Input
+        type="number"
+        step={step}
+        className="rounded-lg h-9 text-sm text-right font-mono w-28"
+        value={value}
+        data-testid={testId}
+        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+      />
+    </div>
+  );
+}
+
 export default function AdminProducts() {
   const [items, setItems] = useState([]);
   const [openId, setOpenId] = useState(null);
   const { format } = useCurrency();
-
   const load = () => api.get("/products").then((r) => setItems(r.data));
   useEffect(() => { load(); }, []);
 

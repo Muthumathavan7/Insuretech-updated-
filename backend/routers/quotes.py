@@ -540,6 +540,144 @@ async def create_health_quote(body: HealthQuoteInput, user: dict = Depends(get_c
     return doc
 
 
+class HomeQuoteInput(BaseModel):
+    product_id: str
+    # Step 1 — Property + plan
+    plan_key: Literal["basic", "enhanced", "premier"] = "enhanced"
+    property_type: Literal["landed", "apartment", "terrace", "commercial"] = "landed"
+    building_sum_insured: float = Field(gt=0)
+    contents_sum_insured: float = Field(ge=0)
+    addons: List[str] = []
+    # Step 2 — Owner details
+    full_name: str
+    id_type: Literal["nric", "passport"] = "nric"
+    id_number: str
+    email: EmailStr
+    phone: str
+    property_address: str
+    postcode: str
+    # Step 3 — Declarations
+    accept_privacy: bool
+
+
+@router.post("/home")
+async def create_home_quote(body: HomeQuoteInput, user: dict = Depends(get_current_user)):
+    product = await db.products.find_one({"id": body.product_id, "active": True}, {"_id": 0})
+    if not product or product["category"] != "home":
+        raise HTTPException(404, "Home product not found")
+    if not body.accept_privacy:
+        raise HTTPException(400, "Please accept the privacy notice to continue")
+
+    meta = product.get("meta") or {}
+    plans = {p["key"]: p for p in meta.get("plans", [])}
+    ptypes = {t["key"]: t for t in meta.get("property_types", [])}
+    plan = plans.get(body.plan_key)
+    ptype = ptypes.get(body.property_type)
+    if not plan or not ptype:
+        raise HTTPException(400, "Invalid plan or property type")
+
+    # Sum-insured bounds
+    b_min = float(meta.get("building_min", 0) or 0)
+    b_max = float(meta.get("building_max", 10_000_000) or 10_000_000)
+    c_min = float(meta.get("contents_min", 0) or 0)
+    c_max = float(meta.get("contents_max", 5_000_000) or 5_000_000)
+    if not (b_min <= body.building_sum_insured <= b_max):
+        raise HTTPException(400, f"Building sum insured must be between {b_min:.0f} and {b_max:.0f}")
+    if body.contents_sum_insured and not (c_min <= body.contents_sum_insured <= c_max):
+        raise HTTPException(400, f"Contents sum insured must be between {c_min:.0f} and {c_max:.0f}")
+
+    base_rate = float(meta.get("base_rate_per_100k", 120))
+    contents_rate = float(meta.get("contents_rate_per_100k", 150))
+
+    building_component = (body.building_sum_insured / 100000.0) * base_rate * plan["building_mult"] * ptype["multiplier"]
+    contents_component = (body.contents_sum_insured / 100000.0) * contents_rate * plan["contents_mult"]
+    gross = round(building_component + contents_component, 2)
+
+    # Add-ons (flat annual prices from product.addons)
+    addon_total = 0.0
+    if body.addons and product.get("addons"):
+        want = set(body.addons)
+        for a in product["addons"]:
+            if a["name"] in want:
+                addon_total += float(a["price"])
+
+    online_pct = float(meta.get("online_discount_pct", 10))
+    online_discount = round(gross * online_pct / 100.0, 2)
+    subtotal = round(gross - online_discount + addon_total, 2)
+
+    # Pricing Rules Engine adjustments
+    rule_inputs = {
+        "plan": body.plan_key,
+        "property_type": body.property_type,
+        "building_sum": body.building_sum_insured,
+        "contents_sum": body.contents_sum_insured,
+        "postcode": body.postcode,
+        "addons_count": len(body.addons),
+    }
+    eval_result = await evaluate_rules(
+        product="home", base_premium=subtotal, inputs=rule_inputs,
+        record_audit=True, user_id=user["id"],
+    )
+    rules_delta = round(eval_result["final_premium"] - subtotal, 2)
+    subtotal = eval_result["final_premium"]
+
+    tax_pct = float(meta.get("tax_pct", 8))
+    tax = round(subtotal * tax_pct / 100.0, 2)
+    total = round(subtotal + tax, 2)
+
+    risk = round(min(0.9, 0.25 + (0.15 if body.property_type == "commercial" else 0.0)
+                     + (0.05 if body.plan_key == "basic" else 0.0)), 2)
+
+    q = Quote(
+        user_id=user["id"],
+        product_id=body.product_id,
+        input=body.model_dump(),
+        base_premium=round(gross, 2),
+        addon_total=round(addon_total, 2),
+        tax=tax,
+        total=total,
+        risk_score=risk,
+        coverage_tier=body.plan_key,
+    )
+    doc = q.model_dump()
+    doc["meta"] = {
+        "gross_premium": round(gross, 2),
+        "online_discount": online_discount,
+        "online_discount_pct": online_pct,
+        "plan": plan,
+        "property_type": ptype,
+        "building_sum_insured": body.building_sum_insured,
+        "contents_sum_insured": body.contents_sum_insured,
+        "insured_name": body.full_name,
+        "property_address": body.property_address,
+        "selected_addons": body.addons,
+        "rules_delta": rules_delta,
+        "applied_rules": eval_result["applied_rules"],
+    }
+    await db.quotes.insert_one(doc)
+    doc.pop("_id", None)
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "lead_stage": "quoted",
+            "full_name": body.full_name,
+            "kyc_data": {
+                "id_type": body.id_type, "id_number": body.id_number,
+                "phone": body.phone, "postcode": body.postcode,
+                "property_address": body.property_address,
+            },
+        }},
+    )
+    await db.interactions.insert_one({
+        "id": __import__("uuid").uuid4().hex, "user_id": user["id"],
+        "kind": "action", "title": "Home Easy quote generated",
+        "body": f"{plan['label']} · {ptype['label']} · Building {body.building_sum_insured:.0f} · total {total}",
+        "meta": {"quote_id": q.id}, "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return doc
+
+
 @router.get("")
 async def list_my_quotes(user: dict = Depends(get_current_user)):
     items = await db.quotes.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)

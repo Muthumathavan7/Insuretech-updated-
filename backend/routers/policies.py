@@ -12,11 +12,11 @@ router = APIRouter(prefix="/policies", tags=["policies"])
 
 # Policy categories that always run on an annual (12-month) cycle.
 # Travel is explicitly excluded — its term is trip-length driven.
-ANNUAL_CATEGORIES = {"pa", "motor", "health", "device"}
+ANNUAL_CATEGORIES = {"pa", "motor", "health", "device", "home"}
 
 
 def _policy_number(category: str) -> str:
-    prefix = {"travel": "TR", "health": "HL", "motor": "MO", "device": "DV", "pa": "PA"}.get(category, "IN")
+    prefix = {"travel": "TR", "health": "HL", "motor": "MO", "device": "DV", "pa": "PA", "home": "HO"}.get(category, "IN")
     return f"{prefix}-{datetime.now(timezone.utc).strftime('%y%m%d')}-{random.randint(10000, 99999)}"
 
 

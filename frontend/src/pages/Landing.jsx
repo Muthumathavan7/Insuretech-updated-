@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useCurrency } from "@/lib/currency";
-import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Shield, Sparkles, Check, Star, Activity } from "lucide-react";
+import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Home, Shield, Sparkles, Check, Star, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity };
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity, home: Home };
 const HERO_IMG =
   "https://images.pexels.com/photos/7065885/pexels-photo-7065885.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1200";
 
@@ -125,6 +125,8 @@ export default function Landing() {
             const href =
               p.category === "motor" ? "/products/motor-easy"
               : p.category === "pa" ? "/products/pa-easy"
+              : p.category === "health" ? "/products/health-secure-plus"
+              : p.category === "home" ? "/products/home-easy"
               : p.category === "travel" ? `/travel-quote/${p.id}`
               : "/products";
             return (

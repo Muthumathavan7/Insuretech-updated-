@@ -150,7 +150,7 @@ class Product(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=_id)
     name: str
-    category: Literal["travel", "health", "motor", "device", "pa"]
+    category: Literal["travel", "health", "motor", "device", "pa", "home"]
     description: str
     base_premium: float
     currency: str = "USD"
@@ -167,7 +167,7 @@ class Product(BaseModel):
 
 class ProductCreate(BaseModel):
     name: str
-    category: Literal["travel", "health", "motor", "device", "pa"]
+    category: Literal["travel", "health", "motor", "device", "pa", "home"]
     description: str
     base_premium: float
     coverage_amount: float

@@ -26,6 +26,8 @@ import PAInsurance from "@/pages/PAInsurance";
 import PAQuote from "@/pages/PAQuote";
 import HealthInsurance from "@/pages/HealthInsurance";
 import HealthQuote from "@/pages/HealthQuote";
+import HomeInsurance from "@/pages/HomeInsurance";
+import HomeQuote from "@/pages/HomeQuote";
 import TravelQuote from "@/pages/TravelQuote";
 
 import AdminDashboard from "@/admin/AdminDashboard";
@@ -130,6 +132,8 @@ function AppRoutes() {
       <Route path="/pa-quote/:productId" element={<CustomerShell><PAQuote /></CustomerShell>} />
       <Route path="/products/health-secure-plus" element={<CustomerShell><HealthInsurance /></CustomerShell>} />
       <Route path="/health-quote/:productId" element={<CustomerShell><HealthQuote /></CustomerShell>} />
+      <Route path="/products/home-easy" element={<CustomerShell><HomeInsurance /></CustomerShell>} />
+      <Route path="/home-quote/:productId" element={<CustomerShell><HomeQuote /></CustomerShell>} />
       <Route path="/products/travel" element={<CustomerShell><TravelQuote /></CustomerShell>} />
       <Route path="/products/travel/:productId/quote" element={<CustomerShell><TravelQuote /></CustomerShell>} />
       <Route path="/travel-quote/:productId" element={<CustomerShell><TravelQuote /></CustomerShell>} />

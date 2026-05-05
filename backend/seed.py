@@ -157,6 +157,75 @@ DEFAULT_PRODUCTS = [
         "image_url": "https://images.pexels.com/photos/7382453/pexels-photo-7382453.jpeg?auto=compress&cs=tinysrgb&w=1200",
     },
     {
+        "name": "Home Easy",
+        "category": "home",
+        "description": "Protect your home against fire, theft, flood and liability — with instant online pricing, 24/7 Home Assistance, and a 10% online discount. From RM 120/year.",
+        "base_premium": 120.0,
+        "coverage_amount": 500000,
+        "display_order": 20,
+        "features": [
+            "Comprehensive Building + Contents cover",
+            "Fire, flood, storm & burglary protection",
+            "Public liability up to RM 1,000,000",
+            "24/7 Home Assistance (plumber/electrician)",
+            "10% online discount, SST 8% included",
+            "Flexible Basic / Enhanced / Premier plans",
+        ],
+        "addons": [
+            {"name": "Personal Belongings / Valuables", "price": 45.0},
+            {"name": "Domestic Helper Coverage", "price": 60.0},
+            {"name": "Home Assistance 24/7", "price": 35.0},
+        ],
+        # Home Easy rate tables — premium formula (yearly MYR):
+        #   building = (building_sum / 100k) × base_rate_per_100k × plan.building_mult × property.multiplier
+        #   contents = (contents_sum / 100k) × contents_rate_per_100k × plan.contents_mult
+        #   gross    = building + contents
+        #   subtotal = gross × (1 − online_discount%) + addons
+        #   total    = subtotal × (1 + tax%)
+        "meta": {
+            "plans": [
+                {"key": "basic", "label": "Basic",
+                 "building_mult": 1.0, "contents_mult": 0.4,
+                 "benefits": [
+                     "Fire & Lightning",
+                     "Theft up to RM 5,000",
+                     "Public liability up to RM 100,000",
+                 ]},
+                {"key": "enhanced", "label": "Enhanced",
+                 "building_mult": 1.4, "contents_mult": 0.6,
+                 "benefits": [
+                     "All Basic benefits",
+                     "Flood & Windstorm",
+                     "Theft up to RM 20,000",
+                     "Liability up to RM 500,000",
+                 ]},
+                {"key": "premier", "label": "Premier",
+                 "building_mult": 1.9, "contents_mult": 0.9,
+                 "benefits": [
+                     "All Enhanced benefits",
+                     "Accidental Damage",
+                     "Alternative Accommodation",
+                     "Liability up to RM 1,000,000",
+                 ]},
+            ],
+            "property_types": [
+                {"key": "landed",     "label": "Landed House",     "multiplier": 1.0},
+                {"key": "apartment",  "label": "Apartment / Condo", "multiplier": 0.85},
+                {"key": "terrace",    "label": "Terrace",          "multiplier": 0.95},
+                {"key": "commercial", "label": "Commercial",       "multiplier": 1.50},
+            ],
+            "base_rate_per_100k": 120.0,
+            "contents_rate_per_100k": 150.0,
+            "online_discount_pct": 10,
+            "tax_pct": 8,
+            "building_min": 50000,
+            "building_max": 2000000,
+            "contents_min": 10000,
+            "contents_max": 500000,
+        },
+        "image_url": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80",
+    },
+    {
         "name": "PA Easy",
         "category": "pa",
         "description": "Life is unpredictable — you'll never know when an accident could happen. Protect yourself and your loved ones from financial strain with PA Easy.",
@@ -241,6 +310,13 @@ async def seed_all():
             if p["category"] == "health" and p.get("meta") and not exists.get("meta", {}).get("coverage_options"):
                 backfill["meta"] = p["meta"]
                 # Also reset base_premium + coverage to new critical-illness values
+                backfill["base_premium"] = p["base_premium"]
+                backfill["coverage_amount"] = p["coverage_amount"]
+                backfill["description"] = p["description"]
+                backfill["features"] = p["features"]
+                backfill["addons"] = p["addons"]
+            if p["category"] == "home" and p.get("meta") and not exists.get("meta", {}).get("plans"):
+                backfill["meta"] = p["meta"]
                 backfill["base_premium"] = p["base_premium"]
                 backfill["coverage_amount"] = p["coverage_amount"]
                 backfill["description"] = p["description"]

@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
-import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Check } from "lucide-react";
+import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Home, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone };
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, home: Home };
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -27,7 +27,8 @@ export default function Products() {
     else if (p.category === "motor") nav(`/products/motor-easy`);
     else if (p.category === "pa") nav(`/products/pa-easy`);
     else if (p.category === "health") nav(`/products/health-secure-plus`);
-    else alert(`${p.name} quote coming soon! Travel, Motor, PA and Health insurance are fully live.`);
+    else if (p.category === "home") nav(`/products/home-easy`);
+    else alert(`${p.name} quote coming soon! Travel, Motor, PA, Health, and Home insurance are fully live.`);
   };
 
   return (
@@ -40,7 +41,7 @@ export default function Products() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">
-        {["all", "travel", "health", "motor", "device"].map((c) => (
+        {["all", "travel", "health", "motor", "home", "device"].map((c) => (
           <button
             key={c}
             onClick={() => setCat(c)}
