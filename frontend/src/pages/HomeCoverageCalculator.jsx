@@ -178,7 +178,7 @@ export default function HomeCoverageCalculator({ product, quoteHref }) {
             </div>
 
             <div className="flex items-end gap-1.5 tabular-nums">
-              <div className="font-display text-[72px] leading-[0.9] font-semibold text-white">
+              <div data-testid="home-calc-total" className="font-display text-[72px] leading-[0.9] font-semibold text-white">
                 {format(animatedTotal, { decimals: 2 }).replace(/^[^0-9-]+/, "")}
               </div>
               <div className="pb-3 text-xs text-white/60">/ year</div>

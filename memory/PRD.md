@@ -1,5 +1,48 @@
 # PRD — Tune Protect · Insurance Technology Platform
 
+## Implemented (2026-05-05 — iteration 18: Home Easy product line)
+End-to-end home insurance product (5th major product line on the platform).
+
+### Backend
+- New seeded **Home Easy** product (`seed.py`, `category="home"`) with full `meta`:
+  3 plans (Basic/Enhanced/Premier × building_mult 1.0/1.4/1.9, contents_mult 0.4/0.6/0.9),
+  4 property types (Landed/Apartment-Condo/Terrace/Commercial × multipliers 1.0/0.85/0.95/1.50),
+  base_rate_per_100k=120, contents_rate_per_100k=150, online_discount_pct=10, tax_pct=8,
+  building_min/max 50k–2M, contents_min/max 10k–500k, 3 add-ons (Personal belongings RM45,
+  Domestic helper RM60, Home Assistance RM35).
+- `models.py` `Product.category` Literal extended with `"home"`.
+- `POST /api/quotes/home` endpoint with `HomeQuoteInput` (plan_key, property_type,
+  building/contents sums, addons, owner KYC, address, postcode, accept_privacy).
+- Premium formula: `building = (b_sum/100k) × base_rate × plan.building_mult × ptype.multiplier`,
+  `contents = (c_sum/100k) × contents_rate × plan.contents_mult`, `gross = building + contents`,
+  `subtotal = gross − online_discount + addons`, then Pricing Rules Engine, then `+SST`.
+- `routers/policies.py` — `ANNUAL_CATEGORIES` now includes `"home"`, policy prefix `HO-`,
+  1-year annual term enforced.
+
+### Frontend
+- `pages/HomeInsurance.jsx` — Home Easy landing page (hero, 5 key benefits, plan tiles,
+  FAQ, CTA), routed at `/products/home-easy`.
+- `pages/HomeCoverageCalculator.jsx` — Live fluid calculator (plan chips, property chips,
+  building & contents sliders, animated total counter); deep-links into the wizard with
+  selection pre-applied. CSS slider style added at `index.css` (`.home-slider`).
+- `pages/HomeQuote.jsx` — 3-step wizard (Plan & Property → Owner Details → Summary &
+  Payment) with profile quick-fill, Stripe checkout, "Skip payment (demo)" bypass.
+  Route: `/home-quote/:productId`.
+- `components/app/PolicyCard.jsx` — New **`ocean`** palette (deep blue → silver-platinum sheen)
+  auto-resolved by `policy.category === "home"`.
+- `pages/Products.jsx` + `pages/Landing.jsx` — Home tile navigates to the new landing page;
+  product filter chip added.
+- `admin/AdminProducts.jsx` — `isHome` editor block: plan tiers (building_mult, contents_mult,
+  benefits), property types (multiplier), rate-per-100k inputs, sum-insured min/max bounds,
+  online-discount % and SST %. Reusable `KnobInput` helper.
+
+### Verification
+- Testing agent (iteration_15.json): **9/9 pytest backend, 100% frontend & admin flows pass.**
+- Math confirmed to the cent: enhanced + landed + 500k building + 50k contents + Home Assistance addon
+  → gross **RM 885.00** → −10% (88.50) → +35 addon → +8% SST (66.52) → total **RM 898.02**.
+- Policy issuance renders the deep-blue `ocean` PolicyCard on `/policies` with
+  `HO-260505-xxxxx` and exactly 1-year validity.
+
 ## Implemented (2026-05-04 — iteration 17: Health Secure+ · Critical Safe+ flow)
 End-to-end critical illness product modelled on Tune Protect's shop flow
 (https://shop.tuneprotect.com/criticalsafe/).
