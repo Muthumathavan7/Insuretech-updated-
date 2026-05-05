@@ -378,6 +378,7 @@ const PALETTES = {
   embossDark: "rgba(0,0,0,0.4)",
   embossLight: "rgba(255,255,255,0.6)",
 },
+<<<<<<< Updated upstream
 
   // HOME — deep ocean blue with silver-platinum sheen (trust / safety)
   ocean: {
@@ -399,6 +400,8 @@ const PALETTES = {
     embossDark: "rgba(0,0,0,0.55)",
     embossLight: "rgba(255,255,255,0.10)",
   },
+=======
+>>>>>>> Stashed changes
 
   // Optional platinum for device etc.
   platinum: {

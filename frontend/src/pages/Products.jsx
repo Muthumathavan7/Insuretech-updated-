@@ -42,7 +42,11 @@ export default function Products() {
 
       <div className="flex flex-wrap gap-2 mb-8">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         {["all", "travel", "health", "motor", "home", "device"].map((c) => (
+=======
+        {["all", "travel", "health", "motor", "pa"].map((c) => (
+>>>>>>> Stashed changes
 =======
         {["all", "travel", "health", "motor", "pa"].map((c) => (
 >>>>>>> Stashed changes
