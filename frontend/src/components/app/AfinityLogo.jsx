@@ -15,7 +15,8 @@ import React from "react";
 export default function AfinityLogo({
   size = 32,
   color = "#DEB25E",
-  textColor = "#f0deb1",
+  textColor = "#DEB25E",
+  iconColor = "#DEB25E",
   showText = true,
 }) {
   return (
@@ -30,7 +31,14 @@ export default function AfinityLogo({
           height: size,
           objectFit: "contain",
           // soft drop-shadow so the red mark reads on any card palette
-          filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.25))",
+           filter:
+    iconColor === "#1a1a1a"
+      ? "brightness(0) saturate(100%) invert(10%)"
+      : iconColor === "#F5F5F5"
+      ? "brightness(0) invert(1)"
+      : "none",
+
+    opacity: 0.95,
         }}
       />
       {showText && (

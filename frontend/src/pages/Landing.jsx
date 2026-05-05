@@ -5,9 +5,16 @@ import { useCurrency } from "@/lib/currency";
 import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Home, Shield, Sparkles, Check, Star, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+<<<<<<< Updated upstream
 const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity, home: Home };
 const HERO_IMG =
   "https://images.pexels.com/photos/7065885/pexels-photo-7065885.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1200";
+=======
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity };
+import familyImg from "./family.png";
+const HERO_IMG = familyImg;
+
+>>>>>>> Stashed changes
 
 export default function Landing() {
   const [products, setProducts] = useState([]);

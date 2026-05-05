@@ -9,8 +9,13 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { Shield } from "lucide-react";
 
-const AUTH_IMG =
-  "https://images.pexels.com/photos/7065885/pexels-photo-7065885.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1000";
+import familyImg from "./family.png";
+
+const AUTH_IMG = familyImg;
+
+import icon from "./icon.png";
+
+const logo = icon;
 
 export default function Login() {
   const { login, otpVerify } = useAuth();
@@ -59,10 +64,14 @@ export default function Login() {
       <div className="flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-float">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-display text-xl font-semibold">TuneProtect</span>
+            <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-float">
+  <img
+    src={logo}
+    alt="Logo"
+    className="w-full h-full object-cover"
+  />
+</div>
+            <span className="font-display text-xl font-semibold"><span className="text-primary">Afinity.ai</span></span>
           </div>
           <h1 className="font-display text-3xl font-semibold mb-2">Welcome back</h1>
           <p className="text-gray-500 mb-8">Log in to access your policies and file claims.</p>
@@ -81,7 +90,6 @@ export default function Login() {
                     id="email"
                     data-testid="login-email"
                     type="email"
-                    value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
                     className="rounded-xl h-11"
@@ -93,7 +101,6 @@ export default function Login() {
                     id="password"
                     data-testid="login-password"
                     type="password"
-                    value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     required
                     className="rounded-xl h-11"
@@ -109,9 +116,9 @@ export default function Login() {
                 </Button>
               </form>
               <div className="mt-4 text-xs text-gray-400 bg-gray-50 p-3 rounded-xl">
-                <span className="font-semibold text-gray-600">Demo:</span> demo@insurtech.io / Demo@123
+                {/* <span className="font-semibold text-gray-600">Demo:</span> demo@insurtech.io / Demo@123 */}
                 <br />
-                <span className="font-semibold text-gray-600">Admin:</span> admin@insurtech.io / Admin@123
+                {/* <span className="font-semibold text-gray-600">Admin:</span> admin@insurtech.io / Admin@123 */}
               </div>
             </TabsContent>
 

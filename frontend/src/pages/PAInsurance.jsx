@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
+
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
@@ -18,6 +19,8 @@ const HERO_IMG =
 // via the active currency switcher.
 const PRICE_NET = 29.16;
 const PRICE_GROSS = 36.0;
+import familyImg1 from "./businessman-blurred-background-using-family-care-insurance-application-3d-rendering.jpg";
+const HERO_IMG1 = familyImg1;
 
 const BENEFITS = [
   { icon: Heart,       title: "Death & Permanent Disablement",         amount: 10000, suffix: "",        body: "By accidental cause resulting in death or permanent disability." },
@@ -29,7 +32,7 @@ const BENEFITS = [
 ];
 
 const FAQS = [
-  { q: "What is Tune Protect PA Easy?", a: "PA Easy is a personal accident insurance product designed to protect you in the event of bodily injury arising from an accident — covering accidental death, permanent disablement, medical expenses, hospital income, bereavement allowance and more." },
+  { q: "What is Afinity.ai PA Easy?", a: "PA Easy is a personal accident insurance product designed to protect you in the event of bodily injury arising from an accident — covering accidental death, permanent disablement, medical expenses, hospital income, bereavement allowance and more." },
   { q: "Who can apply for this policy?", a: "Anyone aged 18 – 70 who is a resident or has a permanent residential address, with a valid ID. You can only hold one PA Easy policy as the Insured Person at any one time." },
   { q: "When does my insurance coverage start?", a: "Your coverage starts from the date of successful payment and runs for 12 calendar months." },
   { q: "Is there a discount for online purchase?", a: "Yes — a 25% discount is applied to the basic premium when you buy PA Easy online through this site." },
@@ -247,7 +250,7 @@ export default function PAInsurance() {
           </div>
           <div className="rounded-3xl overflow-hidden aspect-[4/3] bg-gray-100">
             <img
-              src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80"
+              src={HERO_IMG1}
               alt="Family protection"
               className="w-full h-full object-cover"
             />

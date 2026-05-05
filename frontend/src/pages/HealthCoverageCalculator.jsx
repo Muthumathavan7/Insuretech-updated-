@@ -85,7 +85,7 @@ export default function HealthCoverageCalculator({ product, quoteHref }) {
             <Sparkles className="w-3.5 h-3.5" /> Coverage calculator
           </div>
           <h2 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight">
-            Tune your cover. Watch your price.
+            Afinity.ai your cover. Watch your price.
           </h2>
           <p className="text-gray-500 mt-2 max-w-2xl">
             Slide through sum-insured plans and toggle options — your annual premium recalculates live.

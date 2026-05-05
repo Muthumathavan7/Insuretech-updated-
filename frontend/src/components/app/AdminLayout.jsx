@@ -8,22 +8,27 @@ import {
   GitBranch, MessageCircle, CheckSquare, Menu, X,
 } from "lucide-react";
 
+import familyImg from "./icon.png";
+
+const logo = familyImg;
 // Sectioned navigation matching the lux theme
 const NAV_SECTIONS = [
   {
     title: "Workspace",
     items: [
       { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-      { to: "/admin/customers", label: "Customers", icon: Users },
+      { to: "/admin/leads", label: "Leads", icon: Users },
+      
     ],
   },
   {
     title: "Sales & CRM",
     items: [
-      { to: "/admin/leads", label: "Leads", icon: Users },
+      
       { to: "/admin/pipeline", label: "Pipeline", icon: GitBranch },
-      { to: "/admin/leads-kanban", label: "Leads Kanban", icon: KanbanSquare },
+      // { to: "/admin/leads-kanban", label: "Leads Kanban", icon: KanbanSquare },
       { to: "/admin/tasks", label: "Tasks", icon: CheckSquare },
+      { to: "/admin/customers", label: "Customers", icon: Users },
       { to: "/admin/whatsapp", label: "WhatsApp", icon: MessageCircle },
     ],
   },
@@ -71,18 +76,19 @@ export default function AdminLayout({ children }) {
 
   const sidebarBody = (
     <>
-      <Link to="/admin" className="px-6 py-6 flex items-center justify-between border-b border-[rgba(222,178,94,0.12)]">
-        <AfinityLogo size={30} />
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(false)}
-          className="lg:hidden text-[rgba(232,217,179,0.7)] hover:text-[#f5e4bd] p-1"
-          aria-label="Close menu"
-          data-testid="admin-drawer-close"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      </Link>
+      <Link to="/admin" className="px-5 py-5 flex items-center gap-2 border-b border-gray-100">
+          <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-float">
+  <img
+    src={logo}
+    alt="Logo"
+    className="w-full h-full object-cover"
+  />
+</div>
+          <div>
+            <div className="font-display text-lg font-semibold"><span className="text-primary">Afinity.ai</span></div>
+            <div className="text-[11px] uppercase tracking-wider text-primary-700 font-semibold">InsurTech</div>
+          </div>
+        </Link>
 
       <nav className="flex-1 overflow-y-auto py-2">
         {NAV_SECTIONS.map((section) => (

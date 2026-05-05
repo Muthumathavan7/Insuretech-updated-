@@ -11,9 +11,9 @@ import {
   Check, Clock, Calendar, ArrowRight, Stethoscope,
 } from "lucide-react";
 import HealthCoverageCalculator from "./HealthCoverageCalculator";
+import familyImg from "./WhatsApp Image 2026-05-05 at 15.24.27.jpeg";
 
-const HERO_IMG =
-  "https://images.pexels.com/photos/4006406/pexels-photo-4006406.jpeg?auto=compress&cs=tinysrgb&w=1200";
+const HERO_IMG = familyImg;
 
 const KEY_BENEFITS = [
   { icon: Droplets,   title: "Diabetic Care",        body: "Covers Diabetic Care Disease with a separate sum insured that does not reduce your main cover." },

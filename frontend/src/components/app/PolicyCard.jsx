@@ -32,6 +32,8 @@ export default function PolicyCard({ policy = {}, variant, className = "" }) {
       device: "platinum",
     }[policy.category] ||
     "gold";
+const isGoldCard =
+    resolved === "sunset"; // 👈 your gradient belongs to "sunset", not "gold"
 
   const palette = PALETTES[resolved] || PALETTES.gold;
 
@@ -91,7 +93,12 @@ export default function PolicyCard({ policy = {}, variant, className = "" }) {
       {/* Top row — Brand + status + product */}
       <div className="relative flex items-start justify-between">
         <div>
-          <AfinityLogo size={26} color={palette.brandGold} textColor={palette.brandText} />
+          <AfinityLogo
+  size={26}
+  textColor={palette.brandText}
+  color={palette.brandText}
+  iconColor={palette.brandText}   // 🔥 IMPORTANT
+/>
           <div className="text-[10px] uppercase tracking-[0.22em] mt-2 opacity-80">
             {policy.product_name || "Insurance Policy"}
           </div>
@@ -249,36 +256,53 @@ function formatValidDate(iso) {
 const PALETTES = {
   // Default Afinity gold (charcoal + champagne) — for travel, device, other
   gold: {
-    bg: "linear-gradient(135deg, #1a1612 0%, #2a2722 45%, #3a2f1f 100%)",
-    fg: "#F5E9D2",
-    brandGold: "#DEB25E",
-    brandText: "#f0deb1",
-    border: "rgba(222,178,94,0.35)",
+    // 🟡 GOLD CARD BACKGROUND (matches your image)
+    bg: "linear-gradient(135deg, #f9d44a 0%, #f4c21a 35%, #e3a80a 70%, #c88900 100%)",
+
+    // ⚫ TEXT + LOGO (as you requested)
+    fg: "#1a1a1a",
+    brandGold: "#1a1a1a",
+    brandText: "#1a1a1a",
+
+    border: "rgba(0,0,0,0.2)",
+
+    // ✨ glossy diagonal reflection
     gloss:
-      "linear-gradient(110deg, transparent 28%, rgba(255,255,255,0.10) 45%, rgba(255,255,255,0.04) 60%, transparent 75%)",
-    shine: "radial-gradient(ellipse at 20% 0%, rgba(255,225,170,0.18) 0%, transparent 55%)",
-    glow: "radial-gradient(circle, #DEB25E 0%, transparent 70%)",
-    chipA: "#E2C383",
-    chipB: "#9A7A3C",
-    chipLine: "rgba(0,0,0,0.42)",
-    contactless: "#f0deb1",
-    statusBg: "rgba(222,178,94,0.18)",
-    statusFg: "#F5C77A",
-    embossDark: "rgba(0,0,0,0.55)",
-    embossLight: "rgba(255,255,255,0.05)",
+      "linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 48%, rgba(255,255,255,0.08) 62%, transparent 80%)",
+
+    // 🌟 center soft glow (very important)
+    glow:
+      "radial-gradient(circle at 40% 50%, rgba(255,230,120,0.45), transparent 60%)",
+
+    // ✨ top shine
+    shine:
+      "radial-gradient(ellipse at 25% 0%, rgba(255,255,255,0.35) 0%, transparent 55%)",
+
+    // 💳 chip colors
+    chipA: "#f5d36a",
+    chipB: "#a67c1f",
+    chipLine: "rgba(0,0,0,0.45)",
+
+    contactless: "#1a1a1a",
+
+    statusBg: "rgba(0,0,0,0.1)",
+    statusFg: "#1a1a1a",
+
+    embossDark: "rgba(0,0,0,0.4)",
+    embossLight: "rgba(255,255,255,0.5)",
   },
 
   // MOTOR — obsidian black like the reference photo
   obsidian: {
-    bg: "linear-gradient(135deg, #050507 0%, #0d0d10 45%, #16171b 100%)",
-    fg: "#E8EBF0",
+    bg: "linear-gradient(#000000)",
+    fg: "#C2AA6E",
     brandGold: "#DEB25E",
-    brandText: "#f0deb1",
+    brandText: "#DEB25E",
     border: "rgba(222,178,94,0.22)",
     gloss:
       "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 47%, rgba(255,255,255,0.02) 60%, transparent 78%)",
     shine: "radial-gradient(ellipse at 18% 0%, rgba(222,178,94,0.10) 0%, transparent 55%)",
-    glow: "radial-gradient(circle, #DEB25E 0%, transparent 70%)",
+    // glow: "radial-gradient(circle, #DEB25E 0%, transparent 70%)",
     chipA: "#E2C383",
     chipB: "#9A7A3C",
     chipLine: "rgba(0,0,0,0.6)",
@@ -291,45 +315,69 @@ const PALETTES = {
 
   // HEALTH — rich copper / burnt-orange like the reference photo
   copper: {
-    bg: "linear-gradient(135deg, #b8501e 0%, #c95e1f 45%, #a23f10 100%)",
-    fg: "#fff4e8",
-    brandGold: "#fff1c8",
-    brandText: "#ffffff",
-    border: "rgba(255,233,180,0.42)",
+    bg: "linear-gradient(135deg, #d9d9d9 0%, #f2f2f2 45%, #cfcfcf 100%)",
+
+    fg: "#1a1a1a",               // TEXT COLOR
+    brandGold: "#1a1a1a",       // LOGO COLOR
+    brandText: "#1a1a1a",
+
+    border: "rgba(0,0,0,0.15)",
+
     gloss:
-      "linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.20) 45%, rgba(255,255,255,0.08) 60%, transparent 78%)",
-    shine: "radial-gradient(ellipse at 22% 0%, rgba(255,225,170,0.22) 0%, transparent 60%)",
-    glow: "radial-gradient(circle, #ff9d6e 0%, transparent 70%)",
-    chipA: "#F2D593",
-    chipB: "#A07A36",
-    chipLine: "rgba(0,0,0,0.45)",
-    contactless: "#fff4d6",
-    statusBg: "rgba(255,255,255,0.18)",
-    statusFg: "#fff4e8",
-    embossDark: "rgba(80,30,5,0.55)",
-    embossLight: "rgba(255,255,255,0.18)",
+      "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.6) 48%, rgba(255,255,255,0.2) 65%, transparent 85%)",
+
+    shine:
+      "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.6), transparent 60%)",
+
+    chipA: "#e6c77a",
+    chipB: "#a88c3a",
+    chipLine: "rgba(0,0,0,0.4)",
+
+    contactless: "#1a1a1a",
+
+    statusBg: "rgba(0,0,0,0.08)",
+    statusFg: "#1a1a1a",
+
+    embossDark: "rgba(0,0,0,0.25)",
+    embossLight: "rgba(255,255,255,0.8)",
   },
 
   // PA — peach / sunset like the reference photo
   sunset: {
-    bg: "linear-gradient(135deg, #f5b97a 0%, #f3a55a 45%, #e08a3c 100%)",
-    fg: "#3a1f06",
-    brandGold: "#7a3a09",
-    brandText: "#3a1f06",
-    border: "rgba(122,58,9,0.30)",
-    gloss:
-      "linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.34) 44%, rgba(255,255,255,0.10) 60%, transparent 78%)",
-    shine: "radial-gradient(ellipse at 22% 0%, rgba(255,255,255,0.30) 0%, transparent 55%)",
-    glow: "radial-gradient(circle, #ffd49b 0%, transparent 70%)",
-    chipA: "#F2D593",
-    chipB: "#9A7A3C",
-    chipLine: "rgba(0,0,0,0.38)",
-    contactless: "#3a1f06",
-    statusBg: "rgba(58,31,6,0.15)",
-    statusFg: "#3a1f06",
-    embossDark: "rgba(80,40,8,0.40)",
-    embossLight: "rgba(255,255,255,0.40)",
-  },
+  // 🔴 RED BACKGROUND
+  bg: "linear-gradient(135deg, #7a0006 0%, #b10f1a 35%, #e3262a 65%, #b10f1a 100%)",
+
+  // ✅ TEXT + LOGO COLOR (UPDATED)
+  fg: "#F5F5F5",
+  brandGold: "#F5F5F5",
+  brandText: "#F5F5F5",
+
+  border: "rgba(245,245,245,0.25)",
+
+  // ✨ GLOSS
+  gloss:
+    "linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 48%, rgba(255,255,255,0.08) 62%, transparent 80%)",
+
+  // 🔴 GLOW
+  glow:
+    "radial-gradient(circle at 40% 50%, rgba(255,120,120,0.35), transparent 60%)",
+
+  // 💳 CHIP
+  chipA: "#f5d36a",
+  chipB: "#a67c1f",
+  chipLine: "rgba(0,0,0,0.45)",
+
+  // 📶 ICON
+  contactless: "#F5F5F5",
+
+  // STATUS
+  statusBg: "rgba(245,245,245,0.15)",
+  statusFg: "#F5F5F5",
+
+  // EMBOSS TEXT
+  embossDark: "rgba(0,0,0,0.4)",
+  embossLight: "rgba(255,255,255,0.6)",
+},
 
   // HOME — deep ocean blue with silver-platinum sheen (trust / safety)
   ocean: {
@@ -361,8 +409,8 @@ const PALETTES = {
     border: "rgba(255,255,255,0.45)",
     gloss:
       "linear-gradient(110deg, transparent 28%, rgba(255,255,255,0.30) 45%, rgba(255,255,255,0.08) 60%, transparent 78%)",
-    shine: "radial-gradient(ellipse at 30% 0%, rgba(255,255,255,0.40) 0%, transparent 55%)",
-    glow: "radial-gradient(circle, #ffffff 0%, transparent 70%)",
+    // shine: "radial-gradient(ellipse at 30% 0%, rgba(255,255,255,0.40) 0%, transparent 55%)",
+    // glow: "radial-gradient(circle, #ffffff 0%, transparent 70%)",
     chipA: "#E5E7EB",
     chipB: "#94A3B8",
     chipLine: "rgba(0,0,0,0.35)",
