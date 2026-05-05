@@ -181,8 +181,39 @@ function ProductEditor({ product, onSaved }) {
       </div>
 
       <div>
-        <Label>Image URL</Label>
-        <Input data-testid="edit-image" value={draft.image_url || ""} onChange={(e) => updateDraft({ image_url: e.target.value })} className="rounded-xl h-11" />
+        <div className="flex items-center justify-between mb-1">
+          <Label>Image URL</Label>
+          <span className="text-[11px] text-gray-400">paste a link or upload a file ↓</span>
+        </div>
+        <Input data-testid="edit-image" value={draft.image_url || ""} onChange={(e) => updateDraft({ image_url: e.target.value })} className="rounded-xl h-11" placeholder="https://… or click Upload" />
+        <div className="mt-2 flex items-center gap-3">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            data-testid="edit-image-file"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              if (file.size > 2 * 1024 * 1024) {
+                toast.error("Image must be under 2 MB — please resize and retry.");
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = () => updateDraft({ image_url: String(reader.result || "") });
+              reader.onerror = () => toast.error("Failed to read image");
+              reader.readAsDataURL(file);
+            }}
+            className="text-xs file:mr-3 file:rounded-full file:border-0 file:bg-primary file:text-white file:px-3 file:py-1.5 file:cursor-pointer file:hover:bg-primary-600"
+          />
+          {draft.image_url && (
+            <div className="ml-auto w-14 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
+              <img src={draft.image_url} alt="preview" className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1">
+          Tip: uploads are stored inline (base64) — keep under 2 MB. For large hero images, paste a CDN URL.
+        </p>
       </div>
 
       {/* Features */}
