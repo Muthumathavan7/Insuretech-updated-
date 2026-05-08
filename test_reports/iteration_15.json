@@ -1,0 +1,32 @@
+{
+  "summary": "Full E2E of Home Easy product line (backend + frontend + admin). 9/9 pytest cases pass. Quote math matches spec exactly (gross 885 → discount 88.5 → +addon 35 → SST 66.52 → total 898.02). Wizard deep-link from calculator skips Step 0 to owner step. Skip-payment issues HO-prefixed 1-year policy. PolicyCard renders with data-variant='ocean' (deep blue) for home category. Admin rate-table editor opens with all 8 home-* testids and persists meta.base_rate_per_100k change.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_home_quote.py",
+    "/app/test_reports/pytest/home_quote_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "routers/quotes.py is now ~700 lines (travel + motor + pa + health + home + list/get). Strongly recommend splitting per-product into routers/quotes_health.py, quotes_home.py, quotes_motor.py etc — file size threshold breached.",
+    "HomeQuoteInput rejects building_sum_insured > b_max with HTTP 400 BUT also gt=0 in Field — both are fine; just note that the Field ge=0 on contents allows 0 which then bypasses the c_min bound check (the `if body.contents_sum_insured and ...` guard). Acceptable as 0-contents is valid, but document.",
+    "PATCH /api/products/{id} returns 200 on meta replace; consider deep-merge for partial meta updates so an admin editing only `base_rate_per_100k` doesn't have to PATCH the entire meta blob.",
+    "HomeCoverageCalculator.jsx: the price big number uses `text-[72px]` with `font-display`. The same heading section also uses `font-display`, so generic `.font-display` selectors are ambiguous. (Minor — testers can scope via the dark price card.) Suggest adding `data-testid=\"home-calc-total\"` to the big total for testability.",
+    "Console: 2 x 404 'Failed to load resource' on /home-quote step navigation (likely a missing image or favicon) — non-blocking but worth investigating in network tab.",
+    "Bounds messages '`Building sum insured must be between 50000 and 2000000`' use raw integer formatting; consider currency formatter (RM 50,000) for UX parity with rest of site."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_home_quote.py"
+  ],
+  "success_rate": { "backend": "100%", "frontend": "100%" },
+  "test_credentials": "demo@insurtech.io / Demo@123 (customer); admin@insurtech.io / Admin@123 (admin)",
+  "seed_data_creation": "Tests issue real quotes & policies for the demo customer (TEST_HomeUser cardholder). Multiple HO- policies are visible in /policies as expected — no teardown required.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Home Easy is fully wired end-to-end. Backend formula validated: building = (b_sum/100k) × base_rate × plan.building_mult × ptype.multiplier; contents = (c_sum/100k) × contents_rate × plan.contents_mult; gross → −online_discount% → +addons → +rules_delta → +SST → total. Validations enforced: accept_privacy=true, building/contents min/max bounds, plan_key/property_type literal validation. Policy issuance: HO-YYMMDD-XXXXX, category='home', exact 1y term. Frontend testids confirmed: home-insurance-page, home-buy-now-btn, home-coverage-calculator, home-benefit-0..4, home-plan-basic|enhanced|premier, home-calc-plan-{key}, home-calc-ptype-{key}, home-calc-cta, home-skip-payment-btn. Admin testids: admin-product-home, home-plan-row-{basic,enhanced,premier}, home-ptype-row-landed, home-rate-building, home-rate-contents, home-online-pct, home-tax-pct.",
+  "rca of the issue": "N/A — no defects. Calculator initial test mistakenly read `.font-display` first match (a heading) instead of the price; corrected with scoped selector and confirmed price updates 860.22 → 1,727.73 on plan=premier+property=commercial. PolicyCard ocean variant verified via data-variant='ocean' attribute count (5 home cards on /policies)."
+}

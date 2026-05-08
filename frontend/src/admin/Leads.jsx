@@ -43,7 +43,8 @@ const initialFormData = {
   linkedin: '', company_size: '', industry: '', source: '', notes: '',
   address: '', postcode: '', city: '', state: '', country: '', is_public: false, status: 'new',
   website: '', pic_name: '', office_number: '', fax_number: '', pipeline_status: 'new',
-  ic_number: '', passport_number: ''
+  ic_number: '', passport_number: '',
+  date_of_birth: '', gender: '', race: ''
 };
 
 // Enhanced Form Fields Component matching Picture 5 spec
@@ -197,6 +198,48 @@ const LeadFormFields = memo(({ data, onChange, isEdit = false }) => (
               placeholder="e.g. A12345678"
               data-testid="lead-passport-input"
             />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Date of Birth</label>
+            <input
+              type="date"
+              className="elstar-input"
+              value={data.date_of_birth || ''}
+              onChange={(e) => onChange('date_of_birth', e.target.value)}
+              data-testid="lead-dob-input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Gender</label>
+            <select
+              className="elstar-select"
+              value={data.gender || ''}
+              onChange={(e) => onChange('gender', e.target.value)}
+              data-testid="lead-gender-select"
+            >
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Race</label>
+            <select
+              className="elstar-select"
+              value={data.race || ''}
+              onChange={(e) => onChange('race', e.target.value)}
+              data-testid="lead-race-select"
+            >
+              <option value="">Select</option>
+              <option value="Malay">Malay</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Indian">Indian</option>
+              <option value="Bumiputera">Bumiputera</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
       </div>
@@ -981,19 +1024,23 @@ export default function Leads() {
         ) : (
           <>
             <div className="w-full overflow-x-auto">
-              <table className="elstar-table w-full min-w-[720px]" style={{ tableLayout: 'fixed' }}>
+              <table className="elstar-table w-full min-w-[1700px]" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
-                  <col style={{ width: '32px' }} />
-                  <col style={{ width: '18%' }} />
-                  <col className="hidden sm:table-column" style={{ width: '11%' }} />
-                  <col className="hidden md:table-column" style={{ width: '11%' }} />
-                  <col className="hidden md:table-column" style={{ width: '10%' }} />
-                  <col className="hidden lg:table-column" style={{ width: '11%' }} />
-                  <col className="hidden xl:table-column" style={{ width: '14%' }} />
-                  <col className="hidden 2xl:table-column" style={{ width: '10%' }} />
+                  <col style={{ width: '36px' }} />
+                  <col style={{ width: '50px' }} />
+                  <col style={{ width: '12%' }} />
                   <col style={{ width: '9%' }} />
-                  <col className="hidden sm:table-column" style={{ width: '6%' }} />
-                  <col style={{ width: '40px' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '6%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '8%' }} />
+                  <col style={{ width: '8%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '6%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '44px' }} />
                 </colgroup>
                 <thead>
                   <tr>
@@ -1006,20 +1053,24 @@ export default function Leads() {
                         data-testid="select-all-checkbox"
                       />
                     </th>
+                    <th className="px-2 text-left whitespace-nowrap">NO</th>
                     <th className="px-2 text-left whitespace-nowrap">Customer Name</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden sm:table-cell">PIC</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden md:table-cell">IC Number</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden md:table-cell">Passport</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden lg:table-cell">Mobile</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden xl:table-cell">Email</th>
-                    <th className="px-2 text-left whitespace-nowrap hidden 2xl:table-cell">Location</th>
-                    <th className="px-2 text-left whitespace-nowrap">Status</th>
-                    <th className="px-1 text-center whitespace-nowrap hidden sm:table-cell">Score</th>
+                    <th className="px-2 text-left whitespace-nowrap">IC Number</th>
+                    <th className="px-2 text-left whitespace-nowrap">Date of Birth</th>
+                    <th className="px-2 text-left whitespace-nowrap">Gender</th>
+                    <th className="px-2 text-left whitespace-nowrap">Race</th>
+                    <th className="px-2 text-left whitespace-nowrap">Mobile</th>
+                    <th className="px-2 text-left whitespace-nowrap">Phone</th>
+                    <th className="px-2 text-left whitespace-nowrap">Email Address</th>
+                    <th className="px-2 text-left whitespace-nowrap">City</th>
+                    <th className="px-2 text-left whitespace-nowrap">Postcode</th>
+                    <th className="px-2 text-left whitespace-nowrap">State</th>
+                    <th className="px-2 text-left whitespace-nowrap">Country</th>
                     <th className="px-1"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {leads.map((lead) => (
+                  {leads.map((lead, idx) => (
                     <tr 
                       key={lead.id} 
                       data-testid={`lead-row-${lead.id}`} 
@@ -1038,40 +1089,49 @@ export default function Leads() {
                           data-testid={`select-lead-${lead.id}`}
                         />
                       </td>
+                      <td className="px-2 text-sm text-muted-foreground tabular-nums">
+                        {String(((currentPage - 1) * pageSize) + idx + 1).padStart(3, '0')}
+                      </td>
                       <td className="px-2">
                         <div className="flex items-center gap-1 min-w-0 overflow-hidden">
-                          <Building2 className="w-4 h-4 shrink-0 text-muted-foreground hidden sm:block" />
-                          <div className="min-w-0 flex-1 overflow-hidden">
-                            <span className="font-medium text-sm truncate block">{lead.name}</span>
-                            <span className="text-xs text-muted-foreground sm:hidden truncate block">{lead.pic_name || ''}</span>
-                          </div>
+                          <Building2 className="w-4 h-4 shrink-0 text-muted-foreground" />
+                          <span className="font-medium text-sm truncate block">{lead.name}</span>
                         </div>
                       </td>
-                      <td className="px-2 hidden sm:table-cell overflow-hidden">
-                        <span className="text-sm truncate block">{lead.pic_name || '-'}</span>
-                      </td>
-                      <td className="px-2 hidden md:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground font-mono truncate block">{lead.ic_number || '-'}</span>
                       </td>
-                      <td className="px-2 hidden md:table-cell overflow-hidden">
-                        <span className="text-sm text-muted-foreground font-mono truncate block">{lead.passport_number || '-'}</span>
+                      <td className="px-2 overflow-hidden">
+                        <span className="text-sm text-muted-foreground truncate block">
+                          {lead.date_of_birth ? new Date(lead.date_of_birth).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                        </span>
                       </td>
-                      <td className="px-2 hidden lg:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
+                        <span className="text-sm text-muted-foreground truncate block">{lead.gender || '-'}</span>
+                      </td>
+                      <td className="px-2 overflow-hidden">
+                        <span className="text-sm text-muted-foreground truncate block">{lead.race || '-'}</span>
+                      </td>
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground truncate block">{lead.phone || '-'}</span>
                       </td>
-                      <td className="px-2 hidden xl:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
+                        <span className="text-sm text-muted-foreground truncate block">{lead.office_number || '-'}</span>
+                      </td>
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground truncate block">{lead.email || '-'}</span>
                       </td>
-                      <td className="px-2 hidden 2xl:table-cell overflow-hidden">
+                      <td className="px-2 overflow-hidden">
                         <span className="text-sm text-muted-foreground truncate block">{lead.city || '-'}</span>
                       </td>
                       <td className="px-2 overflow-hidden">
-                        <span className={`elstar-badge text-[10px] px-1.5 py-0.5 whitespace-nowrap ${statusConfig[lead.status]?.class || 'elstar-badge-info'}`}>
-                          {statusConfig[lead.status]?.label || lead.status}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate block">{lead.postcode || '-'}</span>
                       </td>
-                      <td className="px-1 text-center hidden sm:table-cell">
-                        <span className={`font-mono text-xs font-bold ${getScoreClass(lead.ai_score)}`}>{lead.ai_score}</span>
+                      <td className="px-2 overflow-hidden">
+                        <span className="text-sm text-muted-foreground truncate block">{lead.state || '-'}</span>
+                      </td>
+                      <td className="px-2 overflow-hidden">
+                        <span className="text-sm text-muted-foreground truncate block">{lead.country || '-'}</span>
                       </td>
                       <td className="px-1" onClick={(e) => e.stopPropagation()}>
                         <ActionDropdown testId={`lead-actions-${lead.id}`}>

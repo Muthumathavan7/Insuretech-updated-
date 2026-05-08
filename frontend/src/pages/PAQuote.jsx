@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
+import QuickFillBanner from "@/components/app/QuickFillBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +47,7 @@ const fieldReq = (product, key) => {
 export default function PAQuote() {
   const { productId } = useParams();
   const { user } = useAuth();
+  const { format } = useCurrency();
   const nav = useNavigate();
 
   const [product, setProduct] = useState(null);
@@ -210,12 +212,12 @@ export default function PAQuote() {
                   </div>
                   <ul className="space-y-2 mt-3">
                     {[
-                      ["Death & Permanent Disablement", "Up to $10,000"],
-                      ["Hospital Income", "$50/day up to 30 days"],
-                      ["Ambulance Services", "Up to $200"],
-                      ["Bereavement / Funeral Expenses", "$1,500"],
-                      ["Dental & Clinical Treatment", "Up to $1,000"],
-                      ["Fuel Station Accident Benefit", "$10,000"],
+                      ["Death & Permanent Disablement", `Up to ${format(10000, { decimals: 0 })}`],
+                      ["Hospital Income", `${format(50, { decimals: 0 })}/day up to 30 days`],
+                      ["Ambulance Services", `Up to ${format(200, { decimals: 0 })}`],
+                      ["Bereavement / Funeral Expenses", format(1500, { decimals: 0 })],
+                      ["Dental & Clinical Treatment", `Up to ${format(1000, { decimals: 0 })}`],
+                      ["Fuel Station Accident Benefit", format(10000, { decimals: 0 })],
                     ].map(([name, amt]) => (
                       <li key={name} className="flex items-center justify-between text-sm">
                         <span className="flex items-center gap-2 text-gray-700">
@@ -270,17 +272,17 @@ export default function PAQuote() {
                   </div>
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="font-display text-4xl font-semibold">
-                      ${(29.16 * form.num_persons).toFixed(2)}
+                      {format(29.16 * form.num_persons)}
                     </span>
                     <span className="text-sm text-gray-400 line-through">
-                      ${(36 * form.num_persons).toFixed(2)}
+                      {format(36 * form.num_persons)}
                     </span>
                   </div>
                   <div className="text-xs text-gray-500 mb-4">per year · all in</div>
                   <div className="space-y-1.5 text-xs bg-gray-50 rounded-xl p-3">
-                    <div className="flex justify-between"><span className="text-gray-500">Basic premium</span><span>${(36 * form.num_persons).toFixed(2)}</span></div>
-                    <div className="flex justify-between text-green-700"><span>25% online discount</span><span>-${(9 * form.num_persons).toFixed(2)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">SST (8%)</span><span>${(2.16 * form.num_persons).toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Basic premium</span><span>{format(36 * form.num_persons)}</span></div>
+                    <div className="flex justify-between text-green-700"><span>25% online discount</span><span>- {format(9 * form.num_persons)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">SST (8%)</span><span>{format(2.16 * form.num_persons)}</span></div>
                   </div>
                   <div className="mt-4 text-[10px] text-gray-400">
                     Final price may vary based on occupation class. Ages 60+ may have a light loading.
@@ -318,6 +320,22 @@ export default function PAQuote() {
             <p className="text-gray-500 mb-6">
               Tell us about yourself and nominate a beneficiary. Everything's encrypted.
             </p>
+
+            <QuickFillBanner
+              testIdPrefix="pa-quickfill"
+              onApply={(p) => update({
+                full_name: p.full_name || form.full_name,
+                id_type: p.id_type || form.id_type,
+                id_number: p.id_number || form.id_number,
+                phone: p.phone || form.phone,
+                email: p.email || form.email,
+                address: p.address || form.address,
+                postcode: p.postcode || form.postcode,
+                date_of_birth: p.date_of_birth || form.date_of_birth,
+                gender: p.gender || form.gender,
+                nationality: p.nationality || form.nationality,
+              })}
+            />
 
             <div className="grid md:grid-cols-2 gap-5">
               {show("full_name") && (

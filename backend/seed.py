@@ -20,7 +20,7 @@ DEFAULT_PRODUCTS = [
         "coverage_amount": 100000,
         "display_order": 10,
         "features": [
-            "Emergency medical up to $100k",
+            "Emergency medical up to RM100k",
             "Trip cancellation reimbursement",
             "Lost/delayed baggage cover",
             "24/7 global assistance",
@@ -31,25 +31,85 @@ DEFAULT_PRODUCTS = [
             {"name": "Rental Car Cover", "price": 12.0},
             {"name": "Cancel For Any Reason", "price": 25.0},
         ],
+        "form_config": {
+            "step1_fields": [
+                {"key": "region",         "label": "Region",          "type": "toggle",   "options": ["international", "domestic"], "required": True,  "show": True},
+                {"key": "trip_type",      "label": "Trip Type",       "type": "select",   "options": ["single_return", "one_way", "annual"], "required": True, "show": True},
+                {"key": "destinations",   "label": "Destination(s)",  "type": "multi",    "required": True, "show": True},
+                {"key": "traveler_type",  "label": "Traveller Type",  "type": "select",   "options": ["individual", "family", "group"], "required": True, "show": True},
+                {"key": "age_category",   "label": "Age Category",    "type": "select",   "options": ["child", "18_70", "70_plus"], "required": True, "show": True},
+                {"key": "travelers",      "label": "Travellers",      "type": "number",   "required": True, "show": True},
+                {"key": "email",          "label": "Email",           "type": "email",    "required": True, "show": True},
+                {"key": "start_date",     "label": "Start Date",      "type": "date",     "required": True, "show": True},
+                {"key": "end_date",       "label": "End Date",        "type": "date",     "required": True, "show": True},
+                {"key": "is_malaysian",   "label": "Malaysian/PR",    "type": "checkbox", "required": True, "show": True},
+                {"key": "accept_privacy", "label": "Privacy Notice",  "type": "checkbox", "required": True, "show": True},
+            ],
+            "step2_fields": [
+                {"key": "full_name",                "label": "Full Name",     "type": "text",     "required": True,  "show": True},
+                {"key": "id_type",                  "label": "ID Type",       "type": "select",   "options": ["nric", "passport"], "required": True, "show": True},
+                {"key": "id_number",                "label": "ID Number",     "type": "text",     "required": True,  "show": True},
+                {"key": "phone",                    "label": "Mobile",        "type": "tel",      "required": True,  "show": True},
+                {"key": "address",                  "label": "Address",       "type": "textarea", "required": False, "show": True},
+                {"key": "postcode",                 "label": "Postcode",      "type": "text",     "required": True,  "show": True},
+                {"key": "beneficiary_name",         "label": "Beneficiary",   "type": "text",     "required": False, "show": True},
+                {"key": "beneficiary_relationship", "label": "Relationship",  "type": "select",   "options": ["spouse", "parent", "child", "sibling", "other"], "required": False, "show": True},
+            ],
+        },
         "image_url": "https://images.unsplash.com/photo-1774663855124-9ede7464f37e?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80",
     },
     {
         "name": "Health Secure Plus",
         "category": "health",
-        "description": "Comprehensive health coverage for individuals and families.",
-        "base_premium": 89.0,
-        "coverage_amount": 500000,
+        "description": "Critical illness insurance with 39-condition cover, early-stage pay-outs and instant 15% online discount. From as low as RM 22 / year.",
+        "base_premium": 22.0,
+        "coverage_amount": 100000,
         "features": [
-            "Cashless hospitalization",
-            "Pre & post-hospital care",
-            "Annual health check-up",
-            "Maternity cover (optional)",
-            "Critical illness rider",
+            "Choose Top 2, Top 5 or 39 Critical Illnesses cover",
+            "Early-Stage pay-out (50% of sum insured)",
+            "Diabetic Care Disease benefit",
+            "15% instant online discount",
+            "Fast claims — pay-out in 3 working days from approval",
         ],
         "addons": [
             {"name": "Maternity Cover", "price": 30.0},
-            {"name": "Critical Illness", "price": 22.0},
+            {"name": "Accidental Death Rider", "price": 22.0},
         ],
+        # Critical-illness specific config consumed by /quotes/health & the
+        # Health landing/quote pages. Base premium formula:
+        #   monthly_rate × 12 × plan_multiplier × option_multiplier
+        # All numbers below are per-year MYR.
+        "meta": {
+            "coverage_options": [
+                {"key": "top2",  "label": "Top 2 Critical Illnesses",
+                 "multiplier": 1.0,
+                 "illnesses": ["Heart Attack", "Cancer"]},
+                {"key": "top5",  "label": "Top 5 Critical Illnesses",
+                 "multiplier": 1.8,
+                 "illnesses": ["Heart Attack", "Cancer", "Stroke",
+                               "Serious Coronary Artery Disease", "Kidney Failure"]},
+                {"key": "ci39",  "label": "39 Critical Illnesses",
+                 "multiplier": 2.5,
+                 "illnesses": ["All 39 listed critical illnesses"]},
+            ],
+            "plans": [
+                {"key": "plan1", "label": "Plan 1", "sum_insured":  20000, "multiplier": 0.40},
+                {"key": "plan2", "label": "Plan 2", "sum_insured":  50000, "multiplier": 0.80},
+                {"key": "plan3", "label": "Plan 3", "sum_insured": 100000, "multiplier": 1.00},
+                {"key": "plan4", "label": "Plan 4", "sum_insured": 150000, "multiplier": 1.35},
+                {"key": "plan5", "label": "Plan 5", "sum_insured": 200000, "multiplier": 1.65},
+            ],
+            "online_discount_pct": 15,
+            "tax_pct": 8,
+            "age_loading": {
+                "15-29": 1.0,
+                "30-39": 1.3,
+                "40-49": 1.8,
+                "50-60": 2.4,
+            },
+            "smoker_loading_pct": 30,
+            "eligibility": {"age_min": 15, "age_max": 60, "renewal_max": 70},
+        },
         "image_url": "https://images.pexels.com/photos/4617309/pexels-photo-4617309.jpeg?auto=compress&cs=tinysrgb&w=1200",
     },
     {
@@ -95,6 +155,75 @@ DEFAULT_PRODUCTS = [
             {"name": "International Travel", "price": 6.0},
         ],
         "image_url": "https://images.pexels.com/photos/7382453/pexels-photo-7382453.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    },
+    {
+        "name": "Home Easy",
+        "category": "home",
+        "description": "Protect your home against fire, theft, flood and liability — with instant online pricing, 24/7 Home Assistance, and a 10% online discount. From RM 120/year.",
+        "base_premium": 120.0,
+        "coverage_amount": 500000,
+        "display_order": 20,
+        "features": [
+            "Comprehensive Building + Contents cover",
+            "Fire, flood, storm & burglary protection",
+            "Public liability up to RM 1,000,000",
+            "24/7 Home Assistance (plumber/electrician)",
+            "10% online discount, SST 8% included",
+            "Flexible Basic / Enhanced / Premier plans",
+        ],
+        "addons": [
+            {"name": "Personal Belongings / Valuables", "price": 45.0},
+            {"name": "Domestic Helper Coverage", "price": 60.0},
+            {"name": "Home Assistance 24/7", "price": 35.0},
+        ],
+        # Home Easy rate tables — premium formula (yearly MYR):
+        #   building = (building_sum / 100k) × base_rate_per_100k × plan.building_mult × property.multiplier
+        #   contents = (contents_sum / 100k) × contents_rate_per_100k × plan.contents_mult
+        #   gross    = building + contents
+        #   subtotal = gross × (1 − online_discount%) + addons
+        #   total    = subtotal × (1 + tax%)
+        "meta": {
+            "plans": [
+                {"key": "basic", "label": "Basic",
+                 "building_mult": 1.0, "contents_mult": 0.4,
+                 "benefits": [
+                     "Fire & Lightning",
+                     "Theft up to RM 5,000",
+                     "Public liability up to RM 100,000",
+                 ]},
+                {"key": "enhanced", "label": "Enhanced",
+                 "building_mult": 1.4, "contents_mult": 0.6,
+                 "benefits": [
+                     "All Basic benefits",
+                     "Flood & Windstorm",
+                     "Theft up to RM 20,000",
+                     "Liability up to RM 500,000",
+                 ]},
+                {"key": "premier", "label": "Premier",
+                 "building_mult": 1.9, "contents_mult": 0.9,
+                 "benefits": [
+                     "All Enhanced benefits",
+                     "Accidental Damage",
+                     "Alternative Accommodation",
+                     "Liability up to RM 1,000,000",
+                 ]},
+            ],
+            "property_types": [
+                {"key": "landed",     "label": "Landed House",     "multiplier": 1.0},
+                {"key": "apartment",  "label": "Apartment / Condo", "multiplier": 0.85},
+                {"key": "terrace",    "label": "Terrace",          "multiplier": 0.95},
+                {"key": "commercial", "label": "Commercial",       "multiplier": 1.50},
+            ],
+            "base_rate_per_100k": 120.0,
+            "contents_rate_per_100k": 150.0,
+            "online_discount_pct": 10,
+            "tax_pct": 8,
+            "building_min": 50000,
+            "building_max": 2000000,
+            "contents_min": 10000,
+            "contents_max": 500000,
+        },
+        "image_url": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80",
     },
     {
         "name": "PA Easy",
@@ -176,6 +305,23 @@ async def seed_all():
                 backfill["form_config"] = DEFAULT_MOTOR_FORM_CONFIG
             if p["category"] == "pa" and not exists.get("form_config"):
                 backfill["form_config"] = DEFAULT_PA_FORM_CONFIG
+            if p["category"] == "travel" and not exists.get("form_config") and p.get("form_config"):
+                backfill["form_config"] = p["form_config"]
+            if p["category"] == "health" and p.get("meta") and not exists.get("meta", {}).get("coverage_options"):
+                backfill["meta"] = p["meta"]
+                # Also reset base_premium + coverage to new critical-illness values
+                backfill["base_premium"] = p["base_premium"]
+                backfill["coverage_amount"] = p["coverage_amount"]
+                backfill["description"] = p["description"]
+                backfill["features"] = p["features"]
+                backfill["addons"] = p["addons"]
+            if p["category"] == "home" and p.get("meta") and not exists.get("meta", {}).get("plans"):
+                backfill["meta"] = p["meta"]
+                backfill["base_premium"] = p["base_premium"]
+                backfill["coverage_amount"] = p["coverage_amount"]
+                backfill["description"] = p["description"]
+                backfill["features"] = p["features"]
+                backfill["addons"] = p["addons"]
             if "display_order" not in exists:
                 backfill["display_order"] = p.get("display_order", 100)
             if backfill:

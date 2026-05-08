@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
+import QuickFillBanner from "@/components/app/QuickFillBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -187,6 +188,18 @@ export default function MotorQuote() {
           <div className="animate-fade-in-up">
             <h2 className="font-display text-3xl font-semibold tracking-tight mb-2">Let's get your car insurance quote</h2>
             <p className="text-gray-500 mb-6">It takes under 3 minutes — and you get an instant 10% online rebate.</p>
+
+            <QuickFillBanner
+              testIdPrefix="motor-quickfill"
+              onApply={(p) => update({
+                full_name: p.full_name || form.full_name,
+                id_type: p.id_type || form.id_type,
+                id_number: p.id_number || form.id_number,
+                email: p.email || form.email,
+                postcode: p.postcode || form.postcode,
+                date_of_birth: p.date_of_birth || form.date_of_birth,
+              })}
+            />
 
             {show("account_type") && (
               <div className="inline-flex bg-gray-100 rounded-full p-1 mb-6">
@@ -431,7 +444,7 @@ export default function MotorQuote() {
                           } />
                         <div className="flex-1">
                           <div className="font-medium">{a.name}</div>
-                          <div className="text-xs text-gray-500">+${a.price.toFixed(2)}</div>
+                          <div className="text-xs text-gray-500">+{format(a.price)}</div>
                         </div>
                       </label>
                     );

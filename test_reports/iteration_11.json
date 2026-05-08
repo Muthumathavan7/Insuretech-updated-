@@ -1,0 +1,45 @@
+{
+  "summary": "Frontend-only Lux/Afinity theme verification on /admin and /dashboard while public pages remain TuneProtect-styled. All acceptance criteria met. 100% pass on 30+ UI assertions covering admin shell (sidebar sections, afinity-logo, signed-in card, footer, stat tiles, quick links, active-nav accent), 10 admin sub-routes regression, customer dashboard restyle, and PolicyCard preservation. Public pages (/, /products, /login) confirmed unchanged (no .lux-bg, TuneProtect brand intact).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/admin top-right Signed-in card", "issues": ["The 'Welcome back, Admin Root' green toast briefly overlaps the top-right Signed-in card on first load; visual only, the card itself is rendered correctly and becomes fully visible after toast auto-dismiss. Consider raising z-index of toast above signed-in card or anchoring toast to bottom-right to avoid overlap."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_11.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "AdminLayout.jsx leaves an empty <div className='min-w-0' /> placeholder in the top header strip (lines 106-109) intended for per-page eyebrow+h1 — currently unused. Either delete the stub or wire it via a context/prop so individual admin pages can inject their own page title block consistently (today AdminDashboard renders its own welcome card, but other admin pages won't get the standardised eyebrow/h1 treatment).",
+    "Dashboard.jsx still mixes the old design system (bg-gradient-to-br from-primary-50, rounded-3xl, font-display) with the new lux classes in the AI recommendations + 'Recent activity' + 'My Policies' headings. For visual consistency consider migrating those secondary panels to .lux-card / .lux-eyebrow / font-lux as well.",
+    "Hydration console warning observed (`<span> cannot be a child of <option>` on Settings page) originates from Emergent's x-component source-tagging instrumentation injecting <span> into <option>, NOT from this theme PR — pre-existing and unrelated."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not requested)", "frontend": "100%"},
+  "test_credentials": "admin@insurtech.io / Admin@123, demo@insurtech.io / Demo@123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Lux theme verified end-to-end. Admin shell uses dark sidebar (.lux-sidebar) with sectioned NAV (Workspace/Sales & CRM/Operations/Integrations), gold AfinityLogo, .lux-signed-in card, .lux-footer. Cream body via .lux-bg. Customer /dashboard wraps in .lux-bg, lux welcome panel, 4 .lux-card stats, and PolicyCard credit-card visuals preserved (2 cards rendered for demo user). Public pages (/, /products, /login) confirmed without .lux-bg and retaining TuneProtect lockup + MYR currency switcher + Login/Get Quote nav buttons.",
+  "verified_assertions": {
+    "afinity_logo_present": true,
+    "sidebar_sections_all_4": true,
+    "admin_signed_in_card": true,
+    "lux_h1_text": "Dashboard",
+    "lux_card_count_admin": 8,
+    "lux_stat_num_count_admin": 4,
+    "footer_text": "© 2026 Afinity AI · Crafted for enterprise excellence | LUXURY · CORPORATE · INTELLIGENT",
+    "active_nav_accent": "Dashboard active",
+    "admin_sub_routes_passing": 10,
+    "logout_works": true,
+    "customer_dashboard_h1": "Welcome, Demo.",
+    "customer_afinity_premium_tag": true,
+    "customer_policy_cards_rendered": 2,
+    "public_login_no_lux_bg": true,
+    "public_home_no_lux_bg": true,
+    "public_products_no_lux_bg": true,
+    "tuneprotect_brand_on_public": true,
+    "console_errors_app_origin": 0
+  }
+}

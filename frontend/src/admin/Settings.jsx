@@ -134,13 +134,13 @@ export default function Settings() {
   if (!data) return <div className="p-10">Loading…</div>;
 
   return (
-    <div className="p-8 max-w-4xl" data-testid="admin-settings">
-      <div className="mb-8">
+    <div className="max-w-4xl" data-testid="admin-settings">
+      <div className="mb-6 sm:mb-8">
         <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold">
           Platform configuration
         </div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight mt-1">Settings</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight mt-1">Settings</h1>
+        <p className="text-gray-500 mt-1 text-sm sm:text-base">
           Manage payment gateway credentials and platform toggles.
         </p>
       </div>
@@ -292,7 +292,7 @@ export default function Settings() {
             <p className="text-xs text-gray-500 mt-1 flex items-start gap-1.5">
               <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
               Add the webhook endpoint in your Stripe dashboard:{" "}
-              <code className="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-[10px]">
+              <code className="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-[10px] break-all">
                 {typeof window !== "undefined" ? window.location.origin : ""}
                 /api/webhook/stripe
               </code>
@@ -542,60 +542,73 @@ export default function Settings() {
           </div>
         </div>
         <div className="border border-gray-100 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-              <tr>
-                <th className="text-left px-4 py-3">Code</th>
-                <th className="text-left px-4 py-3">Symbol</th>
-                <th className="text-left px-4 py-3">Name</th>
-                <th className="text-right px-4 py-3">Rate (× base)</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {currencies.map((c, idx) => (
-                <tr key={c.code} className="border-t border-gray-100">
-                  <td className="px-4 py-2 font-mono">{c.code}</td>
-                  <td className="px-4 py-2">
-                    <Input value={c.symbol} className="h-9 rounded-lg"
-                      onChange={(e) => {
-                        const next = [...currencies]; next[idx] = { ...c, symbol: e.target.value };
-                        setCurrencies(next);
-                      }} />
-                  </td>
-                  <td className="px-4 py-2">
-                    <Input value={c.name} className="h-9 rounded-lg"
-                      onChange={(e) => {
-                        const next = [...currencies]; next[idx] = { ...c, name: e.target.value };
-                        setCurrencies(next);
-                      }} />
-                  </td>
-                  <td className="px-4 py-2">
-                    <Input
-                      type="number" step="0.0001" value={c.rate}
-                      className="h-9 rounded-lg text-right font-mono"
-                      onChange={(e) => {
-                        const next = [...currencies]; next[idx] = { ...c, rate: parseFloat(e.target.value) || 0 };
-                        setCurrencies(next);
-                      }}
-                      disabled={c.code === form.default_currency}
-                      data-testid={`currency-rate-${c.code}`}
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {c.code !== form.default_currency && (
-                      <button
-                        onClick={() => setCurrencies(currencies.filter((x) => x.code !== c.code))}
-                        className="text-xs text-red-500 hover:underline"
-                      >Remove</button>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <tr>
+                  <th className="text-left px-4 py-3 whitespace-nowrap">Code</th>
+                  <th className="text-left px-4 py-3 whitespace-nowrap">Symbol</th>
+                  <th className="text-left px-4 py-3 whitespace-nowrap">Name</th>
+                  <th className="text-right px-4 py-3 whitespace-nowrap">Rate (× base)</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currencies.map((c, idx) => (
+                  <tr key={c.code} className="border-t border-gray-100">
+                    <td className="px-4 py-2 font-mono whitespace-nowrap">{c.code}</td>
+                    <td className="px-4 py-2">
+                      <Input value={c.symbol} className="h-9 rounded-lg"
+                        onChange={(e) => {
+                          const next = [...currencies]; next[idx] = { ...c, symbol: e.target.value };
+                          setCurrencies(next);
+                        }} />
+                    </td>
+                    <td className="px-4 py-2">
+                      <Input value={c.name} className="h-9 rounded-lg"
+                        onChange={(e) => {
+                          const next = [...currencies]; next[idx] = { ...c, name: e.target.value };
+                          setCurrencies(next);
+                        }} />
+                    </td>
+                    <td className="px-4 py-2">
+                      <Input
+                        type="number" step="0.0001" value={c.rate}
+                        className="h-9 rounded-lg text-right font-mono"
+                        onChange={(e) => {
+                          const next = [...currencies]; next[idx] = { ...c, rate: parseFloat(e.target.value) || 0 };
+                          setCurrencies(next);
+                        }}
+                        disabled={c.code === form.default_currency}
+                        data-testid={`currency-rate-${c.code}`}
+                      />
+                    </td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                      {c.code !== form.default_currency && (
+                        <button
+                          onClick={async () => {
+                            const next = currencies.filter((x) => x.code !== c.code);
+                            setCurrencies(next);
+                            try {
+                              await api.patch("/admin/settings", { supported_currencies: next });
+                              toast.success(`${c.code} removed`);
+                            } catch (e) {
+                              toast.error("Could not remove. Reverted.");
+                              setCurrencies(currencies);
+                            }
+                          }}
+                          data-testid={`remove-currency-${c.code}`}
+                          className="text-xs text-red-500 hover:underline"
+                        >Remove</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex flex-wrap items-center gap-2 mt-3">
           <Input
             placeholder="ADD CODE (e.g. CAD)"
             className="h-9 w-32 rounded-lg uppercase font-mono"
@@ -603,26 +616,37 @@ export default function Settings() {
             data-testid="new-currency-code"
           />
           <Input placeholder="Symbol (e.g. C$)" className="h-9 w-28 rounded-lg" id="newcur-sym" />
-          <Input placeholder="Name" className="h-9 flex-1 rounded-lg" id="newcur-name" />
+          <Input placeholder="Name" className="h-9 flex-1 min-w-[140px] rounded-lg" id="newcur-name" />
           <Input type="number" step="0.0001" placeholder="Rate" className="h-9 w-28 rounded-lg text-right font-mono" id="newcur-rate" />
           <Button
             type="button" variant="outline" className="h-9 rounded-lg"
-            onClick={() => {
+            onClick={async () => {
               const code = document.getElementById('newcur-code').value.trim().toUpperCase();
               const symbol = document.getElementById('newcur-sym').value.trim();
               const name = document.getElementById('newcur-name').value.trim();
               const rate = parseFloat(document.getElementById('newcur-rate').value);
               if (!code || !symbol || !name || !rate) { toast.error('Fill all fields'); return; }
               if (currencies.some((c) => c.code === code)) { toast.error('Code already exists'); return; }
-              setCurrencies([...currencies, { code, symbol, name, rate }]);
-              document.getElementById('newcur-code').value = '';
-              document.getElementById('newcur-sym').value = '';
-              document.getElementById('newcur-name').value = '';
-              document.getElementById('newcur-rate').value = '';
+              const next = [...currencies, { code, symbol, name, rate }];
+              setCurrencies(next);
+              try {
+                await api.patch("/admin/settings", { supported_currencies: next });
+                toast.success(`${code} added & saved`);
+                document.getElementById('newcur-code').value = '';
+                document.getElementById('newcur-sym').value = '';
+                document.getElementById('newcur-name').value = '';
+                document.getElementById('newcur-rate').value = '';
+              } catch (e) {
+                toast.error('Could not persist currency. Reverted.');
+                setCurrencies(currencies);
+              }
             }}
             data-testid="add-currency-btn"
           >+ Add</Button>
         </div>
+        <p className="text-xs text-gray-400 mt-2">
+          New currencies are saved instantly. Edits to existing rows persist when you click <strong>Save settings</strong> below.
+        </p>
       </div>
 
       {/* Premium plan helper card */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
 const STAGES = [
@@ -14,6 +15,7 @@ const STAGES = [
 
 export default function LeadsKanban() {
   const [pipeline, setPipeline] = useState({});
+  const { format } = useCurrency();
   const load = async () => {
     const r = await api.get("/crm/leads/pipeline");
     setPipeline(r.data);
@@ -29,10 +31,10 @@ export default function LeadsKanban() {
   };
 
   return (
-    <div className="p-8" data-testid="leads-kanban">
-      <div className="mb-8">
+    <div data-testid="leads-kanban">
+      <div className="mb-6 sm:mb-8">
         <div className="text-xs text-primary-700 uppercase tracking-widest font-semibold">Pipeline</div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight mt-1">Leads Kanban</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight mt-1">Leads Kanban</h1>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">
@@ -65,7 +67,7 @@ export default function LeadsKanban() {
                         <span className="text-gray-500">
                           Risk {Math.round((u.risk_score || 0) * 100)}%
                         </span>
-                        <span className="font-medium">${Math.round(u.ltv || 0)}</span>
+                        <span className="font-medium">{format(u.ltv || 0, { decimals: 0 })}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {u.tags?.slice(0, 2).map((t) => (

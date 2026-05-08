@@ -1,0 +1,40 @@
+{
+  "summary": "Iteration 9 — Travel Insurance 3-step flow + Repeat-Customer QuickFill Banner verified. Backend: 12 NEW pytest cases pass in test_travel_quickfill.py covering (a) Travel form_config seeding (11 step1 + 8 step2 fields), (b) POST /api/quotes/travel with rich 22-field payload, privacy-rejection 400, legacy minimal payload backward compat, and pricing multipliers (annual > single, 70_plus > 18_70, domestic < international), (c) auth gating, and (d) GET /api/profile/quick-fill returns has_data=true with all 18 expected keys for the demo customer. Combined with prior 156 tests = 168/168 pass (100%). Frontend: end-to-end flow verified for the demo user — clicking 'Get quote' on Travel Shield Global card → /travel-quote/{id}, all 19 step1 testids present (region/triptype/destinations/traveler-type/age-category/travelers/email/dates/tier/addons/checkboxes/next-btn), QuickFillBanner appears on Travel step 1, Motor step 0, and PA step 1 with name/IC/phone/email chips, Apply button populates fields correctly (verified Demo Customer / 900101-14-1234 / +60123456789), Get Quote → step 3 shows total RM32.57 with breakdown and Pay Now (travel-checkout-btn) present. No frontend code changes needed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Personal Details (PA / Travel) — pre-populated full name", "issues": ["Demo user's full_name in DB is 'SETTINGS TEST' (a leftover from a prior test that rewrote demo user's name), so the Full Name input shows 'SETTINGS TEST' even though the QuickFillBanner chip correctly reads 'Demo Customer' from the latest quote. Cosmetic only — banner data is correct, but the auth context's user.full_name is stale. Consider preferring quote-input full_name over user.full_name when seeding the form, or reset demo user's name back to 'Demo Customer' in seed.py (idempotent via $setOnInsert is fine since user already exists)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_travel_quickfill.py",
+    "/app/test_reports/pytest/travel_quickfill_results.xml",
+    "/app/test_reports/pytest/all_results.xml"
+  ],
+  "action_items": [
+    "(LOW) demo user's full_name in DB has been overwritten to 'SETTINGS TEST' by a prior test/iteration. seed.py should either be idempotent on full_name or this should be reset; currently the QuickFillBanner chips show 'Demo Customer' (correct, from quote.input) but the form's pre-populated Full Name input reads 'SETTINGS TEST' from auth user. Not a blocker for this iteration's deliverables."
+  ],
+  "critical_code_review_comments": [
+    "TravelQuote.jsx line 16: `return r.json()['access_token']` — the auth login endpoint returns key 'token' (not 'access_token'). I worked around in the test file by using `j.get('access_token') or j.get('token')`. No frontend impact (frontend reads via lib/auth.js which already handles 'token').",
+    "quotes.py: TravelQuoteInput's `destination` field accepts any string — no high_risk warning surfaced to user. Pricing risk_loading is silent. Consider exposing risk_score in the UI's summary card (currently shown only at top in a tiny div).",
+    "QuickFillBanner.jsx: dismiss state is per-mount (not localStorage). Clicking Dismiss and re-navigating brings it back. This is documented behavior per E1's note ('dismissible per-session — state only'), but flagging for future UX consideration.",
+    "POPULAR_DESTINATIONS hard-coded to 21 countries in TravelQuote.jsx — admin cannot edit this list (only form_config). Per spec this is intentional but worth a comment in the code.",
+    "Backend response from /api/quotes/travel includes the full `input` object (which has accept_privacy/full_name/id_number/etc.). Make sure no PII is logged at the structured log level — currently looks fine, only insert_one persists, but worth a security review."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_travel_quickfill.py (NEW — 12 tests covering form_config / travel quote / privacy rejection / legacy compat / pricing multipliers / quick-fill profile)"
+  ],
+  "success_rate": {
+    "backend": "100% (168/168 pytest, includes 12 new for this iteration)",
+    "frontend": "100% — all 4 critical flows verified: travel-quote 3-step flow, QuickFillBanner on Travel/Motor/PA, apply button populates fields, full quote-to-payment-step transition with correct breakdown."
+  },
+  "test_credentials": "demo@insurtech.io / Demo@123 (per /app/memory/test_credentials.md). Demo user already has a seeded policy + we created several quotes during testing — has_data is true.",
+  "seed_data_creation": "Tests created several travel quotes for the demo user via POST /api/quotes/travel — these are TEST_-equivalent and persist in db.quotes / db.interactions. No teardown done because they're idempotent and used by the QuickFill profile endpoint to populate has_data=true (which is the desired test state).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 9 added Travel Insurance 3-step flow (TravelQuote.jsx) + reusable QuickFillBanner.jsx + GET /api/profile/quick-fill + POST /api/quotes/travel rich payload. All 12 new backend tests + 156 prior tests = 168/168 green. Frontend verified end-to-end via Playwright: Travel→Motor→PA quote forms all show QuickFillBanner with correct chips & apply behavior. Demo user's stored full_name is 'SETTINGS TEST' (stale from earlier test runs — cosmetic only, banner chips read correctly from latest quote). Pricing multipliers (TRIP_TYPE_MULT/AGE_MULT/REGION_MULT) all applied correctly: annual > single_return, 70_plus > 18_70, domestic < international. Travel quote endpoint requires auth and returns 400 on accept_privacy=false. Payment / checkout downstream (Stripe) was not triggered in this iteration — the travel-checkout-btn is present but Stripe redirect only happens on click.",
+  "rca of the issue": "No critical issues. One LOW cosmetic: demo user's full_name in users collection is 'SETTINGS TEST' (not 'Demo Customer'). RCA: a prior iteration's test or admin-edit-user flow updated db.users.full_name. The QuickFillBanner chip reads from quote.input.full_name (correctly 'Demo Customer'), but the form's pre-populated value comes from the auth context (user.full_name). Fix path: either (a) seed.py upsert demo user's full_name on every boot, or (b) MotorQuote/PAQuote/TravelQuote prefer quickfill-profile's full_name over user.full_name when initializing the form."
+}

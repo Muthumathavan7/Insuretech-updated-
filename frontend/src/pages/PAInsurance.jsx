@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
+
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
@@ -13,91 +15,48 @@ import {
 const HERO_IMG =
   "https://images.pexels.com/photos/5407206/pexels-photo-5407206.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1200";
 
-const BENEFITS = [
-  {
-    icon: Heart,
-    title: "Death & Permanent Disablement",
-    amount: "$10,000",
-    body: "By accidental cause resulting in death or permanent disability.",
-  },
-  {
-    icon: Hospital,
-    title: "Hospital Income",
-    amount: "$50 / day",
-    body: "Up to 30 days per accident while hospitalised.",
-  },
-  {
-    icon: Siren,
-    title: "Ambulance Services",
-    amount: "$200",
-    body: "Reimbursement for emergency ambulance transport.",
-  },
-  {
-    icon: Flower2,
-    title: "Bereavement / Funeral Expenses",
-    amount: "$1,500",
-    body: "Accidental death only — eases the burden on loved ones.",
-  },
-  {
-    icon: Stethoscope,
-    title: "Dental & Clinical Accidental Treatment",
-    amount: "$1,000",
-    body: "Reimbursement for accidental dental and clinical care.",
-  },
-  {
-    icon: FuelIcon,
-    title: "Fuel Station Accident Benefit",
-    amount: "$10,000",
-    body: "Dedicated additional cover for accidents at fuel stations.",
-  },
-];
+// All amounts are in the platform base currency (MYR). They will be formatted
+// via the active currency switcher.
+const PRICE_NET = 29.16;
+const PRICE_GROSS = 36.0;
+import familyImg1 from "./businessman-blurred-background-using-family-care-insurance-application-3d-rendering.jpg";
+const HERO_IMG1 = familyImg1;
 
-const HIGHLIGHTS = [
-  { label: "Only $29.16/year", sub: "after 25% online discount" },
-  { label: "12 months cover", sub: "annually renewable" },
-  { label: "Ages 18 – 70", sub: "eligibility" },
-  { label: "Instant cover", sub: "from successful payment" },
+const BENEFITS = [
+  { icon: Heart,       title: "Death & Permanent Disablement",         amount: 10000, suffix: "",        body: "By accidental cause resulting in death or permanent disability." },
+  { icon: Hospital,    title: "Hospital Income",                       amount: 50,    suffix: " / day",  body: "Up to 30 days per accident while hospitalised." },
+  { icon: Siren,       title: "Ambulance Services",                    amount: 200,   suffix: "",        body: "Reimbursement for emergency ambulance transport." },
+  { icon: Flower2,     title: "Bereavement / Funeral Expenses",        amount: 1500,  suffix: "",        body: "Accidental death only — eases the burden on loved ones." },
+  { icon: Stethoscope, title: "Dental & Clinical Accidental Treatment", amount: 1000,  suffix: "",        body: "Reimbursement for accidental dental and clinical care." },
+  { icon: FuelIcon,    title: "Fuel Station Accident Benefit",         amount: 10000, suffix: "",        body: "Dedicated additional cover for accidents at fuel stations." },
 ];
 
 const FAQS = [
-  {
-    q: "What is Tune Protect PA Easy?",
-    a: "PA Easy is a personal accident insurance product designed to protect you in the event of bodily injury arising from an accident — covering accidental death, permanent disablement, medical expenses, hospital income, bereavement allowance and more.",
-  },
-  {
-    q: "How much does PA Easy cost?",
-    a: "PA Easy is available at only $29.16 per year (gross $36 − 25% online discount + 8% SST on the discounted amount).",
-  },
-  {
-    q: "Who can apply for this policy?",
-    a: "Anyone aged 18 – 70 who is a resident or has a permanent residential address, with a valid ID. You can only hold one PA Easy policy as the Insured Person at any one time.",
-  },
-  {
-    q: "When does my insurance coverage start?",
-    a: "Your coverage starts from the date of successful payment and runs for 12 calendar months.",
-  },
-  {
-    q: "Is there a discount for online purchase?",
-    a: "Yes — a 25% discount is applied to the basic premium when you buy PA Easy online through this site.",
-  },
-  {
-    q: "Can I cancel my policy?",
-    a: "Yes. You can cancel at any time by giving written notice. Upon cancellation, you are entitled to a short-period premium refund subject to a minimum premium.",
-  },
-  {
-    q: "How and where do I update my beneficiary information?",
-    a: "During the quote flow you nominate a primary beneficiary. To change it later, contact customer support — we'll send you the nomination form.",
-  },
+  { q: "What is Afinity.ai PA Easy?", a: "PA Easy is a personal accident insurance product designed to protect you in the event of bodily injury arising from an accident — covering accidental death, permanent disablement, medical expenses, hospital income, bereavement allowance and more." },
+  { q: "Who can apply for this policy?", a: "Anyone aged 18 – 70 who is a resident or has a permanent residential address, with a valid ID. You can only hold one PA Easy policy as the Insured Person at any one time." },
+  { q: "When does my insurance coverage start?", a: "Your coverage starts from the date of successful payment and runs for 12 calendar months." },
+  { q: "Is there a discount for online purchase?", a: "Yes — a 25% discount is applied to the basic premium when you buy PA Easy online through this site." },
+  { q: "Can I cancel my policy?", a: "Yes. You can cancel at any time by giving written notice. Upon cancellation, you are entitled to a short-period premium refund subject to a minimum premium." },
+  { q: "How and where do I update my beneficiary information?", a: "During the quote flow you nominate a primary beneficiary. To change it later, contact customer support — we'll send you the nomination form." },
 ];
 
 export default function PAInsurance() {
   const [product, setProduct] = useState(null);
+  const { format } = useCurrency();
 
   useEffect(() => {
     api.get("/products?category=pa").then((r) => setProduct(r.data?.[0]));
   }, []);
 
   const quoteHref = product ? `/pa-quote/${product.id}` : "/pa-quote";
+  const priceNet = format(PRICE_NET);
+
+  const HIGHLIGHTS = [
+    { label: `Only ${priceNet}/year`, sub: "after 25% online discount" },
+    { label: "12 months cover", sub: "annually renewable" },
+    { label: "Ages 18 – 70", sub: "eligibility" },
+    { label: "Instant cover", sub: "from successful payment" },
+  ];
 
   return (
     <div data-testid="pa-insurance-page">
@@ -119,7 +78,7 @@ export default function PAInsurance() {
             <p className="mt-6 text-lg text-gray-600 max-w-xl leading-relaxed">
               You'll never know when an accident could happen. Protect yourself and your loved ones
               from financial strain with <strong>PA Easy</strong> — premium personal accident
-              protection, from <strong>$29.16/year</strong>.
+              protection, from <strong>{priceNet}/year</strong>.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link to={quoteHref}>
@@ -168,21 +127,21 @@ export default function PAInsurance() {
                     -25%
                   </span>
                 </div>
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="font-display text-5xl font-semibold text-primary-700">
-                    $29.16
+                <div className="flex items-baseline gap-2 mb-4 flex-wrap">
+                  <span className="font-display text-4xl sm:text-5xl font-semibold text-primary-700">
+                    {priceNet}
                   </span>
-                  <span className="text-gray-400 line-through">$36.00</span>
+                  <span className="text-gray-400 line-through">{format(PRICE_GROSS)}</span>
                   <span className="text-xs text-gray-500">/year</span>
                 </div>
                 <ul className="space-y-2 mb-5">
                   {[
-                    "Death & Permanent Disablement up to $10,000",
-                    "Hospital Income $50/day up to 30 days",
-                    "Ambulance Services up to $200",
-                    "Bereavement / Funeral Expenses $1,500",
-                    "Dental & Clinical Treatment $1,000",
-                    "Fuel Station Accident Benefit $10,000",
+                    `Death & Permanent Disablement up to ${format(10000, { decimals: 0 })}`,
+                    `Hospital Income ${format(50, { decimals: 0 })}/day up to 30 days`,
+                    `Ambulance Services up to ${format(200, { decimals: 0 })}`,
+                    `Bereavement / Funeral Expenses ${format(1500, { decimals: 0 })}`,
+                    `Dental & Clinical Treatment ${format(1000, { decimals: 0 })}`,
+                    `Fuel Station Accident Benefit ${format(10000, { decimals: 0 })}`,
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
                       <Check className="w-4 h-4 text-primary-700 flex-shrink-0 mt-0.5" strokeWidth={3} />
@@ -230,7 +189,7 @@ export default function PAInsurance() {
             What PA Easy covers.
           </h2>
           <p className="text-gray-500 mt-2 max-w-2xl">
-            Enjoy 12 months of coverage for only $29.16. Purchase online for instant peace of mind.
+            Enjoy 12 months of coverage for only {priceNet}. Purchase online for instant peace of mind.
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -247,7 +206,7 @@ export default function PAInsurance() {
                 </div>
                 <div className="font-display text-lg font-semibold mb-1">{b.title}</div>
                 <div className="font-display text-3xl font-semibold text-primary-700 mb-2">
-                  Up to {b.amount}
+                  Up to {format(b.amount, { decimals: 0 })}{b.suffix}
                 </div>
                 <p className="text-sm text-gray-500 leading-relaxed">{b.body}</p>
               </div>
@@ -291,7 +250,7 @@ export default function PAInsurance() {
           </div>
           <div className="rounded-3xl overflow-hidden aspect-[4/3] bg-gray-100">
             <img
-              src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?crop=entropy&cs=srgb&fm=jpg&w=1200&q=80"
+              src={HERO_IMG1}
               alt="Family protection"
               className="w-full h-full object-cover"
             />
@@ -310,6 +269,14 @@ export default function PAInsurance() {
           </h2>
         </div>
         <Accordion type="single" collapsible className="bg-white rounded-3xl border border-gray-100 p-2">
+          <AccordionItem value="cost" data-testid="pa-faq-cost">
+            <AccordionTrigger className="px-4 text-left font-medium hover:no-underline">
+              How much does PA Easy cost?
+            </AccordionTrigger>
+            <AccordionContent className="px-4 text-gray-600 leading-relaxed">
+              PA Easy is available at only {priceNet} per year ({format(PRICE_GROSS)} − 25% online discount + 8% SST on the discounted amount).
+            </AccordionContent>
+          </AccordionItem>
           {FAQS.map((f, i) => (
             <AccordionItem key={i} value={`f-${i}`} data-testid={`pa-faq-${i}`}>
               <AccordionTrigger className="px-4 text-left font-medium hover:no-underline">
@@ -333,7 +300,7 @@ export default function PAInsurance() {
             <h3 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight">
               Instant protection. Under 3 minutes.
             </h3>
-            <p className="text-white/70 mt-2">12 months cover · $29.16/year · Secure Stripe checkout</p>
+            <p className="text-white/70 mt-2">12 months cover · {priceNet}/year · Secure Stripe checkout</p>
           </div>
           <Link to={quoteHref}>
             <Button

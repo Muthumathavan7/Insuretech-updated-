@@ -1,6 +1,6 @@
 import React from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { CurrencyProvider } from "@/lib/currency";
 import { Toaster } from "sonner";
@@ -24,6 +24,11 @@ import MotorInsurance from "@/pages/MotorInsurance";
 import MotorQuote from "@/pages/MotorQuote";
 import PAInsurance from "@/pages/PAInsurance";
 import PAQuote from "@/pages/PAQuote";
+import HealthInsurance from "@/pages/HealthInsurance";
+import HealthQuote from "@/pages/HealthQuote";
+import HomeInsurance from "@/pages/HomeInsurance";
+import HomeQuote from "@/pages/HomeQuote";
+import TravelQuote from "@/pages/TravelQuote";
 
 import AdminDashboard from "@/admin/AdminDashboard";
 import Customers from "@/admin/Customers";
@@ -38,6 +43,7 @@ import Analytics from "@/admin/Analytics";
 import ClaimsQueue from "@/admin/ClaimsQueue";
 import AdminProducts from "@/admin/AdminProducts";
 import Campaigns from "@/admin/Campaigns";
+import PricingRulesEngine from "@/admin/pricing/PricingRulesEngine";
 import VoiceCalls from "@/admin/VoiceCalls";
 import Settings from "@/admin/Settings";
 
@@ -52,6 +58,54 @@ function Protected({ children, adminOnly = false }) {
   return children;
 }
 
+// Jumps the window (and any internal scroll containers) to the top on every
+// route change. Runs before paint AND re-runs after async layout shifts so
+// images / fetched data can't drag the page back down.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+
+  // Disable the browser's own scroll restoration so it can't fight us.
+  React.useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
+  React.useLayoutEffect(() => {
+    if (hash) return; // let the browser handle #anchor targets
+    const jump = () => {
+      // Target every possible scroll root. Any browser / OS combo of
+      // mobile Safari, Chrome, Firefox — one of these will apply.
+      if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    };
+
+    jump();
+
+    // Chain of re-jumps to cover: first paint, image decode, async fetches,
+    // font swaps, and any late layout shift. Cheap to run, very robust.
+    const rafs = [];
+    const timers = [];
+    let ticks = 0;
+    const rafJump = () => {
+      jump();
+      if (ticks++ < 3) rafs.push(window.requestAnimationFrame(rafJump));
+    };
+    rafs.push(window.requestAnimationFrame(rafJump));
+    [50, 150, 350, 700, 1200].forEach((ms) => {
+      timers.push(window.setTimeout(jump, ms));
+    });
+
+    return () => {
+      rafs.forEach(window.cancelAnimationFrame);
+      timers.forEach(window.clearTimeout);
+    };
+  }, [pathname, hash]);
+  return null;
+}
+
 function CustomerShell({ children }) {
   return (
     <Layout>
@@ -63,7 +117,9 @@ function CustomerShell({ children }) {
 
 function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/" element={<CustomerShell><Landing /></CustomerShell>} />
       <Route path="/login" element={<CustomerShell><Login /></CustomerShell>} />
       <Route path="/signup" element={<CustomerShell><Signup /></CustomerShell>} />
@@ -74,6 +130,13 @@ function AppRoutes() {
       <Route path="/products/pa-easy" element={<CustomerShell><PAInsurance /></CustomerShell>} />
       <Route path="/pa-quote" element={<CustomerShell><PAQuote /></CustomerShell>} />
       <Route path="/pa-quote/:productId" element={<CustomerShell><PAQuote /></CustomerShell>} />
+      <Route path="/products/health-secure-plus" element={<CustomerShell><HealthInsurance /></CustomerShell>} />
+      <Route path="/health-quote/:productId" element={<CustomerShell><HealthQuote /></CustomerShell>} />
+      <Route path="/products/home-easy" element={<CustomerShell><HomeInsurance /></CustomerShell>} />
+      <Route path="/home-quote/:productId" element={<CustomerShell><HomeQuote /></CustomerShell>} />
+      <Route path="/products/travel" element={<CustomerShell><TravelQuote /></CustomerShell>} />
+      <Route path="/products/travel/:productId/quote" element={<CustomerShell><TravelQuote /></CustomerShell>} />
+      <Route path="/travel-quote/:productId" element={<CustomerShell><TravelQuote /></CustomerShell>} />
       <Route
         path="/dashboard"
         element={
@@ -237,6 +300,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin/rules"
+        element={
+          <Protected adminOnly>
+            <AdminLayout><PricingRulesEngine /></AdminLayout>
+          </Protected>
+        }
+      />
+      <Route
         path="/admin/settings"
         element={
           <Protected adminOnly>
@@ -246,6 +317,7 @@ function AppRoutes() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

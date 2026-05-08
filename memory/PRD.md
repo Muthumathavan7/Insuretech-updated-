@@ -1,5 +1,113 @@
 # PRD — Tune Protect · Insurance Technology Platform
 
+## Implemented (2026-05-05 — iteration 18: Home Easy product line)
+End-to-end home insurance product (5th major product line on the platform).
+
+### Backend
+- New seeded **Home Easy** product (`seed.py`, `category="home"`) with full `meta`:
+  3 plans (Basic/Enhanced/Premier × building_mult 1.0/1.4/1.9, contents_mult 0.4/0.6/0.9),
+  4 property types (Landed/Apartment-Condo/Terrace/Commercial × multipliers 1.0/0.85/0.95/1.50),
+  base_rate_per_100k=120, contents_rate_per_100k=150, online_discount_pct=10, tax_pct=8,
+  building_min/max 50k–2M, contents_min/max 10k–500k, 3 add-ons (Personal belongings RM45,
+  Domestic helper RM60, Home Assistance RM35).
+- `models.py` `Product.category` Literal extended with `"home"`.
+- `POST /api/quotes/home` endpoint with `HomeQuoteInput` (plan_key, property_type,
+  building/contents sums, addons, owner KYC, address, postcode, accept_privacy).
+- Premium formula: `building = (b_sum/100k) × base_rate × plan.building_mult × ptype.multiplier`,
+  `contents = (c_sum/100k) × contents_rate × plan.contents_mult`, `gross = building + contents`,
+  `subtotal = gross − online_discount + addons`, then Pricing Rules Engine, then `+SST`.
+- `routers/policies.py` — `ANNUAL_CATEGORIES` now includes `"home"`, policy prefix `HO-`,
+  1-year annual term enforced.
+
+### Frontend
+- `pages/HomeInsurance.jsx` — Home Easy landing page (hero, 5 key benefits, plan tiles,
+  FAQ, CTA), routed at `/products/home-easy`.
+- `pages/HomeCoverageCalculator.jsx` — Live fluid calculator (plan chips, property chips,
+  building & contents sliders, animated total counter); deep-links into the wizard with
+  selection pre-applied. CSS slider style added at `index.css` (`.home-slider`).
+- `pages/HomeQuote.jsx` — 3-step wizard (Plan & Property → Owner Details → Summary &
+  Payment) with profile quick-fill, Stripe checkout, "Skip payment (demo)" bypass.
+  Route: `/home-quote/:productId`.
+- `components/app/PolicyCard.jsx` — New **`ocean`** palette (deep blue → silver-platinum sheen)
+  auto-resolved by `policy.category === "home"`.
+- `pages/Products.jsx` + `pages/Landing.jsx` — Home tile navigates to the new landing page;
+  product filter chip added.
+- `admin/AdminProducts.jsx` — `isHome` editor block: plan tiers (building_mult, contents_mult,
+  benefits), property types (multiplier), rate-per-100k inputs, sum-insured min/max bounds,
+  online-discount % and SST %. Reusable `KnobInput` helper.
+
+### Verification
+- Testing agent (iteration_15.json): **9/9 pytest backend, 100% frontend & admin flows pass.**
+- Math confirmed to the cent: enhanced + landed + 500k building + 50k contents + Home Assistance addon
+  → gross **RM 885.00** → −10% (88.50) → +35 addon → +8% SST (66.52) → total **RM 898.02**.
+- Policy issuance renders the deep-blue `ocean` PolicyCard on `/policies` with
+  `HO-260505-xxxxx` and exactly 1-year validity.
+
+## Implemented (2026-05-04 — iteration 17: Health Secure+ · Critical Safe+ flow)
+End-to-end critical illness product modelled on Tune Protect's shop flow
+(https://shop.tuneprotect.com/criticalsafe/).
+
+### Backend
+- Re-seeded **Health Secure Plus** product (`seed.py`) with `meta.coverage_options`
+  (top2/top5/ci39 × multipliers 1.0/1.8/2.5), `meta.plans` (Plan 1–5 sum insured
+  20k–200k × multipliers 0.40/0.80/1.00/1.35/1.65), `meta.age_loading`
+  (1.0/1.3/1.8/2.4 by 10-year bucket), 30% smoker loading, 15% online discount, 8% SST.
+- `Product` model now persists `meta: Dict` (was previously dropped by `extra="ignore"`).
+- `POST /api/quotes/health` endpoint with `HealthQuoteInput` (plan, NRIC/passport, DOB,
+  gender, smoker flag, Malaysian resident & privacy consent, optional beneficiary).
+- Validations: age 15–60 hard gate, privacy + residency must be true.
+- Premium formula: `base_premium × option × plan × age_bucket × (1+30% if smoker)`
+  → `-15% online` → `+rules_delta` (Pricing Rules Engine) → `+8% SST`.
+- Integrates with existing `/api/policies/issue-from-quote/:quote_id` — `HL-` prefix,
+  1-year annual term (automatic via existing `ANNUAL_CATEGORIES`).
+
+### Frontend
+- `pages/HealthInsurance.jsx` — Critical Safe+ landing page (hero, 5 key benefits,
+  3:3:3 promise banner, 3 coverage-option cards, FAQ, CTA). Routes: `/products/health-secure-plus`.
+- `pages/HealthQuote.jsx` — 3-step wizard: Plan Selection → Personal Details →
+  Summary & Payment. Profile quick-fill, Stripe checkout button + "Skip payment (demo)"
+  bypass. Route: `/health-quote/:productId`.
+- `pages/Products.jsx` — Health product tile now navigates to the new landing page.
+
+### Verification
+- Testing agent (iteration_14.json): 7/7 pytest cases pass, 100% backend + frontend.
+- Math confirmed to the cent: non-smoker age 30 + Top 5 + Plan 3 →
+  `22 × 1.8 × 1.0 × 1.3 = 51.48` gross → `-15%` = 43.76 → `+8% SST` = **RM 47.26** total.
+- Policy issuance renders a copper-orange credit-card PolicyCard on `/policies`
+  with `HL-260504-xxxxx` and exactly 1-year validity.
+
+## Implemented (2026-05-02 — iteration 16: Pricing Rules Engine)
+**Production-grade no-code pricing engine integrated into the admin panel.**
+
+### Backend (`routers/pricing_rules.py`)
+- Full CRUD: `POST/GET/PUT/DELETE /api/rules`, plus `/clone`, `/toggle`.
+- Evaluator: `evaluate_rules(product, base_premium, inputs, ...)` sorts active rules by
+  priority, evaluates conditions (AND/OR), applies actions sequentially.
+- Action types: `increase_percentage`, `decrease_percentage`, `flat_fee`, `discount_fee`,
+  `override_premium`. Operators: `==, !=, <, >, <=, >=, in, not_in, contains`.
+- `POST /api/rules/simulate` — no-persist preview for the admin Simulator screen.
+- `POST /api/rules/evaluate` — auth'd customer call that records audit.
+- Formula config + version history: `GET/PUT /api/rules/formula/config`, `GET /api/rules/formula/history`.
+- Audit logs: `GET /api/rules/audit/logs?product=`.
+- Field catalogue: `GET /api/rules/meta/fields` exposes operators, action types, and
+  per-product field options (drives the no-code Conditions Builder UI).
+
+### Quote integration
+- `routers/quotes.py` Motor / PA / Travel endpoints all call `evaluate_rules()` after
+  computing the subtotal — rule deltas land before tax. Each quote stores `meta.rules_delta`
+  + `meta.applied_rules` for traceability. Audit log written on every evaluation.
+
+### Admin UI (`/admin/rules` — `admin/pricing/PricingRulesEngine.jsx`)
+- Five-tab single-page module: **Rules · Editor · Simulator · Formula · Audit Logs**.
+- Sidebar entry "Rules Engine" added under Operations.
+- Editor: 3-section flow (Details → Conditions → Action) with live JSON preview.
+- Simulator: split layout, real-time recompute (250ms debounce), animated rule deltas.
+- Formula: editable Risk weight / Coverage multiplier / Tax % / Online discount %, with
+  per-save snapshot + version history.
+- Audit Logs: expandable per-row panel showing input dict + rule cascade.
+- Verified end-to-end by testing agent (iteration_13.json) — 18/18 pytest tests pass,
+  100% backend + frontend success.
+
 ## Original problem statement
 Build a production-grade Insurance Technology Platform (Tune Protect style): CRM-first, AI-powered, modular. Must support lead generation → policy purchase → claims → retention, across Travel / Health / Motor / Device insurance products. Primary color #DEB25E (gold) + secondary #FFFFFF (white).
 
@@ -16,6 +124,42 @@ Build a production-grade Insurance Technology Platform (Tune Protect style): CRM
 3. **Claims Officer** — reviews claims queue, approves/rejects with fraud score
 4. **Admin** — full access: analytics, products, campaigns, coupons, CRM
 5. **Partner** — B2B2C API placeholder (not exposed to UI)
+
+## Implemented (2026-04-29 — iteration 9: Travel flow + Quick-fill profile)
+
+### Travel Insurance Quote Flow (mirrors Tune Protect)
+- New customer-facing route `/travel-quote/:productId` — 3-step flow
+  (Plan Selection → Personal Details → Summary & Payment) modelled after
+  `https://shop.tuneprotect.com/travel-insurance/quote/`.
+- Step 1 fields: International/Domestic toggle, trip type
+  (single_return/one_way/annual), destinations multi-select (21 popular
+  countries pre-seeded), traveller type, age category, # travellers, email,
+  travel period, plan tier, addons, Malaysian-PR + privacy-notice consent.
+- Step 2: Full Name + ID type/number + Mobile + Address + Postcode +
+  optional Beneficiary, with **QuickFillBanner** at top.
+- Step 3: total breakdown + Pay Now → Stripe checkout.
+- Backend: `TravelQuoteInput` extended with 22 fields. Pricing multipliers
+  applied: trip_type (single 1×, one_way 0.7×, annual 5×), age_category
+  (child 0.6×, 18-70 1×, 70+ 1.8×), region (international 1×, domestic 0.6×).
+  Rejects with 400 when `accept_privacy=false`.
+- Admin: Travel product seeded with `form_config` (11 step1 + 8 step2 fields)
+  — fully editable in the existing AdminProducts UI. Backfills onto
+  existing docs on every boot.
+
+### Repeat-Customer Quick Fill Banner
+- New endpoint `GET /api/profile/quick-fill` aggregates the customer's
+  latest non-empty Name, IC/Passport, Mobile, Email, Address from their
+  prior `quotes.input` + `policies.details` + `users` doc.
+- New reusable component `QuickFillBanner.jsx` shown at the top of Motor,
+  PA, and Travel quote forms. Click "Use this info" to auto-fill the
+  current form. Per-session dismissible.
+- Example: customer who bought PA via Petron now buying Motor →
+  banner shows "Welcome back, Demo! We found your saved details from your
+  PA Easy purchase" with chips (Name, IC, Mobile, Email).
+
+**Test results**: Backend 168/168 (12 new + 156 regression). Frontend 100%
+verified end-to-end (Travel 3-step flow, QuickFillBanner across all 3 quote
+forms, apply button populates fields).
 
 ## Implemented (2026-04-28 — iteration 8: Tasks page + Multi-currency)
 
@@ -225,8 +369,66 @@ Frontend verified end-to-end — CSV download, Pipeline 6 columns, WhatsApp cont
 - Multi-tenancy for partner white-labels
 - Kafka event bus for cross-service async
 
+## Implemented (2026-05-01 — iteration 15: Annual-term default for PA / Motor / Health / Device)
+- `routers/policies.py → issue_policy_from_quote()` now computes `end_date = start_date + 1 year`
+  for every non-Travel category (PA, Motor, Health, Device). Travel still honours its trip
+  start/end. Leap-year safe (29 Feb → 1 Mar fallback).
+- Added startup migration in `server.py` that backfills any legacy annual-category policy
+  where `end_date - start_date < 30 days` and rewrites the end to start + 1 year.
+- `PolicyCard.jsx` — Valid From / Valid Thru now render `DD/MM/YYYY` (e.g. `29/04/2026`)
+  instead of the old `MM/YY` credit-card style, per the user's printable-policy requirement.
+- Verified: issued PA / Motor / Health / Travel policies render correctly on `/policies`,
+  with PA / Motor / Health showing exactly a 1-year span.
+
+## Implemented (2026-04-29 — iteration 14: Dynamic currency everywhere)
+- Root cause: the site had **dozens of hardcoded `$` and `RM` symbols** across customer
+  pages (Products, Landing, PA / Motor marketing, PA / Travel / Motor quote flows, Claims,
+  FileClaim) and admin pages (Customers, ClaimsQueue, AdminProducts, Analytics, LeadsKanban,
+  Pipeline, Tasks, LeadDetailPage, Customer360). The currency switcher in the navbar updated
+  state correctly, but those hardcoded symbols never re-rendered.
+- Refactor: every monetary value now flows through `useCurrency().format(amount)` (or
+  `formatMoney()` alias). Stale `orgSettings = { currency_symbol: 'RM' }` patterns inside
+  CRM pages replaced with the real context.
+- Added `formatText(string)` helper to `currency.jsx` that scans free-text fields
+  (product `description`, `features` bullets seeded with `$10,000`-style legacy text) and
+  rewrites every `$X[,XXX]` token to the active currency. This covers the seeded copy
+  ("Hospital Income $50/day up to 30 days" etc.) without re-seeding the database.
+- Verified end-to-end: switching MYR ↔ USD on `/products` instantly converts hero card
+  prices, feature-bullet sums, and "from RM 29 / from $ 6" footer prices.
+
+## Implemented (2026-04-29 — iteration 13: Admin panel mobile + tablet responsiveness)
+- `AdminLayout.jsx` refactored to a drawer pattern: persistent Lux sidebar at `lg` (>=1024px),
+  slide-in drawer + hamburger button below `lg`. Drawer auto-closes on route change and
+  locks body scroll while open. Mobile header shows compact user identity + sign-out.
+- Outer page padding moved to AdminLayout (`px-4 sm:px-6 lg:px-10`); admin pages that
+  previously had `p-8` (Customers, ClaimsQueue, Settings, AdminProducts, LeadsKanban)
+  trimmed to avoid double-padding.
+- Per user instruction "don't reduce the fields", removed every `hidden ___:table-cell`
+  column-hide on Leads (11 cols), Tasks (8 cols), Customers (6 cols), ClaimsQueue (6 cols),
+  Settings currency table (5 cols). Tables now sit inside `overflow-x-auto` with explicit
+  `min-w-[…]` so all columns stay in the DOM and scroll horizontally on small viewports.
+- `.lux-footer` wraps + stacks under 640px; `.lux-stat-num` shrinks 56→38px on mobile.
+- Settings webhook URL `<code>` got `break-all` so long URLs wrap on phones.
+- Verified by testing agent (iteration_12.json) at 390×844 / 820×1180 / 1280×800: 100% pass,
+  zero page-level horizontal overflow on any admin page.
+
+## Implemented (2026-04-29 — iteration 12: Category-aware policy card variants)
+- `PolicyCard.jsx` now auto-picks a credit-card visual variant from `policy.category`:
+  - **motor → obsidian** (jet black + champagne gold accents)
+  - **health → copper** (rich burnt orange with gloss)
+  - **pa → sunset** (peach/cantaloupe gold)
+  - **travel/device/other → gold** (default Afinity gold)
+- Removed forced `variant` overrides on `Dashboard.jsx`, `MyPolicies.jsx`, `PaymentSuccess.jsx`
+  so each card now reflects its actual policy category (no more rotating index hack).
+- Card renders dynamic `policy_number`, `user_name` (Card Holder), `Valid From` (MM/YY) and
+  `Valid Thru` (MM/YY) parsed from the policy `start_date` / `end_date`.
+- Verified visually for the demo customer with seeded Motor / Health / PA / Travel policies.
+- Added `/app/backend/seed_demo_policies.py` helper to seed Motor + Health + PA policies
+  for any user (guarded by `payment_id LIKE demo_seed_*`, idempotent).
+
 ## Next tasks
-1. Ship Health / Motor / Device quote flows
+1. Ship Health / Motor / Device quote flows (Health is P0 — no quote endpoint yet)
 2. Add server-side PDF policy document generation
 3. Wire SendGrid or Resend for real email notifications
 4. Build partner-scoped bearer token auth for /partner endpoints
+5. Marketing automation: campaigns, referrals, coupon engine wired to CRM triggers

@@ -1,0 +1,76 @@
+/* Pricing Rules Engine — Admin UI primitives */
+.pre-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.pre-badge--active { background: rgba(34,197,94,0.10); color: #15803d; border: 1px solid rgba(34,197,94,0.25); }
+.pre-badge--inactive { background: rgba(15,15,15,0.05); color: #6b7280; border: 1px solid rgba(15,15,15,0.10); }
+.pre-card {
+  background: #fff;
+  border: 1px solid rgba(15,15,15,0.06);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 0 rgba(15,15,15,0.02);
+}
+.pre-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15,15,15,0.10);
+  background: #fff;
+  font-size: 14px;
+  color: #0c0b09;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.pre-input:focus {
+  outline: none;
+  border-color: #DEB25E;
+  box-shadow: 0 0 0 3px rgba(222,178,94,0.15);
+}
+.pre-select { cursor: pointer; }
+.pre-tab {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+  background: #fff;
+  border: 1px solid rgba(15,15,15,0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pre-tab--active {
+  background: #0c0b09;
+  color: #fff;
+  border-color: #0c0b09;
+}
+.pre-btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 38px; padding: 0 16px;
+  border-radius: 999px;
+  background: #DEB25E; color: #fff;
+  font-size: 13px; font-weight: 600;
+  border: none; cursor: pointer;
+  transition: background 0.15s;
+}
+.pre-btn-primary:hover { background: #c89a45; }
+.pre-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.pre-btn-ghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 38px; padding: 0 14px;
+  border-radius: 999px;
+  background: #fff; color: #0c0b09;
+  font-size: 13px; font-weight: 500;
+  border: 1px solid rgba(15,15,15,0.10);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pre-btn-ghost:hover { background: rgba(15,15,15,0.03); }

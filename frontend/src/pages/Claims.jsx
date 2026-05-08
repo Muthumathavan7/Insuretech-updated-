@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useCurrency } from "@/lib/currency";
 import { Hammer, Clock, CheckCircle2, XCircle, Search } from "lucide-react";
 
 const STAGES = [
@@ -43,6 +44,7 @@ function Tracker({ status }) {
 
 export default function Claims() {
   const [claims, setClaims] = useState([]);
+  const { format } = useCurrency();
   useEffect(() => {
     api.get("/claims").then((r) => setClaims(r.data));
   }, []);
@@ -74,7 +76,7 @@ export default function Claims() {
                 <div>
                   <div className="text-xs text-gray-500 font-mono">{c.claim_number}</div>
                   <div className="font-semibold text-lg">
-                    {c.incident_type} · ${c.amount_claimed.toFixed(2)}
+                    {c.incident_type} · {format(c.amount_claimed)}
                   </div>
                 </div>
                 <span
@@ -94,7 +96,7 @@ export default function Claims() {
               )}
               {c.status === "approved" && c.amount_approved > 0 && (
                 <div className="mt-2 text-sm text-gray-700">
-                  Approved amount: <span className="font-semibold">${c.amount_approved.toFixed(2)}</span>
+                  Approved amount: <span className="font-semibold">{format(c.amount_approved)}</span>
                 </div>
               )}
             </div>

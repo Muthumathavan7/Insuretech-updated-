@@ -53,9 +53,12 @@ class LeadCreate(BaseModel):
     # Identity
     ic_number: str = ""           # NEW: Malaysian IC
     passport_number: str = ""     # NEW: Passport
+    date_of_birth: str = ""       # YYYY-MM-DD
+    gender: str = ""              # male / female / other
+    race: str = ""                # Malay / Chinese / Indian / Other
     # Contact
-    phone: str = ""
-    office_number: str = ""
+    phone: str = ""               # Mobile number
+    office_number: str = ""       # Phone (office / landline)
     fax_number: str = ""
     email: str = ""
     linkedin: str = ""

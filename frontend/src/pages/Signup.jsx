@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Shield, Check } from "lucide-react";
 
+import icon from "./icon.png";
+
+const logo = icon;
+
 export default function Signup() {
   const { signup } = useAuth();
   const nav = useNavigate();
@@ -34,10 +38,14 @@ export default function Signup() {
       <div className="flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-float">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-display text-xl font-semibold">TuneProtect</span>
+            <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-float">
+  <img
+    src={logo}
+    alt="Logo"
+    className="w-full h-full object-cover"
+  />
+</div>
+            <span className="font-display text-xl font-semibold"><span className="text-primary">Afinity.ai</span></span>
           </div>
           <h1 className="font-display text-3xl font-semibold mb-2">Create your account</h1>
           <p className="text-gray-500 mb-8">It takes under a minute. No paperwork.</p>
@@ -112,7 +120,7 @@ export default function Signup() {
 
       <div className="hidden md:flex items-center justify-center bg-primary-50 p-12">
         <div className="max-w-sm">
-          <h2 className="font-display text-3xl font-semibold mb-6">Why TuneProtect?</h2>
+          <h2 className="font-display text-3xl font-semibold mb-6">Why Afinity.ai?</h2>
           <ul className="space-y-4">
             {[
               "Get a quote in under 60 seconds",

@@ -3,16 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useCurrency } from "@/lib/currency";
-import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Check } from "lucide-react";
+import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Home, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone };
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, home: Home };
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [cat, setCat] = useState("all");
   const { user } = useAuth();
-  const { format } = useCurrency();
+  const { format, formatText } = useCurrency();
   const nav = useNavigate();
 
   useEffect(() => {
@@ -23,10 +23,12 @@ export default function Products() {
 
   const selectProduct = (p) => {
     if (!user) return nav("/login");
-    if (p.category === "travel") nav(`/quote/${p.id}`);
+    if (p.category === "travel") nav(`/travel-quote/${p.id}`);
     else if (p.category === "motor") nav(`/products/motor-easy`);
     else if (p.category === "pa") nav(`/products/pa-easy`);
-    else alert(`${p.name} quote coming soon! Travel, Motor and PA insurance are fully live.`);
+    else if (p.category === "health") nav(`/products/health-secure-plus`);
+    else if (p.category === "home") nav(`/products/home-easy`);
+    else alert(`${p.name} quote coming soon! Travel, Motor, PA, Health, and Home insurance are fully live.`);
   };
 
   return (
@@ -39,7 +41,15 @@ export default function Products() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">
-        {["all", "travel", "health", "motor", "device"].map((c) => (
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+        {["all", "travel", "health", "motor", "home", "device"].map((c) => (
+=======
+        {["all", "travel", "health", "motor", "pa"].map((c) => (
+>>>>>>> Stashed changes
+=======
+        {["all", "travel", "health", "motor", "pa"].map((c) => (
+>>>>>>> Stashed changes
           <button
             key={c}
             onClick={() => setCat(c)}
@@ -73,12 +83,12 @@ export default function Products() {
                   <span className="text-xs font-semibold uppercase tracking-wider">{p.category}</span>
                 </div>
                 <h3 className="font-display text-2xl font-semibold">{p.name}</h3>
-                <p className="text-sm text-gray-500 mt-1 mb-4">{p.description}</p>
+                <p className="text-sm text-gray-500 mt-1 mb-4">{formatText(p.description)}</p>
                 <ul className="space-y-2 mb-5">
                   {p.features?.slice(0, 4).map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
                       <Check className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" strokeWidth={3} />
-                      {f}
+                      {formatText(f)}
                     </li>
                   ))}
                 </ul>
@@ -86,7 +96,7 @@ export default function Products() {
                   <div>
                     <div className="text-xs text-gray-400">from</div>
                     <div className="font-display text-2xl font-semibold">
-                      ${p.base_premium.toFixed(0)}
+                      {format(p.base_premium, { decimals: 0 })}
                       <span className="text-xs text-gray-400 font-normal ml-1">/policy</span>
                     </div>
                   </div>

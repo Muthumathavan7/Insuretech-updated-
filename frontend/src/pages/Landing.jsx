@@ -2,16 +2,29 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useCurrency } from "@/lib/currency";
-import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Shield, Sparkles, Check, Star, Activity } from "lucide-react";
+import { ArrowRight, Plane, HeartPulse, Car, Smartphone, Home, Shield, Sparkles, Check, Star, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity };
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity, home: Home };
 const HERO_IMG =
   "https://images.pexels.com/photos/7065885/pexels-photo-7065885.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1200";
+=======
+=======
+>>>>>>> Stashed changes
+const ICONS = { travel: Plane, health: HeartPulse, motor: Car, device: Smartphone, pa: Activity };
+import familyImg from "./family.png";
+const HERO_IMG = familyImg;
+
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
 export default function Landing() {
   const [products, setProducts] = useState([]);
-  const { format } = useCurrency();
+  const { format, formatText } = useCurrency();
 
   useEffect(() => {
     api.get("/products").then((r) => setProducts(r.data)).catch(() => {});
@@ -87,7 +100,7 @@ export default function Landing() {
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Active cover</div>
-                    <div className="font-semibold text-sm">Travel Shield Global · $100k</div>
+                    <div className="font-semibold text-sm">Travel Shield Global · {format(100000, { decimals: 0 })}</div>
                   </div>
                   <div className="ml-auto bg-green-50 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">
                     Active
@@ -125,6 +138,9 @@ export default function Landing() {
             const href =
               p.category === "motor" ? "/products/motor-easy"
               : p.category === "pa" ? "/products/pa-easy"
+              : p.category === "health" ? "/products/health-secure-plus"
+              : p.category === "home" ? "/products/home-easy"
+              : p.category === "travel" ? `/travel-quote/${p.id}`
               : "/products";
             return (
               <Link
@@ -150,7 +166,7 @@ export default function Landing() {
                     </span>
                   </div>
                   <h3 className="font-display text-xl font-semibold mb-1">{p.name}</h3>
-                  <p className="text-sm text-gray-500 line-clamp-2">{p.description}</p>
+                  <p className="text-sm text-gray-500 line-clamp-2">{formatText(p.description)}</p>
                   <div className="mt-4 flex items-center justify-between">
                     <div>
                       <div className="text-xs text-gray-400">from</div>

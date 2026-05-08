@@ -150,7 +150,7 @@ class Product(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=_id)
     name: str
-    category: Literal["travel", "health", "motor", "device", "pa"]
+    category: Literal["travel", "health", "motor", "device", "pa", "home"]
     description: str
     base_premium: float
     currency: str = "USD"
@@ -161,12 +161,13 @@ class Product(BaseModel):
     active: bool = True
     display_order: int = 100
     form_config: Dict[str, FieldConfig] = Field(default_factory=dict)
+    meta: Dict[str, Any] = Field(default_factory=dict)
     created_at: str = Field(default_factory=_now)
 
 
 class ProductCreate(BaseModel):
     name: str
-    category: Literal["travel", "health", "motor", "device", "pa"]
+    category: Literal["travel", "health", "motor", "device", "pa", "home"]
     description: str
     base_premium: float
     coverage_amount: float
@@ -189,6 +190,7 @@ class ProductUpdate(BaseModel):
     active: Optional[bool] = None
     display_order: Optional[int] = None
     form_config: Optional[Dict[str, FieldConfig]] = None
+    meta: Optional[Dict[str, Any]] = None  # rate tables (Health Secure+, etc.)
 
 
 # ============ VEHICLE LOOKUP ============
@@ -210,13 +212,33 @@ class VehicleLookupResult(BaseModel):
 
 # ============ QUOTE ============
 class TravelQuoteInput(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     product_id: str
-    destination: str
+    # Step 1 — Plan Selection (mirrors Tune Protect quote page)
+    region: Literal["international", "domestic"] = "international"
+    trip_type: Literal["single_return", "one_way", "annual"] = "single_return"
+    destination: str = ""                  # main destination string for risk lookup
+    destinations: List[str] = []           # multi-select
+    traveler_type: Literal["individual", "family", "group"] = "individual"
+    age_category: Literal["18_70", "70_plus", "child"] = "18_70"
+    travelers: int = Field(ge=1, le=20, default=1)
+    email: Optional[EmailStr] = None
     start_date: str
     end_date: str
-    travelers: int = Field(ge=1, le=10)
+    is_malaysian: bool = True
+    accept_privacy: bool = True
     coverage_tier: Literal["basic", "premium", "vip"] = "basic"
     addons: List[str] = []
+    # Step 2 — Personal Details (filled in step 2)
+    full_name: Optional[str] = ""
+    id_type: Optional[Literal["nric", "passport"]] = "nric"
+    id_number: Optional[str] = ""
+    phone: Optional[str] = ""
+    address: Optional[str] = ""
+    postcode: Optional[str] = ""
+    # Beneficiary (optional)
+    beneficiary_name: Optional[str] = ""
+    beneficiary_relationship: Optional[str] = ""
 
 
 class Quote(BaseModel):
